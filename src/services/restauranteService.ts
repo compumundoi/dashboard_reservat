@@ -1,6 +1,12 @@
-import { RestauranteData, CreateRestauranteData, UpdateRestauranteData, RestauranteStats, RestauranteChartData } from '../types/restaurante';
+import {
+  RestauranteData,
+  CreateRestauranteData,
+  UpdateRestauranteData,
+  RestauranteStats,
+  RestauranteChartData,
+} from "../types/restaurante";
 
-const API_BASE_URL = '/api/v1';
+const API_BASE_URL = "http://localhost:8013/api/v1";
 
 // Interfaces para las respuestas de la API
 interface ApiResponseList {
@@ -16,34 +22,40 @@ interface ApiResponseList {
 class RestauranteService {
   private getAuthHeaders() {
     const token = document.cookie
-      .split('; ')
-      .find(row => row.startsWith('token='))
-      ?.split('=')[1];
-    
+      .split("; ")
+      .find((row) => row.startsWith("token="))
+      ?.split("=")[1];
+
     return {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
     };
   }
 
-  async getRestaurantes(page: number = 0, size: number = 10): Promise<{
+  async getRestaurantes(
+    page: number = 0,
+    size: number = 10,
+  ): Promise<{
     restaurantes: RestauranteData[];
     total: number;
     totalPages: number;
     currentPage: number;
   }> {
     try {
-      const response = await fetch(`${API_BASE_URL}/restaurantes/listar/?pagina=${page + 1}&limite=${size}`, {
-        method: 'GET',
-        headers: this.getAuthHeaders()
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/restaurantes/listar/?pagina=${page + 1}&limite=${size}`,
+        {
+          method: "GET",
+          headers: this.getAuthHeaders(),
+        },
+      );
 
       if (!response.ok) {
         throw new Error(`Error ${response.status}: ${response.statusText}`);
       }
 
       const data: ApiResponseList = await response.json();
-      
+
       // Unificar datos de proveedor y restaurante
       const restaurantes: RestauranteData[] = data.data.map((item: any) => ({
         // Datos del proveedor
@@ -67,7 +79,7 @@ class RestauranteService {
         tipo_documento: item.proveedor.tipo_documento,
         numero_documento: item.proveedor.numero_documento,
         activo: item.proveedor.activo,
-        
+
         // Datos específicos del restaurante
         id_restaurante: item.restaurante.id_restaurante,
         tipo_cocina: item.restaurante.tipo_cocina,
@@ -92,38 +104,42 @@ class RestauranteService {
         parqueadero: item.restaurante.parqueadero,
         terraza: item.restaurante.terraza,
         sillas_bebe: item.restaurante.sillas_bebe,
-        decoraciones_fechas_especiales: item.restaurante.decoraciones_fechas_especiales,
+        decoraciones_fechas_especiales:
+          item.restaurante.decoraciones_fechas_especiales,
         rampa_discapacitados: item.restaurante.rampa_discapacitados,
         aforo_maximo: item.restaurante.aforo_maximo,
         tipo_comida: item.restaurante.tipo_comida,
-        precio_ascendente: item.restaurante.precio_ascendente
+        precio_ascendente: item.restaurante.precio_ascendente,
       }));
 
       return {
         restaurantes,
         total: data.total,
         totalPages: Math.ceil(data.total / size),
-        currentPage: page + 1
+        currentPage: page + 1,
       };
     } catch (error) {
-      console.error('Error fetching restaurantes:', error);
+      console.error("Error fetching restaurantes:", error);
       throw error;
     }
   }
 
   async getRestauranteById(id: string): Promise<RestauranteData> {
     try {
-      const response = await fetch(`${API_BASE_URL}/restaurantes/consultar/${id}`, {
-        method: 'GET',
-        headers: this.getAuthHeaders()
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/restaurantes/consultar/${id}`,
+        {
+          method: "GET",
+          headers: this.getAuthHeaders(),
+        },
+      );
 
       if (!response.ok) {
         throw new Error(`Error ${response.status}: ${response.statusText}`);
       }
 
       const data = await response.json();
-      
+
       // Unificar datos de proveedor y restaurante
       return {
         // Datos del proveedor
@@ -147,7 +163,7 @@ class RestauranteService {
         tipo_documento: data.proveedor.tipo_documento,
         numero_documento: data.proveedor.numero_documento,
         activo: data.proveedor.activo,
-        
+
         // Datos específicos del restaurante
         id_restaurante: data.restaurante.id_restaurante,
         tipo_cocina: data.restaurante.tipo_cocina,
@@ -172,19 +188,22 @@ class RestauranteService {
         parqueadero: data.restaurante.parqueadero,
         terraza: data.restaurante.terraza,
         sillas_bebe: data.restaurante.sillas_bebe,
-        decoraciones_fechas_especiales: data.restaurante.decoraciones_fechas_especiales,
+        decoraciones_fechas_especiales:
+          data.restaurante.decoraciones_fechas_especiales,
         rampa_discapacitados: data.restaurante.rampa_discapacitados,
         aforo_maximo: data.restaurante.aforo_maximo,
         tipo_comida: data.restaurante.tipo_comida,
-        precio_ascendente: data.restaurante.precio_ascendente
+        precio_ascendente: data.restaurante.precio_ascendente,
       };
     } catch (error) {
-      console.error('Error fetching restaurante details:', error);
+      console.error("Error fetching restaurante details:", error);
       throw error;
     }
   }
 
-  async createRestaurante(restaurante: CreateRestauranteData): Promise<RestauranteData> {
+  async createRestaurante(
+    restaurante: CreateRestauranteData,
+  ): Promise<RestauranteData> {
     try {
       // Estructurar los datos según el formato esperado por la API
       const requestData = {
@@ -207,7 +226,7 @@ class RestauranteService {
           usuario_creador: restaurante.usuario_creador,
           tipo_documento: restaurante.tipo_documento,
           numero_documento: restaurante.numero_documento,
-          activo: restaurante.activo
+          activo: restaurante.activo,
         },
         restaurante: {
           tipo_cocina: restaurante.tipo_cocina,
@@ -232,18 +251,19 @@ class RestauranteService {
           parqueadero: restaurante.parqueadero,
           terraza: restaurante.terraza,
           sillas_bebe: restaurante.sillas_bebe,
-          decoraciones_fechas_especiales: restaurante.decoraciones_fechas_especiales,
+          decoraciones_fechas_especiales:
+            restaurante.decoraciones_fechas_especiales,
           rampa_discapacitados: restaurante.rampa_discapacitados,
           aforo_maximo: restaurante.aforo_maximo,
           tipo_comida: restaurante.tipo_comida,
-          precio_ascendente: restaurante.precio_ascendente
-        }
+          precio_ascendente: restaurante.precio_ascendente,
+        },
       };
 
       const response = await fetch(`${API_BASE_URL}/restaurantes/crear/`, {
-        method: 'POST',
+        method: "POST",
         headers: this.getAuthHeaders(),
-        body: JSON.stringify(requestData)
+        body: JSON.stringify(requestData),
       });
 
       if (!response.ok) {
@@ -253,12 +273,15 @@ class RestauranteService {
       const result = await response.json();
       return result;
     } catch (error) {
-      console.error('Error creating restaurante:', error);
+      console.error("Error creating restaurante:", error);
       throw error;
     }
   }
 
-  async updateRestaurante(id: string, restaurante: UpdateRestauranteData): Promise<RestauranteData> {
+  async updateRestaurante(
+    id: string,
+    restaurante: UpdateRestauranteData,
+  ): Promise<RestauranteData> {
     try {
       // Estructurar los datos según el formato esperado por la API
       const requestData = {
@@ -281,7 +304,7 @@ class RestauranteService {
           usuario_creador: restaurante.usuario_creador,
           tipo_documento: restaurante.tipo_documento,
           numero_documento: restaurante.numero_documento,
-          activo: restaurante.activo
+          activo: restaurante.activo,
         },
         restaurante: {
           tipo_cocina: restaurante.tipo_cocina,
@@ -306,19 +329,23 @@ class RestauranteService {
           parqueadero: restaurante.parqueadero,
           terraza: restaurante.terraza,
           sillas_bebe: restaurante.sillas_bebe,
-          decoraciones_fechas_especiales: restaurante.decoraciones_fechas_especiales,
+          decoraciones_fechas_especiales:
+            restaurante.decoraciones_fechas_especiales,
           rampa_discapacitados: restaurante.rampa_discapacitados,
           aforo_maximo: restaurante.aforo_maximo,
           tipo_comida: restaurante.tipo_comida,
-          precio_ascendente: restaurante.precio_ascendente
-        }
+          precio_ascendente: restaurante.precio_ascendente,
+        },
       };
 
-      const response = await fetch(`${API_BASE_URL}/restaurantes/editar/${id}`, {
-        method: 'PUT',
-        headers: this.getAuthHeaders(),
-        body: JSON.stringify(requestData)
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/restaurantes/editar/${id}`,
+        {
+          method: "PUT",
+          headers: this.getAuthHeaders(),
+          body: JSON.stringify(requestData),
+        },
+      );
 
       if (!response.ok) {
         throw new Error(`Error ${response.status}: ${response.statusText}`);
@@ -326,23 +353,26 @@ class RestauranteService {
 
       return await response.json();
     } catch (error) {
-      console.error('Error updating restaurante:', error);
+      console.error("Error updating restaurante:", error);
       throw error;
     }
   }
 
   async deleteRestaurante(id: string): Promise<void> {
     try {
-      const response = await fetch(`${API_BASE_URL}/restaurantes/eliminar/${id}`, {
-        method: 'DELETE',
-        headers: this.getAuthHeaders()
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/restaurantes/eliminar/${id}`,
+        {
+          method: "DELETE",
+          headers: this.getAuthHeaders(),
+        },
+      );
 
       if (!response.ok) {
         throw new Error(`Error ${response.status}: ${response.statusText}`);
       }
     } catch (error) {
-      console.error('Error deleting restaurante:', error);
+      console.error("Error deleting restaurante:", error);
       throw error;
     }
   }
@@ -351,15 +381,15 @@ class RestauranteService {
     try {
       // Obtener todos los restaurantes para calcular estadísticas
       const { restaurantes } = await this.getRestaurantes(0, 1000);
-      
+
       return {
         total: restaurantes.length,
-        verificados: restaurantes.filter(r => r.verificado).length,
-        con_entrega: restaurantes.filter(r => r.entrega_a_domicilio).length,
-        pet_friendly: restaurantes.filter(r => r.pet_friendly).length
+        verificados: restaurantes.filter((r) => r.verificado).length,
+        con_entrega: restaurantes.filter((r) => r.entrega_a_domicilio).length,
+        pet_friendly: restaurantes.filter((r) => r.pet_friendly).length,
       };
     } catch (error) {
-      console.error('Error fetching restaurante stats:', error);
+      console.error("Error fetching restaurante stats:", error);
       return { total: 0, verificados: 0, con_entrega: 0, pet_friendly: 0 };
     }
   }
@@ -367,7 +397,7 @@ class RestauranteService {
   async getRestauranteChartData(): Promise<RestauranteChartData> {
     try {
       const { restaurantes } = await this.getRestaurantes(0, 1000);
-      
+
       // Distribución por tipos de cocina
       const tiposCount = restaurantes.reduce((acc: any, restaurante) => {
         acc[restaurante.tipo_cocina] = (acc[restaurante.tipo_cocina] || 0) + 1;
@@ -376,29 +406,29 @@ class RestauranteService {
 
       const tipos_cocina = Object.entries(tiposCount).map(([tipo, count]) => ({
         tipo,
-        count: count as number
+        count: count as number,
       }));
 
       // Distribución por servicios principales
       const servicios = [
-        { key: 'wifi', label: 'WiFi' },
-        { key: 'parqueadero', label: 'Parqueadero' },
-        { key: 'pet_friendly', label: 'Pet Friendly' },
-        { key: 'terraza', label: 'Terraza' },
-        { key: 'entrega_a_domicilio', label: 'Entrega a Domicilio' },
-        { key: 'rampa_discapacitados', label: 'Rampa Discapacitados' },
-        { key: 'eventos', label: 'Eventos' },
-        { key: 'catering', label: 'Catering' }
+        { key: "wifi", label: "WiFi" },
+        { key: "parqueadero", label: "Parqueadero" },
+        { key: "pet_friendly", label: "Pet Friendly" },
+        { key: "terraza", label: "Terraza" },
+        { key: "entrega_a_domicilio", label: "Entrega a Domicilio" },
+        { key: "rampa_discapacitados", label: "Rampa Discapacitados" },
+        { key: "eventos", label: "Eventos" },
+        { key: "catering", label: "Catering" },
       ];
 
-      const serviciosData = servicios.map(servicio => ({
+      const serviciosData = servicios.map((servicio) => ({
         servicio: servicio.label,
-        count: restaurantes.filter((r: any) => r[servicio.key]).length
+        count: restaurantes.filter((r: any) => r[servicio.key]).length,
       }));
 
       return { tipos_cocina, servicios: serviciosData };
     } catch (error) {
-      console.error('Error fetching restaurante chart data:', error);
+      console.error("Error fetching restaurante chart data:", error);
       return { tipos_cocina: [], servicios: [] };
     }
   }
