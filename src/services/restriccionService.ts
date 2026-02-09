@@ -11,7 +11,8 @@ import {
 } from "../types/restriccion";
 import * as XLSX from "xlsx";
 
-const API_BASE_URL = "http://localhost:8007/api/v1";
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:8007/api/v1";
 
 // Función para obtener el token de autenticación
 const getAuthToken = (): string | null => {

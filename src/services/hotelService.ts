@@ -1,7 +1,8 @@
 import { HotelUnificado, ProveedorHotel, HotelInfo } from "../types/hotel";
 import { getCookie } from "../utils/auth";
 
-const API_BASE_URL = "http://localhost:8012/api/v1";
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:8012/api/v1";
 
 class HotelService {
   private getAuthHeaders() {

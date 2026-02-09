@@ -6,7 +6,8 @@ import {
 } from "../types/transporte";
 import * as XLSX from "xlsx";
 
-const API_BASE_URL = "http://localhost:8015";
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:8015/api/v1";
 
 // Función para obtener el token de autenticación
 const getAuthToken = (): string | null => {

@@ -6,7 +6,8 @@ import {
   MayoristaChartData,
 } from "../types/mayorista";
 
-const API_BASE_URL = "http://localhost:8004/api/v1";
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:8004/api/v1";
 
 // Interfaces para las respuestas de la API oficial
 interface ApiResponseList {

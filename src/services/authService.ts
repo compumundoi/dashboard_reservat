@@ -3,7 +3,8 @@ import { getCookie } from "../utils/auth";
 
 // Usar ruta relativa para aprovechar el proxy en desarrollo y funcionar en producción
 // Usar ruta completa para conectar con el microservicio en Docker
-const API_BASE_URL = "http://localhost:8000/api/v1";
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api/v1";
 
 export const loginUser = async (
   credentials: LoginCredentials,

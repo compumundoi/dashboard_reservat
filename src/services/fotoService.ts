@@ -9,7 +9,8 @@ import {
 } from "../types/foto";
 import * as XLSX from "xlsx";
 
-const API_BASE_URL = "http://localhost:8008";
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:8008/api/v1";
 
 // Función para obtener el token de autenticación
 const getAuthToken = (): string => {
@@ -59,7 +60,7 @@ const procesarFotoParaUI = (foto: RespuestaFoto): FotoData => ({
 
 // Crear nueva foto
 export const crearFoto = async (datosFoto: DatosFoto): Promise<void> => {
-  const response = await fetch(`${API_BASE_URL}/api/v1/fotos/crear/`, {
+  const response = await fetch(`${API_BASE_URL}/fotos/crear/`, {
     method: "POST",
     headers: getAuthHeaders(),
     body: JSON.stringify(datosFoto),
@@ -76,7 +77,7 @@ export const listarFotos = async (
   limite: number = 10,
 ): Promise<ResponseListFotos> => {
   const response = await fetch(
-    `${API_BASE_URL}/api/v1/fotos/listar/?pagina=${pagina}&limite=${limite}`,
+    `${API_BASE_URL}/fotos/listar/?pagina=${pagina}&limite=${limite}`,
     {
       method: "GET",
       headers: getAuthHeaders(),

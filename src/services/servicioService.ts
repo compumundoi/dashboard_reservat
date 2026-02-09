@@ -9,7 +9,8 @@ import {
 } from "../types/servicio";
 import * as XLSX from "xlsx";
 
-const API_BASE_URL = "http://localhost:8016";
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:8016/api/v1";
 
 // Función para obtener el token de autenticación
 const getAuthToken = (): string => {
@@ -76,7 +77,7 @@ const procesarServicioParaUI = (servicio: RespuestaServicio): ServicioData => ({
 export const crearServicio = async (
   datosServicio: DatosServicio,
 ): Promise<void> => {
-  const response = await fetch(`${API_BASE_URL}/api/v1/servicios/crear/`, {
+  const response = await fetch(`${API_BASE_URL}/servicios/crear/`, {
     method: "POST",
     headers: getAuthHeaders(),
     body: JSON.stringify(datosServicio),
@@ -93,7 +94,7 @@ export const listarServicios = async (
   limite: number = 10,
 ): Promise<ResponseListServicios> => {
   const response = await fetch(
-    `${API_BASE_URL}/api/v1/servicios/listar/?pagina=${pagina}&limite=${limite}`,
+    `${API_BASE_URL}/servicios/listar/?pagina=${pagina}&limite=${limite}`,
     {
       method: "GET",
       headers: getAuthHeaders(),

@@ -2,7 +2,8 @@ import { User } from "../types/user";
 import { getCookie } from "../utils/auth";
 
 // Usar el proxy configurado en Vite para evitar problemas de CORS
-const API_BASE_URL = "http://localhost:8000/api/v1";
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api/v1";
 
 class UserService {
   private getAuthHeaders() {
