@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { Package, Download, Plus } from 'lucide-react';
-import Swal from 'sweetalert2';
-import ServicioTable from './ServicioTable';
-import ServicioStats from './ServicioStats';
-import ServicioCharts from './ServicioCharts';
-import ServicioDetailModal from './ServicioDetailModal';
-import EditServicioModal from './EditServicioModal';
-import CreateServicioModal from './CreateServicioModal';
+import React, { useState, useEffect } from "react";
+import { Package, Download, Plus } from "lucide-react";
+import Swal from "sweetalert2";
+import ServicioTable from "./ServicioTable";
+import ServicioStats from "./ServicioStats";
+import ServicioCharts from "./ServicioCharts";
+import ServicioDetailModal from "./ServicioDetailModal";
+import EditServicioModal from "./EditServicioModal";
+import CreateServicioModal from "./CreateServicioModal";
 import {
   listarServicios,
   procesarDatosServicios,
@@ -15,22 +15,24 @@ import {
   exportarServiciosExcel,
   eliminarServicio,
   crearServicio,
-  actualizarServicio
-} from '../../services/servicioService';
+  actualizarServicio,
+} from "../../services/servicioService";
 import {
   ServicioData,
   ServicioStatsData,
   ServicioChartData,
   DatosServicio,
-  ActualizarServicio
-} from '../../types/servicio';
+  ActualizarServicio,
+} from "../../types/servicio";
 
 const ServiciosSection: React.FC = () => {
   // Estados principales
   const [servicios, setServicios] = useState<ServicioData[]>([]);
-  const [filteredServicios, setFilteredServicios] = useState<ServicioData[]>([]);
+  const [filteredServicios, setFilteredServicios] = useState<ServicioData[]>(
+    [],
+  );
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Estados de paginación
   const [currentPage, setCurrentPage] = useState(0);
@@ -43,16 +45,18 @@ const ServiciosSection: React.FC = () => {
     totalServicios: 0,
     serviciosActivos: 0,
     serviciosPorTipo: 0,
-    proveedoresConServicios: 0
+    proveedoresConServicios: 0,
   });
   const [chartData, setChartData] = useState<ServicioChartData>({
     tipoServicioData: [],
-    ciudadData: []
+    ciudadData: [],
   });
   const [statsLoading, setStatsLoading] = useState(true);
 
   // Estados de modales
-  const [selectedServicio, setSelectedServicio] = useState<ServicioData | null>(null);
+  const [selectedServicio, setSelectedServicio] = useState<ServicioData | null>(
+    null,
+  );
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -70,11 +74,11 @@ const ServiciosSection: React.FC = () => {
       setTotalPages(processedData.totalPages);
       setCurrentPage(processedData.currentPage);
     } catch (error) {
-      console.error('Error al cargar servicios:', error);
+      console.error("Error al cargar servicios:", error);
       Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'No se pudieron cargar los servicios'
+        icon: "error",
+        title: "Error",
+        text: "No se pudieron cargar los servicios",
       });
     } finally {
       setLoading(false);
@@ -95,7 +99,7 @@ const ServiciosSection: React.FC = () => {
       setStats(calculatedStats);
       setChartData(generatedChartData);
     } catch (error) {
-      console.error('Error al cargar estadísticas:', error);
+      console.error("Error al cargar estadísticas:", error);
     } finally {
       setStatsLoading(false);
     }
@@ -105,25 +109,34 @@ const ServiciosSection: React.FC = () => {
   useEffect(() => {
     loadServicios(currentPage, pageSize);
     loadStatsAndCharts();
-  }, []);
+  }, [currentPage, pageSize]);
 
   // Efecto para cambios de página/tamaño
   useEffect(() => {
     if (!searchTerm) {
       loadServicios(currentPage, pageSize);
     }
-  }, [currentPage, pageSize]);
+  }, [currentPage, pageSize, searchTerm]);
 
   // Efecto para filtrado local por búsqueda
   useEffect(() => {
     if (searchTerm) {
-      const filtered = servicios.filter(servicio =>
-        servicio.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        servicio.descripcion.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        servicio.tipo_servicio.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        servicio.ciudad.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        servicio.departamento.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        servicio.proveedorNombre.toLowerCase().includes(searchTerm.toLowerCase())
+      const filtered = servicios.filter(
+        (servicio) =>
+          servicio.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          servicio.descripcion
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          servicio.tipo_servicio
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          servicio.ciudad.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          servicio.departamento
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          servicio.proveedorNombre
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()),
       );
       setFilteredServicios(filtered);
     } else {
@@ -159,34 +172,35 @@ const ServiciosSection: React.FC = () => {
   // Handler para eliminar
   const handleDelete = async (id: string) => {
     const result = await Swal.fire({
-      title: '¿Estás seguro?',
-      text: 'Esta acción no se puede deshacer',
-      icon: 'warning',
+      title: "¿Estás seguro?",
+      text: "Esta acción no se puede deshacer",
+      icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: '#EF4444',
-      cancelButtonColor: '#6B7280',
-      confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar'
+      confirmButtonColor: "#EF4444",
+      cancelButtonColor: "#6B7280",
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
     });
 
     if (result.isConfirmed) {
       try {
         await eliminarServicio(id);
         await Swal.fire({
-          icon: 'success',
-          title: 'Eliminado',
-          text: 'El servicio ha sido eliminado correctamente',
+          icon: "success",
+          title: "Eliminado",
+          text: "El servicio ha sido eliminado correctamente",
           timer: 2000,
-          showConfirmButton: false
+          showConfirmButton: false,
         });
         // Recargar datos
         loadServicios(currentPage, pageSize);
         loadStatsAndCharts();
       } catch (error) {
+        console.error(error);
         Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'No se pudo eliminar el servicio'
+          icon: "error",
+          title: "Error",
+          text: "No se pudo eliminar el servicio",
         });
       }
     }
@@ -194,43 +208,35 @@ const ServiciosSection: React.FC = () => {
 
   // Handler para crear servicio
   const handleCreateSave = async (data: DatosServicio) => {
-    try {
-      await crearServicio(data);
-      await Swal.fire({
-        icon: 'success',
-        title: 'Creado',
-        text: 'El servicio ha sido creado correctamente',
-        timer: 2000,
-        showConfirmButton: false
-      });
-      setShowCreateModal(false);
-      // Recargar datos
-      loadServicios(currentPage, pageSize);
-      loadStatsAndCharts();
-    } catch (error) {
-      throw error;
-    }
+    await crearServicio(data);
+    await Swal.fire({
+      icon: "success",
+      title: "Creado",
+      text: "El servicio ha sido creado correctamente",
+      timer: 2000,
+      showConfirmButton: false,
+    });
+    setShowCreateModal(false);
+    // Recargar datos
+    loadServicios(currentPage, pageSize);
+    loadStatsAndCharts();
   };
 
   // Handler para editar servicio
   const handleEditSave = async (data: ActualizarServicio) => {
-    try {
-      await actualizarServicio(data.id_servicio, data);
-      await Swal.fire({
-        icon: 'success',
-        title: 'Actualizado',
-        text: 'El servicio ha sido actualizado correctamente',
-        timer: 2000,
-        showConfirmButton: false
-      });
-      setShowEditModal(false);
-      setSelectedServicio(null);
-      // Recargar datos
-      loadServicios(currentPage, pageSize);
-      loadStatsAndCharts();
-    } catch (error) {
-      throw error;
-    }
+    await actualizarServicio(data.id_servicio, data);
+    await Swal.fire({
+      icon: "success",
+      title: "Actualizado",
+      text: "El servicio ha sido actualizado correctamente",
+      timer: 2000,
+      showConfirmButton: false,
+    });
+    setShowEditModal(false);
+    setSelectedServicio(null);
+    // Recargar datos
+    loadServicios(currentPage, pageSize);
+    loadStatsAndCharts();
   };
 
   // Handler para exportar
@@ -238,17 +244,18 @@ const ServiciosSection: React.FC = () => {
     try {
       await exportarServiciosExcel();
       Swal.fire({
-        icon: 'success',
-        title: 'Exportado',
-        text: 'Los servicios han sido exportados correctamente',
+        icon: "success",
+        title: "Exportado",
+        text: "Los servicios han sido exportados correctamente",
         timer: 2000,
-        showConfirmButton: false
+        showConfirmButton: false,
       });
     } catch (error) {
+      console.error(error);
       Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'No se pudo exportar los servicios'
+        icon: "error",
+        title: "Error",
+        text: "No se pudo exportar los servicios",
       });
     }
   };

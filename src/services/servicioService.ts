@@ -354,6 +354,7 @@ export const exportarServiciosExcel = async (): Promise<void> => {
     const fechaActual = new Date().toISOString().split("T")[0];
     XLSX.writeFile(workbook, `servicios_${fechaActual}.xlsx`);
   } catch (error) {
+    console.error(error);
     throw new Error("Error al exportar servicios a Excel");
   }
 };

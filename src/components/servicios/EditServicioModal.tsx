@@ -53,10 +53,10 @@ const EditServicioModal: React.FC<EditServicioModalProps> = ({ isOpen, onClose, 
     const { name, value, type } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : 
-              type === 'number' ? Number(value) : value
+      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked :
+        type === 'number' ? Number(value) : value
     }));
-    
+
     // Limpiar error del campo cuando el usuario empiece a escribir
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
@@ -114,7 +114,7 @@ const EditServicioModal: React.FC<EditServicioModalProps> = ({ isOpen, onClose, 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
@@ -123,6 +123,7 @@ const EditServicioModal: React.FC<EditServicioModalProps> = ({ isOpen, onClose, 
     try {
       await onSave(formData);
     } catch (error) {
+      console.error(error);
       Swal.fire({
         icon: 'error',
         title: 'Error',
@@ -168,9 +169,8 @@ const EditServicioModal: React.FC<EditServicioModalProps> = ({ isOpen, onClose, 
                   name="nombre"
                   value={formData.nombre}
                   onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    errors.nombre ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.nombre ? 'border-red-500' : 'border-gray-300'
+                    }`}
                   placeholder="Ingrese el nombre del servicio"
                 />
                 {errors.nombre && <p className="text-red-500 text-sm mt-1">{errors.nombre}</p>}
@@ -185,9 +185,8 @@ const EditServicioModal: React.FC<EditServicioModalProps> = ({ isOpen, onClose, 
                   name="tipo_servicio"
                   value={formData.tipo_servicio}
                   onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    errors.tipo_servicio ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.tipo_servicio ? 'border-red-500' : 'border-gray-300'
+                    }`}
                   placeholder="Ej: Hospedaje, Transporte, Alimentación"
                 />
                 {errors.tipo_servicio && <p className="text-red-500 text-sm mt-1">{errors.tipo_servicio}</p>}
@@ -202,9 +201,8 @@ const EditServicioModal: React.FC<EditServicioModalProps> = ({ isOpen, onClose, 
                   value={formData.descripcion}
                   onChange={handleInputChange}
                   rows={4}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    errors.descripcion ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.descripcion ? 'border-red-500' : 'border-gray-300'
+                    }`}
                   placeholder="Descripción detallada del servicio"
                 />
                 {errors.descripcion && <p className="text-red-500 text-sm mt-1">{errors.descripcion}</p>}
@@ -219,9 +217,8 @@ const EditServicioModal: React.FC<EditServicioModalProps> = ({ isOpen, onClose, 
                   value={formData.detalles_del_servicio}
                   onChange={handleInputChange}
                   rows={3}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    errors.detalles_del_servicio ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.detalles_del_servicio ? 'border-red-500' : 'border-gray-300'
+                    }`}
                   placeholder="Detalles adicionales del servicio"
                 />
                 {errors.detalles_del_servicio && <p className="text-red-500 text-sm mt-1">{errors.detalles_del_servicio}</p>}
@@ -244,9 +241,8 @@ const EditServicioModal: React.FC<EditServicioModalProps> = ({ isOpen, onClose, 
                   name="proveedor_id"
                   value={formData.proveedor_id}
                   onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    errors.proveedor_id ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.proveedor_id ? 'border-red-500' : 'border-gray-300'
+                    }`}
                   placeholder="UUID del proveedor"
                 />
                 {errors.proveedor_id && <p className="text-red-500 text-sm mt-1">{errors.proveedor_id}</p>}
@@ -263,9 +259,8 @@ const EditServicioModal: React.FC<EditServicioModalProps> = ({ isOpen, onClose, 
                     value={formData.precio}
                     onChange={handleInputChange}
                     min="0"
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors.precio ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.precio ? 'border-red-500' : 'border-gray-300'
+                      }`}
                     placeholder="0"
                   />
                   {errors.precio && <p className="text-red-500 text-sm mt-1">{errors.precio}</p>}
@@ -318,9 +313,8 @@ const EditServicioModal: React.FC<EditServicioModalProps> = ({ isOpen, onClose, 
                     name="ciudad"
                     value={formData.ciudad}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors.ciudad ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.ciudad ? 'border-red-500' : 'border-gray-300'
+                      }`}
                     placeholder="Ciudad"
                   />
                   {errors.ciudad && <p className="text-red-500 text-sm mt-1">{errors.ciudad}</p>}
@@ -334,9 +328,8 @@ const EditServicioModal: React.FC<EditServicioModalProps> = ({ isOpen, onClose, 
                     name="departamento"
                     value={formData.departamento}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors.departamento ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.departamento ? 'border-red-500' : 'border-gray-300'
+                      }`}
                     placeholder="Departamento"
                   />
                   {errors.departamento && <p className="text-red-500 text-sm mt-1">{errors.departamento}</p>}
@@ -352,9 +345,8 @@ const EditServicioModal: React.FC<EditServicioModalProps> = ({ isOpen, onClose, 
                   name="ubicacion"
                   value={formData.ubicacion}
                   onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    errors.ubicacion ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.ubicacion ? 'border-red-500' : 'border-gray-300'
+                    }`}
                   placeholder="Dirección o ubicación específica"
                 />
                 {errors.ubicacion && <p className="text-red-500 text-sm mt-1">{errors.ubicacion}</p>}
