@@ -9,7 +9,7 @@ const CreateTransporteModal: React.FC<TransporteModalProps> = ({ isOpen, onClose
   const [formData, setFormData] = useState({
     // Datos del proveedor
     proveedor: {
-      tipo: 'Transporte',
+      tipo: 'transporte',
       nombre: '',
       descripcion: '',
       email: '',
@@ -44,14 +44,14 @@ const CreateTransporteModal: React.FC<TransporteModalProps> = ({ isOpen, onClose
       fecha_mantenimiento: new Date().toISOString()
     }
   });
-  
+
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const resetForm = () => {
     setFormData({
       proveedor: {
-        tipo: 'Transporte',
+        tipo: 'transporte',
         nombre: '',
         descripcion: '',
         email: '',
@@ -114,12 +114,12 @@ const CreateTransporteModal: React.FC<TransporteModalProps> = ({ isOpen, onClose
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
 
     try {
       setLoading(true);
-      
+
       const createData = {
         proveedor: {
           ...formData.proveedor,
@@ -132,7 +132,7 @@ const CreateTransporteModal: React.FC<TransporteModalProps> = ({ isOpen, onClose
       };
 
       await transporteService.createTransporte(createData);
-      
+
       await Swal.fire({
         title: '¡Creado!',
         text: 'Transporte creado correctamente',
@@ -147,7 +147,7 @@ const CreateTransporteModal: React.FC<TransporteModalProps> = ({ isOpen, onClose
       }
       resetForm();
       onClose();
-      
+
     } catch (error) {
       console.error('Error creating transporte:', error);
       Swal.fire({
@@ -169,7 +169,7 @@ const CreateTransporteModal: React.FC<TransporteModalProps> = ({ isOpen, onClose
         [field]: value
       }
     }));
-    
+
     // Limpiar error del campo
     const errorKey = `${section}.${field}`;
     if (errors[errorKey]) {
@@ -219,9 +219,8 @@ const CreateTransporteModal: React.FC<TransporteModalProps> = ({ isOpen, onClose
                     type="text"
                     value={formData.proveedor.nombre}
                     onChange={(e) => handleInputChange('proveedor', 'nombre', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors['proveedor.nombre'] ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors['proveedor.nombre'] ? 'border-red-500' : 'border-gray-300'
+                      }`}
                     placeholder="Nombre del proveedor"
                   />
                   {errors['proveedor.nombre'] && <p className="text-red-500 text-xs mt-1">{errors['proveedor.nombre']}</p>}
@@ -233,9 +232,8 @@ const CreateTransporteModal: React.FC<TransporteModalProps> = ({ isOpen, onClose
                     type="email"
                     value={formData.proveedor.email}
                     onChange={(e) => handleInputChange('proveedor', 'email', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors['proveedor.email'] ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors['proveedor.email'] ? 'border-red-500' : 'border-gray-300'
+                      }`}
                     placeholder="email@ejemplo.com"
                   />
                   {errors['proveedor.email'] && <p className="text-red-500 text-xs mt-1">{errors['proveedor.email']}</p>}
@@ -247,9 +245,8 @@ const CreateTransporteModal: React.FC<TransporteModalProps> = ({ isOpen, onClose
                     type="text"
                     value={formData.proveedor.telefono}
                     onChange={(e) => handleInputChange('proveedor', 'telefono', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors['proveedor.telefono'] ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors['proveedor.telefono'] ? 'border-red-500' : 'border-gray-300'
+                      }`}
                     placeholder="Número de teléfono"
                   />
                   {errors['proveedor.telefono'] && <p className="text-red-500 text-xs mt-1">{errors['proveedor.telefono']}</p>}
@@ -261,9 +258,8 @@ const CreateTransporteModal: React.FC<TransporteModalProps> = ({ isOpen, onClose
                     type="text"
                     value={formData.proveedor.ciudad}
                     onChange={(e) => handleInputChange('proveedor', 'ciudad', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors['proveedor.ciudad'] ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors['proveedor.ciudad'] ? 'border-red-500' : 'border-gray-300'
+                      }`}
                     placeholder="Ciudad"
                   />
                   {errors['proveedor.ciudad'] && <p className="text-red-500 text-xs mt-1">{errors['proveedor.ciudad']}</p>}
@@ -275,9 +271,8 @@ const CreateTransporteModal: React.FC<TransporteModalProps> = ({ isOpen, onClose
                     type="text"
                     value={formData.proveedor.direccion}
                     onChange={(e) => handleInputChange('proveedor', 'direccion', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors['proveedor.direccion'] ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors['proveedor.direccion'] ? 'border-red-500' : 'border-gray-300'
+                      }`}
                     placeholder="Dirección completa"
                   />
                   {errors['proveedor.direccion'] && <p className="text-red-500 text-xs mt-1">{errors['proveedor.direccion']}</p>}
@@ -289,9 +284,8 @@ const CreateTransporteModal: React.FC<TransporteModalProps> = ({ isOpen, onClose
                     type="text"
                     value={formData.proveedor.numero_documento}
                     onChange={(e) => handleInputChange('proveedor', 'numero_documento', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors['proveedor.numero_documento'] ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors['proveedor.numero_documento'] ? 'border-red-500' : 'border-gray-300'
+                      }`}
                     placeholder="Número de NIT"
                   />
                   {errors['proveedor.numero_documento'] && <p className="text-red-500 text-xs mt-1">{errors['proveedor.numero_documento']}</p>}
@@ -304,9 +298,8 @@ const CreateTransporteModal: React.FC<TransporteModalProps> = ({ isOpen, onClose
                   value={formData.proveedor.descripcion}
                   onChange={(e) => handleInputChange('proveedor', 'descripcion', e.target.value)}
                   rows={3}
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    errors['proveedor.descripcion'] ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors['proveedor.descripcion'] ? 'border-red-500' : 'border-gray-300'
+                    }`}
                   placeholder="Descripción del proveedor de transporte"
                 />
                 {errors['proveedor.descripcion'] && <p className="text-red-500 text-xs mt-1">{errors['proveedor.descripcion']}</p>}
@@ -318,9 +311,8 @@ const CreateTransporteModal: React.FC<TransporteModalProps> = ({ isOpen, onClose
                   type="text"
                   value={formData.proveedor.ubicacion}
                   onChange={(e) => handleInputChange('proveedor', 'ubicacion', e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    errors['proveedor.ubicacion'] ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors['proveedor.ubicacion'] ? 'border-red-500' : 'border-gray-300'
+                    }`}
                   placeholder="Ubicación específica o coordenadas"
                 />
                 {errors['proveedor.ubicacion'] && <p className="text-red-500 text-xs mt-1">{errors['proveedor.ubicacion']}</p>}
@@ -336,9 +328,8 @@ const CreateTransporteModal: React.FC<TransporteModalProps> = ({ isOpen, onClose
                   <select
                     value={formData.transporte.tipo_vehiculo}
                     onChange={(e) => handleInputChange('transporte', 'tipo_vehiculo', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors['transporte.tipo_vehiculo'] ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors['transporte.tipo_vehiculo'] ? 'border-red-500' : 'border-gray-300'
+                      }`}
                   >
                     <option value="">Seleccionar tipo</option>
                     <option value="Bus">Bus</option>
@@ -356,9 +347,8 @@ const CreateTransporteModal: React.FC<TransporteModalProps> = ({ isOpen, onClose
                     type="text"
                     value={formData.transporte.modelo}
                     onChange={(e) => handleInputChange('transporte', 'modelo', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors['transporte.modelo'] ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors['transporte.modelo'] ? 'border-red-500' : 'border-gray-300'
+                      }`}
                     placeholder="Modelo del vehículo"
                   />
                   {errors['transporte.modelo'] && <p className="text-red-500 text-xs mt-1">{errors['transporte.modelo']}</p>}
@@ -382,9 +372,8 @@ const CreateTransporteModal: React.FC<TransporteModalProps> = ({ isOpen, onClose
                     type="text"
                     value={formData.transporte.placa}
                     onChange={(e) => handleInputChange('transporte', 'placa', e.target.value.toUpperCase())}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors['transporte.placa'] ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors['transporte.placa'] ? 'border-red-500' : 'border-gray-300'
+                      }`}
                     placeholder="ABC123"
                   />
                   {errors['transporte.placa'] && <p className="text-red-500 text-xs mt-1">{errors['transporte.placa']}</p>}
@@ -396,9 +385,8 @@ const CreateTransporteModal: React.FC<TransporteModalProps> = ({ isOpen, onClose
                     type="number"
                     value={formData.transporte.capacidad}
                     onChange={(e) => handleInputChange('transporte', 'capacidad', Number(e.target.value))}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors['transporte.capacidad'] ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors['transporte.capacidad'] ? 'border-red-500' : 'border-gray-300'
+                      }`}
                     min="1"
                     placeholder="Número de pasajeros"
                   />
@@ -410,9 +398,8 @@ const CreateTransporteModal: React.FC<TransporteModalProps> = ({ isOpen, onClose
                   <select
                     value={formData.transporte.combustible}
                     onChange={(e) => handleInputChange('transporte', 'combustible', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors['transporte.combustible'] ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors['transporte.combustible'] ? 'border-red-500' : 'border-gray-300'
+                      }`}
                   >
                     <option value="">Seleccionar combustible</option>
                     <option value="Gasolina">Gasolina</option>
