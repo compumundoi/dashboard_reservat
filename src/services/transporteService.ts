@@ -48,7 +48,7 @@ export const transporteService = {
   ): Promise<TransporteResponse> {
     try {
       const response = await authenticatedFetch(
-        `${API_BASE_URL}/api/v1/transportes/listar/?pagina=${page}&limite=${limit}`,
+        `${API_BASE_URL}/transportes/listar/?pagina=${page}&limite=${limit}`,
       );
 
       const data = await response.json();
@@ -63,7 +63,7 @@ export const transporteService = {
   async getTransporteById(id: string): Promise<TransporteData> {
     try {
       const response = await authenticatedFetch(
-        `${API_BASE_URL}/api/v1/transportes/consultar/${id}`,
+        `${API_BASE_URL}/transportes/consultar/${id}`,
       );
 
       const data = await response.json();
@@ -79,7 +79,7 @@ export const transporteService = {
     transporteData: CrearTransporteRequest,
   ): Promise<void> {
     try {
-      await authenticatedFetch(`${API_BASE_URL}/api/v1/transportes/crear/`, {
+      await authenticatedFetch(`${API_BASE_URL}/transportes/crear/`, {
         method: "POST",
         body: JSON.stringify(transporteData),
       });
@@ -95,13 +95,10 @@ export const transporteService = {
     transporteData: TransporteUpdateData,
   ): Promise<void> {
     try {
-      await authenticatedFetch(
-        `${API_BASE_URL}/api/v1/transportes/editar/${id}`,
-        {
-          method: "PUT",
-          body: JSON.stringify(transporteData),
-        },
-      );
+      await authenticatedFetch(`${API_BASE_URL}/transportes/editar/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(transporteData),
+      });
     } catch (error) {
       console.error("Error updating transporte:", error);
       throw error;
@@ -111,12 +108,9 @@ export const transporteService = {
   // Eliminar transporte
   async deleteTransporte(id: string): Promise<void> {
     try {
-      await authenticatedFetch(
-        `${API_BASE_URL}/api/v1/transportes/eliminar/${id}`,
-        {
-          method: "DELETE",
-        },
-      );
+      await authenticatedFetch(`${API_BASE_URL}/transportes/eliminar/${id}`, {
+        method: "DELETE",
+      });
     } catch (error) {
       console.error("Error deleting transporte:", error);
       throw error;

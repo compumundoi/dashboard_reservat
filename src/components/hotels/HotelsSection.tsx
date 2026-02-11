@@ -57,12 +57,12 @@ export const HotelsSection: React.FC = () => {
     setSearchTerm(term);
     setIsSearching(true);
     setCurrentPage(1);
-    
+
     if (term.trim() === '') {
       setFiltered(hotels);
       setIsSearching(false);
     } else {
-      const filtered = hotels.filter(hotel => 
+      const filtered = hotels.filter(hotel =>
         hotel.nombre_proveedor.toLowerCase().includes(term.toLowerCase()) ||
         hotel.ciudad.toLowerCase().includes(term.toLowerCase()) ||
         hotel.pais.toLowerCase().includes(term.toLowerCase()) ||
@@ -110,7 +110,7 @@ export const HotelsSection: React.FC = () => {
     try {
       const hotel = hotels.find(h => h.id_hotel === id);
       const hotelName = hotel?.nombre_proveedor || 'este hotel';
-      
+
       const result = await Swal.fire({
         title: '¿Estás seguro?',
         html: `
@@ -152,12 +152,12 @@ export const HotelsSection: React.FC = () => {
       // Proceder con la eliminación
       console.log('Eliminando hotel con ID:', id);
       await hotelService.deleteHotel(id);
-      
+
       // Recargar la lista después de eliminar
       const data = await hotelService.getHotels(1, 300);
       setHotels(data);
       setFiltered(data);
-      
+
       // Mostrar confirmación de éxito
       await Swal.fire({
         title: '¡Eliminado!',
@@ -174,10 +174,10 @@ export const HotelsSection: React.FC = () => {
         timer: 2000,
         timerProgressBar: true
       });
-      
+
     } catch (error) {
       console.error('Error eliminando hotel:', error);
-      
+
       await Swal.fire({
         title: 'Error',
         text: 'No se pudo eliminar el hotel. Por favor intenta nuevamente.',
@@ -198,16 +198,16 @@ export const HotelsSection: React.FC = () => {
     try {
       setCreateLoading(true);
       console.log('Creando hotel con payload:', payload);
-      
+
       await hotelService.createHotel(payload);
-      
+
       // Recargar la lista después de crear
       const data = await hotelService.getHotels(1, 300);
       setHotels(data);
       setFiltered(data);
-      
+
       setCreateOpen(false);
-      
+
       // Mostrar confirmación de éxito
       await Swal.fire({
         title: '¡Hotel Creado!',
@@ -224,10 +224,10 @@ export const HotelsSection: React.FC = () => {
         timer: 2000,
         timerProgressBar: true
       });
-      
+
     } catch (error) {
       console.error('Error creando hotel:', error);
-      
+
       await Swal.fire({
         title: 'Error',
         text: 'No se pudo crear el hotel. Por favor verifica los datos e intenta nuevamente.',
@@ -261,18 +261,19 @@ export const HotelsSection: React.FC = () => {
       });
 
       // Obtener todos los hoteles directamente de la API
-      const API_BASE_URL = 'https://back-services.api-reservat.com';
-      const response = await fetch(`${API_BASE_URL}/api/v1/hoteles/listar/?page=1&size=1000`, {
+      const API_BASE_URL =
+        import.meta.env.VITE_API_BASE_URL || "http://localhost:8008/api/v1";
+      const response = await fetch(`${API_BASE_URL}/hoteles/listar/?page=1&size=1000`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json',
         },
       });
-      
+
       if (!response.ok) {
         throw new Error(`Error ${response.status}`);
       }
-      
+
       const apiData = await response.json();
       const hotelesData = apiData.data || [];
 
@@ -316,7 +317,7 @@ export const HotelsSection: React.FC = () => {
         'Tipo Documento': item.proveedor.tipo_documento,
         'Número Documento': item.proveedor.numero_documento,
         'Activo': item.proveedor.activo ? 'Sí' : 'No',
-        
+
         // Información del Hotel
         'ID Hotel': item.hotel.id_hotel,
         'Estrellas': item.hotel.estrellas,
@@ -350,34 +351,34 @@ export const HotelsSection: React.FC = () => {
       const fecha = new Date().toISOString().split('T')[0];
       const timestamp = new Date().getTime();
       const fileName = `hoteles_${fecha}_${timestamp}.xlsx`;
-      
+
       // Generar ArrayBuffer y descargar manualmente para asegurar extensión
       const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
       const blob = new Blob([wbout], {
         type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8',
       });
-      
+
       // Método mejorado para asegurar la descarga con extensión
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
-      
+
       // Configurar el enlace de descarga
       link.href = url;
       link.download = fileName;
       link.style.display = 'none';
       link.target = '_blank';
-      
+
       // Forzar atributos para asegurar descarga correcta
       link.setAttribute('download', fileName);
       link.setAttribute('href', url);
-      
+
       // Agregar al DOM, hacer click y limpiar
       document.body.appendChild(link);
-      
+
       // Usar setTimeout para asegurar que el DOM se actualice
       setTimeout(() => {
         link.click();
-        
+
         // Limpiar después de la descarga
         setTimeout(() => {
           if (document.body.contains(link)) {
@@ -386,7 +387,7 @@ export const HotelsSection: React.FC = () => {
           URL.revokeObjectURL(url);
         }, 200);
       }, 50);
-      
+
       // Mostrar confirmación de éxito
       await Swal.fire({
         title: '¡Archivo Exportado!',
@@ -403,10 +404,10 @@ export const HotelsSection: React.FC = () => {
         timer: 3000,
         timerProgressBar: true
       });
-      
+
     } catch (error) {
       console.error('Error exportando hoteles:', error);
-      
+
       await Swal.fire({
         title: 'Error',
         text: 'No se pudo exportar el archivo. Por favor intenta nuevamente.',
@@ -446,14 +447,14 @@ export const HotelsSection: React.FC = () => {
           <p className="text-gray-600 mt-2">Administra todos los hoteles del sistema</p>
         </div>
         <div className="flex items-center space-x-3">
-          <button 
+          <button
             onClick={handleExportHotels}
             className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
           >
             <Download className="h-5 w-5" />
             <span>Exportar Hoteles</span>
           </button>
-          <button 
+          <button
             onClick={() => setCreateOpen(true)}
             className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
           >

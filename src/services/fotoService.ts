@@ -98,7 +98,7 @@ export const listarFotosPorServicio = async (
   limite: number = 100,
 ): Promise<ResponseListFotos> => {
   const response = await fetch(
-    `${API_BASE_URL}/api/v1/fotos/servicios/${idServicio}?pagina=${pagina}&limite=${limite}`,
+    `${API_BASE_URL}/fotos/servicios/${idServicio}?pagina=${pagina}&limite=${limite}`,
     {
       method: "GET",
       headers: getAuthHeaders(),
@@ -114,13 +114,10 @@ export const listarFotosPorServicio = async (
 
 // Consultar foto específica
 export const consultarFoto = async (idFoto: string): Promise<RespuestaFoto> => {
-  const response = await fetch(
-    `${API_BASE_URL}/api/v1/fotos/consultar/${idFoto}`,
-    {
-      method: "GET",
-      headers: getAuthHeaders(),
-    },
-  );
+  const response = await fetch(`${API_BASE_URL}/fotos/consultar/${idFoto}`, {
+    method: "GET",
+    headers: getAuthHeaders(),
+  });
 
   if (!response.ok) {
     throw new Error("Error al consultar la foto");
@@ -134,14 +131,11 @@ export const actualizarFoto = async (
   idFoto: string,
   datos: ActualizarFoto,
 ): Promise<RespuestaFoto> => {
-  const response = await fetch(
-    `${API_BASE_URL}/api/v1/fotos/editar/${idFoto}`,
-    {
-      method: "PUT",
-      headers: getAuthHeaders(),
-      body: JSON.stringify(datos),
-    },
-  );
+  const response = await fetch(`${API_BASE_URL}/fotos/editar/${idFoto}`, {
+    method: "PUT",
+    headers: getAuthHeaders(),
+    body: JSON.stringify(datos),
+  });
 
   if (!response.ok) {
     throw new Error("Error al actualizar la foto");
@@ -152,13 +146,10 @@ export const actualizarFoto = async (
 
 // Eliminar foto
 export const eliminarFoto = async (idFoto: string): Promise<void> => {
-  const response = await fetch(
-    `${API_BASE_URL}/api/v1/fotos/eliminar/${idFoto}`,
-    {
-      method: "DELETE",
-      headers: getAuthHeaders(),
-    },
-  );
+  const response = await fetch(`${API_BASE_URL}/fotos/eliminar/${idFoto}`, {
+    method: "DELETE",
+    headers: getAuthHeaders(),
+  });
 
   if (!response.ok) {
     throw new Error("Error al eliminar la foto");
