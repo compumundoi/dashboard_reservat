@@ -7,19 +7,19 @@ import ServicioCharts from './ServicioCharts';
 import ServicioDetailModal from './ServicioDetailModal';
 import EditServicioModal from './EditServicioModal';
 import CreateServicioModal from './CreateServicioModal';
-import { 
-  listarServicios, 
-  procesarDatosServicios, 
-  calcularEstadisticas, 
+import {
+  listarServicios,
+  procesarDatosServicios,
+  calcularEstadisticas,
   generarDatosGraficos,
   exportarServiciosExcel,
   eliminarServicio,
   crearServicio,
   actualizarServicio
 } from '../../services/servicioService';
-import { 
-  ServicioData, 
-  ServicioStatsData, 
+import {
+  ServicioData,
+  ServicioStatsData,
   ServicioChartData,
   DatosServicio,
   ActualizarServicio
@@ -63,7 +63,7 @@ const ServiciosSection: React.FC = () => {
       setLoading(true);
       const response = await listarServicios(page, size);
       const processedData = procesarDatosServicios(response);
-      
+
       setServicios(processedData.servicios);
       setFilteredServicios(processedData.servicios);
       setTotalItems(processedData.totalItems);
@@ -88,10 +88,10 @@ const ServiciosSection: React.FC = () => {
       // Obtener una muestra más grande para estadísticas
       const response = await listarServicios(0, 300);
       const processedData = procesarDatosServicios(response);
-      
+
       const calculatedStats = calcularEstadisticas(processedData.servicios);
       const generatedChartData = generarDatosGraficos(processedData.servicios);
-      
+
       setStats(calculatedStats);
       setChartData(generatedChartData);
     } catch (error) {

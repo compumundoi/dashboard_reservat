@@ -115,7 +115,7 @@ export const listarServiciosPorProveedor = async (
   limite: number = 100,
 ): Promise<ResponseListServicios> => {
   const response = await fetch(
-    `${API_BASE_URL}/api/v1/servicios/proveedor/${idProveedor}?pagina=${pagina}&limite=${limite}`,
+    `${API_BASE_URL}/servicios/proveedor/${idProveedor}?pagina=${pagina}&limite=${limite}`,
     {
       method: "GET",
       headers: getAuthHeaders(),
@@ -134,7 +134,7 @@ export const consultarServicio = async (
   idServicio: string,
 ): Promise<RespuestaServicio> => {
   const response = await fetch(
-    `${API_BASE_URL}/api/v1/servicios/consultar/${idServicio}`,
+    `${API_BASE_URL}/servicios/consultar/${idServicio}`,
     {
       method: "GET",
       headers: getAuthHeaders(),
@@ -154,7 +154,7 @@ export const actualizarServicio = async (
   datos: ActualizarServicio,
 ): Promise<RespuestaServicio> => {
   const response = await fetch(
-    `${API_BASE_URL}/api/v1/servicios/editar/${idServicio}`,
+    `${API_BASE_URL}/servicios/editar/${idServicio}`,
     {
       method: "PUT",
       headers: getAuthHeaders(),
@@ -172,7 +172,7 @@ export const actualizarServicio = async (
 // Eliminar servicio
 export const eliminarServicio = async (idServicio: string): Promise<void> => {
   const response = await fetch(
-    `${API_BASE_URL}/api/v1/servicios/eliminar/${idServicio}`,
+    `${API_BASE_URL}/servicios/eliminar/${idServicio}`,
     {
       method: "DELETE",
       headers: getAuthHeaders(),
