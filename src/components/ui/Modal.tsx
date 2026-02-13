@@ -9,10 +9,10 @@ interface ModalProps {
     title: string;
     description?: string;
     children: React.ReactNode;
-    size?: 'sm' | 'md' | 'lg' | 'xl';
+    size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | 'full';
 }
 
-export function Modal({ isOpen, onClose, title, description, children, size = 'md' }: ModalProps) {
+export function Modal({ isOpen, onClose, title, description, children, size = 'md', className }: ModalProps & { className?: string }) {
     const modalRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -38,6 +38,10 @@ export function Modal({ isOpen, onClose, title, description, children, size = 'm
         md: "max-w-md",
         lg: "max-w-xl",
         xl: "max-w-4xl",
+        "2xl": "max-w-5xl",
+        "3xl": "max-w-6xl",
+        "4xl": "max-w-7xl",
+        full: "max-w-full mx-4",
     };
 
     return createPortal(
@@ -53,7 +57,8 @@ export function Modal({ isOpen, onClose, title, description, children, size = 'm
                 ref={modalRef}
                 className={cn(
                     "relative w-full bg-white rounded-2xl shadow-soft-xl border border-secondary-200 overflow-hidden flex flex-col max-h-[90vh] animate-scale-in",
-                    sizes[size]
+                    sizes[size],
+                    className
                 )}
             >
                 {/* Header */}
