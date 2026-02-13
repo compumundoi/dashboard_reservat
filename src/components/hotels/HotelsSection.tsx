@@ -8,6 +8,7 @@ import { CreateHotelModal } from './CreateHotelModal';
 import { HotelStarsChart } from './HotelStarsChart';
 import { HotelServicesChart } from './HotelServicesChart';
 import { Download, Plus, Hotel, CheckCircle, LayoutList, Building } from 'lucide-react';
+import { Button } from '../ui/Button';
 import Swal from 'sweetalert2';
 import * as XLSX from 'xlsx';
 
@@ -446,21 +447,22 @@ export const HotelsSection: React.FC = () => {
           </div>
           <p className="text-gray-600 mt-2">Administra todos los hoteles del sistema</p>
         </div>
-        <div className="flex items-center space-x-3">
-          <button
+        <div className="flex items-center gap-3">
+          <Button
             onClick={handleExportHotels}
-            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+            className="flex items-center gap-2"
           >
-            <Download className="h-5 w-5" />
+            <Download className="h-4 w-4" />
             <span>Exportar Hoteles</span>
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => setCreateOpen(true)}
-            className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
+            variant="primary"
+            className="flex items-center gap-2"
           >
-            <Plus className="h-5 w-5" />
+            <Plus className="h-4 w-4" />
             <span>Crear Hotel</span>
-          </button>
+          </Button>
         </div>
       </div>
 

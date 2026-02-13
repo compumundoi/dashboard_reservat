@@ -70,4 +70,17 @@ export interface HotelUnificado {
   check_out?: string;
   recepcion_24_horas: boolean;
   piscina: boolean;
+  servicio_restaurante: boolean;
+  parqueadero: boolean;
+  pet_friendly: boolean;
+  rampa_discapacitado: boolean;
+  bar: boolean;
+  room_service: boolean;
+  asensor: boolean;
+  auditorio: boolean;
+  planta_energia: boolean;
+  precio_ascendente?: number;
+  tipo_habitacion?: string;
+  admite_mascotas?: boolean;
+  tiene_estacionamiento?: boolean;
 }

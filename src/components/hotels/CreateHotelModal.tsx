@@ -1,14 +1,12 @@
 import React, { useState } from 'react';
-import ReactDOM from 'react-dom';
-import { X, Save, PlusCircle } from 'lucide-react';
+import { Save, Building, Info } from 'lucide-react';
+import { Modal } from '../ui/Modal';
+import { Button } from '../ui/Button';
+import { Input } from '../ui/Input';
+import { Select } from '../ui/Select';
+import { Textarea } from '../ui/Textarea';
 
-interface CreateHotelModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSave: (payload: any) => void;
-  loading: boolean;
-}
-
+// ... (keep initialForm same as before or define it here if not exported)
 // Formulario inicial con valores por defecto
 const initialForm = {
   proveedor: {
@@ -56,6 +54,13 @@ const initialForm = {
   },
 };
 
+interface CreateHotelModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (payload: typeof initialForm) => void;
+  loading: boolean;
+}
+
 export const CreateHotelModal: React.FC<CreateHotelModalProps> = ({
   isOpen,
   onClose,
@@ -64,7 +69,7 @@ export const CreateHotelModal: React.FC<CreateHotelModalProps> = ({
 }) => {
   const [form, setForm] = useState(initialForm);
 
-  const updateProveedorField = (field: string, value: any) => {
+  const updateProveedorField = (field: string, value: string | number | boolean) => {
     setForm(prev => ({
       ...prev,
       proveedor: {
@@ -74,7 +79,7 @@ export const CreateHotelModal: React.FC<CreateHotelModalProps> = ({
     }));
   };
 
-  const updateHotelField = (field: string, value: any) => {
+  const updateHotelField = (field: string, value: string | number | boolean) => {
     setForm(prev => ({
       ...prev,
       hotel: {
@@ -86,7 +91,7 @@ export const CreateHotelModal: React.FC<CreateHotelModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validaciones básicas
     if (!form.proveedor.nombre.trim()) {
       alert('El nombre del proveedor es requerido');
@@ -130,392 +135,248 @@ export const CreateHotelModal: React.FC<CreateHotelModalProps> = ({
     onClose();
   };
 
-  if (!isOpen) return null;
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={handleClose}
+      title="Crear Nuevo Hotel"
+      description="Completa la información del proveedor y hotel"
+      size="3xl"
+    >
+      <form onSubmit={handleSubmit} className="space-y-8">
 
-  const modalContent = (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl shadow-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white rounded-t-xl">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <PlusCircle className="h-5 w-5 text-blue-600" />
+        {/* Información del Proveedor */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 pb-2 border-b border-secondary-100">
+            <div className="p-1.5 bg-primary-100 text-primary-700 rounded-lg">
+              <Info className="w-4 h-4" />
             </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">Crear Nuevo Hotel</h3>
-              <p className="text-sm text-gray-600">Completa la información del proveedor y hotel</p>
+            <h4 className="font-semibold text-secondary-900">Información del Proveedor</h4>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <Input
+              label="Nombre del Hotel *"
+              placeholder="Ej: Hotel Paradise"
+              value={form.proveedor.nombre}
+              onChange={(e) => updateProveedorField('nombre', e.target.value)}
+              required
+            />
+            <Input
+              label="Email *"
+              type="email"
+              placeholder="hotel@ejemplo.com"
+              value={form.proveedor.email}
+              onChange={(e) => updateProveedorField('email', e.target.value)}
+              required
+            />
+            <Input
+              label="Teléfono *"
+              type="tel"
+              placeholder="1234567890"
+              value={form.proveedor.telefono}
+              onChange={(e) => updateProveedorField('telefono', e.target.value)}
+              required
+            />
+            <Input
+              label="Ciudad *"
+              placeholder="Bogotá"
+              value={form.proveedor.ciudad}
+              onChange={(e) => updateProveedorField('ciudad', e.target.value)}
+              required
+            />
+            <Input
+              label="País *"
+              placeholder="Colombia"
+              value={form.proveedor.pais}
+              onChange={(e) => updateProveedorField('pais', e.target.value)}
+              required
+            />
+            <Input
+              label="Sitio Web"
+              type="url"
+              placeholder="https://hotel.com"
+              value={form.proveedor.sitio_web}
+              onChange={(e) => updateProveedorField('sitio_web', e.target.value)}
+            />
+            <Input
+              label="Dirección"
+              placeholder="Calle Principal 123"
+              value={form.proveedor.direccion}
+              onChange={(e) => updateProveedorField('direccion', e.target.value)}
+            />
+            <Input
+              label="Ubicación (Barrio/Zona)"
+              placeholder="Centro"
+              value={form.proveedor.ubicacion}
+              onChange={(e) => updateProveedorField('ubicacion', e.target.value)}
+            />
+            <Input
+              label="Rating Promedio"
+              type="number"
+              min={1}
+              max={5}
+              step={0.1}
+              value={form.proveedor.rating_promedio}
+              onChange={(e) => updateProveedorField('rating_promedio', parseFloat(e.target.value))}
+            />
+            <Select
+              label="Tipo Documento"
+              value={form.proveedor.tipo_documento}
+              onChange={(e) => updateProveedorField('tipo_documento', e.target.value)}
+              options={[
+                { value: 'NIT', label: 'NIT' },
+                { value: 'CC', label: 'Cédula' },
+                { value: 'CE', label: 'Cédula Extranjería' },
+                { value: 'RUT', label: 'RUT' },
+              ]}
+            />
+            <Input
+              label="Número Documento"
+              placeholder="123456789"
+              value={form.proveedor.numero_documento}
+              onChange={(e) => updateProveedorField('numero_documento', e.target.value)}
+            />
+
+            <div className="flex items-center h-full pt-6">
+              <label className="flex items-center gap-2 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={form.proveedor.verificado}
+                  onChange={(e) => updateProveedorField('verificado', e.target.checked)}
+                  className="w-4 h-4 text-primary-600 rounded border-secondary-300 focus:ring-primary-500 transition duration-150 ease-in-out"
+                />
+                <span className="text-sm text-secondary-700 group-hover:text-secondary-900">Verificado</span>
+              </label>
             </div>
           </div>
-          <button
-            onClick={handleClose}
-            className="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100"
-          >
-            <X className="h-5 w-5" />
-          </button>
+          <Textarea
+            label="Descripción"
+            placeholder="Descripción del hotel..."
+            value={form.proveedor.descripcion}
+            onChange={(e) => updateProveedorField('descripcion', e.target.value)}
+            rows={3}
+          />
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6">
-          <div className="space-y-8">
-            {/* Información del Proveedor */}
-            <div className="bg-blue-50 rounded-xl p-6">
-              <h4 className="text-xl font-semibold text-gray-900 mb-6">
-                📋 Información del Proveedor
-              </h4>
+        {/* Información del Hotel */}
+        <div className="space-y-4 pt-4 border-t border-secondary-100">
+          <div className="flex items-center gap-2 pb-2 border-b border-secondary-100">
+            <div className="p-1.5 bg-success-100 text-success-700 rounded-lg">
+              <Building className="w-4 h-4" />
+            </div>
+            <h4 className="font-semibold text-secondary-900">Detalles del Hotel</h4>
+          </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Nombre del Hotel *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={form.proveedor.nombre}
-                    onChange={(e) => updateProveedorField('nombre', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Ej: Hotel Paradise"
-                  />
-                </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <Input
+              label="Estrellas"
+              type="number"
+              min={1}
+              max={5}
+              value={form.hotel.estrellas}
+              onChange={(e) => updateHotelField('estrellas', parseInt(e.target.value))}
+            />
+            <Input
+              label="Número de Habitaciones"
+              type="number"
+              min={1}
+              value={form.hotel.numero_habitaciones}
+              onChange={(e) => updateHotelField('numero_habitaciones', parseInt(e.target.value))}
+            />
+            <Select
+              label="Tipo de Habitación"
+              value={form.hotel.tipo_habitacion}
+              onChange={(e) => updateHotelField('tipo_habitacion', e.target.value)}
+              options={[
+                { value: 'Standard', label: 'Standard' },
+                { value: 'Superior', label: 'Superior' },
+                { value: 'Deluxe', label: 'Deluxe' },
+                { value: 'Suite', label: 'Suite' },
+                { value: 'Presidential', label: 'Presidential' },
+              ]}
+            />
+            <Input
+              label="Check-in"
+              type="time"
+              value={form.hotel.check_in}
+              onChange={(e) => updateHotelField('check_in', e.target.value)}
+            />
+            <Input
+              label="Check-out"
+              type="time"
+              value={form.hotel.check_out}
+              onChange={(e) => updateHotelField('check_out', e.target.value)}
+            />
+            <Input
+              label="Precio Base"
+              type="number"
+              min={0}
+              step={0.01}
+              value={form.hotel.precio_ascendente}
+              onChange={(e) => updateHotelField('precio_ascendente', parseFloat(e.target.value))}
+            />
+          </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Email *
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    value={form.proveedor.email}
-                    onChange={(e) => updateProveedorField('email', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="hotel@ejemplo.com"
-                  />
-                </div>
+          <Textarea
+            label="Servicios Incluidos"
+            placeholder="Desayuno, WiFi, Parking, etc..."
+            value={form.hotel.servicios_incluidos}
+            onChange={(e) => updateHotelField('servicios_incluidos', e.target.value)}
+            rows={3}
+          />
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Teléfono *
-                  </label>
-                  <input
-                    type="tel"
-                    required
-                    value={form.proveedor.telefono}
-                    onChange={(e) => updateProveedorField('telefono', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="1234567890"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Ciudad *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={form.proveedor.ciudad}
-                    onChange={(e) => updateProveedorField('ciudad', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Bogotá"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    País *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={form.proveedor.pais}
-                    onChange={(e) => updateProveedorField('pais', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Colombia"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Sitio Web
-                  </label>
-                  <input
-                    type="url"
-                    value={form.proveedor.sitio_web}
-                    onChange={(e) => updateProveedorField('sitio_web', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="https://hotel.com"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Dirección
-                  </label>
-                  <input
-                    type="text"
-                    value={form.proveedor.direccion}
-                    onChange={(e) => updateProveedorField('direccion', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Calle Principal 123"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Ubicación
-                  </label>
-                  <input
-                    type="text"
-                    value={form.proveedor.ubicacion}
-                    onChange={(e) => updateProveedorField('ubicacion', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Centro"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Rating Promedio
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="5"
-                    step="0.1"
-                    value={form.proveedor.rating_promedio}
-                    onChange={(e) => updateProveedorField('rating_promedio', parseFloat(e.target.value))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Tipo Documento
-                  </label>
-                  <select
-                    value={form.proveedor.tipo_documento}
-                    onChange={(e) => updateProveedorField('tipo_documento', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="NIT">NIT</option>
-                    <option value="CC">Cédula</option>
-                    <option value="CE">Cédula Extranjería</option>
-                    <option value="RUT">RUT</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Número Documento
-                  </label>
-                  <input
-                    type="text"
-                    value={form.proveedor.numero_documento}
-                    onChange={(e) => updateProveedorField('numero_documento', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="123456789"
-                  />
-                </div>
-
-                <div className="flex items-center">
+          <div className="space-y-3">
+            <h5 className="text-sm font-medium text-secondary-700">Servicios y Facilidades</h5>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+              {[
+                { key: 'recepcion_24_horas', label: 'Recepción 24h' },
+                { key: 'piscina', label: 'Piscina' },
+                { key: 'admite_mascotas', label: 'Admite Mascotas' },
+                { key: 'pet_friendly', label: 'Pet Friendly' },
+                { key: 'tiene_estacionamiento', label: 'Estacionamiento' },
+                { key: 'servicio_restaurante', label: 'Restaurante' },
+                { key: 'bar', label: 'Bar' },
+                { key: 'room_service', label: 'Room Service' },
+                { key: 'asensor', label: 'Ascensor' },
+                { key: 'rampa_discapacitado', label: 'Rampa Discapacitados' },
+                { key: 'auditorio', label: 'Auditorio' },
+                { key: 'parqueadero', label: 'Parqueadero' },
+                { key: 'planta_energia', label: 'Planta Energía' },
+              ].map((service) => (
+                <label key={service.key} className="flex items-center gap-2 cursor-pointer group p-2 hover:bg-secondary-50 rounded-lg transition-colors border border-transparent hover:border-secondary-100">
                   <input
                     type="checkbox"
-                    id="verificado"
-                    checked={form.proveedor.verificado}
-                    onChange={(e) => updateProveedorField('verificado', e.target.checked)}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    checked={form.hotel[service.key as keyof typeof form.hotel] as boolean}
+                    onChange={(e) => updateHotelField(service.key, e.target.checked)}
+                    className="w-4 h-4 text-primary-600 rounded border-secondary-300 focus:ring-primary-500 transition duration-150 ease-in-out"
                   />
-                  <label htmlFor="verificado" className="ml-2 block text-sm text-gray-900">
-                    Verificado
-                  </label>
-                </div>
-              </div>
-
-              <div className="mt-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Descripción
+                  <span className="text-sm text-secondary-700 group-hover:text-secondary-900">{service.label}</span>
                 </label>
-                <textarea
-                  value={form.proveedor.descripcion}
-                  onChange={(e) => updateProveedorField('descripcion', e.target.value)}
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Descripción del hotel..."
-                />
-              </div>
-            </div>
-
-            {/* Información del Hotel */}
-            <div className="bg-green-50 rounded-xl p-6">
-              <h4 className="text-xl font-semibold text-gray-900 mb-6">
-                🏨 Detalles del Hotel
-              </h4>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Estrellas
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="5"
-                    value={form.hotel.estrellas}
-                    onChange={(e) => updateHotelField('estrellas', parseInt(e.target.value))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Número de Habitaciones
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    value={form.hotel.numero_habitaciones}
-                    onChange={(e) => updateHotelField('numero_habitaciones', parseInt(e.target.value))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Tipo de Habitación
-                  </label>
-                  <select
-                    value={form.hotel.tipo_habitacion}
-                    onChange={(e) => updateHotelField('tipo_habitacion', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="Standard">Standard</option>
-                    <option value="Superior">Superior</option>
-                    <option value="Deluxe">Deluxe</option>
-                    <option value="Suite">Suite</option>
-                    <option value="Presidential">Presidential</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Check-in
-                  </label>
-                  <input
-                    type="time"
-                    value={form.hotel.check_in}
-                    onChange={(e) => updateHotelField('check_in', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Check-out
-                  </label>
-                  <input
-                    type="time"
-                    value={form.hotel.check_out}
-                    onChange={(e) => updateHotelField('check_out', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Precio Base
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={form.hotel.precio_ascendente}
-                    onChange={(e) => updateHotelField('precio_ascendente', parseFloat(e.target.value))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-              </div>
-
-              <div className="mt-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Servicios Incluidos
-                </label>
-                <textarea
-                  value={form.hotel.servicios_incluidos}
-                  onChange={(e) => updateHotelField('servicios_incluidos', e.target.value)}
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Desayuno, WiFi, Parking, etc..."
-                />
-              </div>
-
-              {/* Servicios y Facilidades */}
-              <div className="mt-6">
-                <h5 className="text-lg font-medium text-gray-900 mb-4">Servicios y Facilidades</h5>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {[
-                    { key: 'recepcion_24_horas', label: 'Recepción 24h' },
-                    { key: 'piscina', label: 'Piscina' },
-                    { key: 'admite_mascotas', label: 'Admite Mascotas' },
-                    { key: 'pet_friendly', label: 'Pet Friendly' },
-                    { key: 'tiene_estacionamiento', label: 'Estacionamiento' },
-                    { key: 'servicio_restaurante', label: 'Restaurante' },
-                    { key: 'bar', label: 'Bar' },
-                    { key: 'room_service', label: 'Room Service' },
-                    { key: 'asensor', label: 'Ascensor' },
-                    { key: 'rampa_discapacitado', label: 'Rampa Discapacitados' },
-                    { key: 'auditorio', label: 'Auditorio' },
-                    { key: 'parqueadero', label: 'Parqueadero' },
-                    { key: 'planta_energia', label: 'Planta Energía' },
-                  ].map((service) => (
-                    <div key={service.key} className="flex items-center">
-                      <input
-                        type="checkbox"
-                        id={service.key}
-                        checked={form.hotel[service.key as keyof typeof form.hotel] as boolean}
-                        onChange={(e) => updateHotelField(service.key, e.target.checked)}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                      />
-                      <label htmlFor={service.key} className="ml-2 block text-sm text-gray-900">
-                        {service.label}
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              ))}
             </div>
           </div>
 
-          {/* Footer */}
-          <div className="flex justify-end space-x-3 mt-8 pt-6 border-t border-gray-200">
-            <button
-              type="button"
-              onClick={handleClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
-            >
-              {loading ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Creando...
-                </>
-              ) : (
-                <>
-                  <Save className="h-4 w-4 mr-2" />
-                  Crear Hotel
-                </>
-              )}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        </div>
+
+        {/* Footer */}
+        <div className="flex justify-end gap-3 pt-6 border-t border-secondary-100">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleClose}
+          >
+            Cancelar
+          </Button>
+          <Button
+            type="submit"
+            isLoading={loading}
+            leftIcon={!loading && <Save className="h-4 w-4" />}
+          >
+            {loading ? 'Creando...' : 'Crear Hotel'}
+          </Button>
+        </div>
+      </form>
+    </Modal>
   );
-
-  return ReactDOM.createPortal(modalContent, document.body);
 };

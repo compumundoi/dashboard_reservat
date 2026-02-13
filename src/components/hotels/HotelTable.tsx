@@ -1,6 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, ChevronLeft, ChevronRight, X, CheckCircle, XCircle, MapPin, Star, Eye, Edit, Trash2, Building, Phone, Mail } from 'lucide-react';
 import { HotelUnificado } from '../../types/hotel';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/Table';
+import { Badge } from '../ui/Badge';
+import { Button } from '../ui/Button';
+import { Input } from '../ui/Input';
+import { Select } from '../ui/Select';
+import { cn } from '../../lib/utils';
 
 interface HotelTableProps {
   hotels: HotelUnificado[];
@@ -37,66 +43,74 @@ export const HotelTable: React.FC<HotelTableProps> = ({
   onEdit,
   onDelete
 }) => {
-  const [localSearchTerm, setLocalSearchTerm] = useState('');
-  const [searchTimeout, setSearchTimeout] = useState<number | null>(null);
+  const [localSearchTerm, setLocalSearchTerm] = useState(searchTerm);
+
+  // Sync local search term with prop when it changes externally (e.g. clear)
+  useEffect(() => {
+    setLocalSearchTerm(searchTerm);
+  }, [searchTerm]);
 
   const safeHotels = Array.isArray(hotels) ? hotels : [];
   const displayHotels = safeHotels;
-  // Funciones auxiliares
+
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (localSearchTerm !== searchTerm) {
+        onSearchChange(localSearchTerm);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [localSearchTerm, onSearchChange, searchTerm]);
+
   const getVerificationBadge = (isVerified: boolean) => {
     return (
-      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-        isVerified 
-          ? 'bg-green-100 text-green-800' 
-          : 'bg-red-100 text-red-800'
-      }`}>
+      <Badge variant={isVerified ? 'success' : 'error'} className="gap-1">
         {isVerified ? (
           <>
-            <CheckCircle className="h-3 w-3 mr-1" />
+            <CheckCircle className="h-3 w-3" />
             Verificado
           </>
         ) : (
           <>
-            <XCircle className="h-3 w-3 mr-1" />
+            <XCircle className="h-3 w-3" />
             No Verificado
           </>
         )}
-      </span>
+      </Badge>
     );
   };
 
   const getStarRating = (rating: number) => {
     return (
-      <div className="flex items-center">
+      <div className="flex items-center" title={`${rating} estrellas`}>
         {[...Array(5)].map((_, i) => (
           <Star
             key={i}
-            className={`h-4 w-4 ${
-              i < rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
-            }`}
+            className={cn(
+              "h-3.5 w-3.5",
+              i < rating ? "text-yellow-400 fill-current" : "text-gray-300"
+            )}
           />
         ))}
-        <span className="ml-1 text-xs text-gray-600">{rating}</span>
+        <span className="ml-1.5 text-xs font-medium text-secondary-600">{rating}</span>
       </div>
     );
   };
 
   const getServiceBadge = (hasService: boolean) => {
     return (
-      <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-        hasService
-          ? 'bg-green-100 text-green-800'
-          : 'bg-gray-100 text-gray-800'
-      }`}>
+      <Badge variant={hasService ? 'success' : 'secondary'} className="px-1.5 py-0 text-[10px]">
         {hasService ? 'Sí' : 'No'}
-      </span>
+      </Badge>
     );
   };
 
   const generatePageNumbers = () => {
     const pages = [];
     const maxVisiblePages = 5;
-    
+
     if (totalPages <= maxVisiblePages) {
       for (let i = 1; i <= totalPages; i++) {
         pages.push(i);
@@ -124,319 +138,258 @@ export const HotelTable: React.FC<HotelTableProps> = ({
         pages.push(totalPages);
       }
     }
-    
-    return pages;
-  };
 
-  const handleLocalSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setLocalSearchTerm(value);
-    
-    if (searchTimeout) {
-      clearTimeout(searchTimeout);
-    }
-    
-    const newTimeout = setTimeout(() => {
-      onSearchChange(value);
-    }, 500);
-    
-    setSearchTimeout(newTimeout);
+    return pages;
   };
 
   const handleClearSearch = () => {
     setLocalSearchTerm('');
-    if (searchTimeout) {
-      clearTimeout(searchTimeout);
-    }
     onClearSearch();
   };
 
   if (loading) {
     return (
-      <div className="bg-white rounded-xl shadow-sm p-8">
-        <div className="animate-pulse">
-          <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
-          <div className="space-y-3">
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <div className="h-10 w-64 bg-gray-100 rounded-xl animate-pulse" />
+          <div className="h-10 w-32 bg-gray-100 rounded-xl animate-pulse" />
+        </div>
+        <div className="rounded-xl border border-secondary-200 bg-white shadow-soft-sm overflow-hidden">
+          <div className="space-y-4 p-6">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-4 bg-gray-200 rounded"></div>
+              <div key={i} className="flex space-x-4">
+                <div className="h-12 w-12 rounded-full bg-gray-100 animate-pulse" />
+                <div className="flex-1 space-y-2 py-1">
+                  <div className="h-4 bg-gray-100 rounded w-3/4 animate-pulse" />
+                  <div className="h-4 bg-gray-100 rounded w-1/2 animate-pulse" />
+                </div>
+              </div>
             ))}
           </div>
         </div>
       </div>
-    );
+    )
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-sm">
+    <div className="space-y-4">
       {/* Search Header */}
-      <div className="p-6 border-b border-gray-200">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">
-            {isSearching ? (
-              <span>
-                Resultados de búsqueda: <span className="text-blue-600">{totalHotels}</span> hoteles encontrados
-                {searchTerm && (
-                  <span className="text-sm font-normal text-gray-600 ml-2">
-                    para "{searchTerm}"
-                  </span>
-                )}
-              </span>
-            ) : (
-              `Lista de Hoteles (${totalHotels} total)`
-            )}
-          </h3>
-          
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-600">Mostrar:</span>
-            <select
+      <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center bg-white p-4 rounded-xl border border-secondary-200 shadow-soft-sm">
+        <div className="w-full sm:w-72 md:w-96">
+          <Input
+            placeholder="Buscar por proveedor, ciudad..."
+            value={localSearchTerm}
+            onChange={(e) => setLocalSearchTerm(e.target.value)}
+            leftIcon={<Search className="h-4 w-4" />}
+            rightIcon={
+              (localSearchTerm || isSearching) ? (
+                <button onClick={handleClearSearch} className="hover:bg-secondary-100 p-1 rounded-full text-secondary-500">
+                  <X className="h-3 w-3" />
+                </button>
+              ) : undefined
+            }
+            className={isSearching ? 'border-primary-300 bg-primary-50/30' : ''}
+          />
+        </div>
+
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="flex items-center gap-2 text-sm text-secondary-600 whitespace-nowrap">
+            <span>Mostrar:</span>
+            <Select
               value={pageSize}
               onChange={(e) => onPageSizeChange(Number(e.target.value))}
-              className="border border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
-            >
-              <option value={5}>5</option>
-              <option value={10}>10</option>
-              <option value={20}>20</option>
-              <option value={50}>50</option>
-            </select>
-            <span className="text-sm text-gray-600">por página</span>
+              className="w-20 h-9"
+              options={[
+                { value: 5, label: '5' },
+                { value: 10, label: '10' },
+                { value: 20, label: '20' },
+                { value: 50, label: '50' },
+              ]}
+            />
           </div>
         </div>
-        
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className={`h-5 w-5 ${isSearching ? 'text-blue-500' : 'text-gray-400'}`} />
-          </div>
-          <input
-            type="text"
-            placeholder="Buscar hoteles por proveedor, ciudad, país..."
-            value={localSearchTerm}
-            onChange={handleLocalSearchChange}
-            className={`block w-full pl-10 pr-12 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
-              isSearching ? 'border-blue-300 bg-blue-50' : 'border-gray-300'
-            }`}
-          />
-          {(localSearchTerm || isSearching) && (
-            <button
-              onClick={handleClearSearch}
-              className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-              title="Limpiar búsqueda"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          )}
-        </div>
-        
-        {isSearching && (
-          <div className="mt-2 text-sm text-blue-600 flex items-center">
-            <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mr-2"></div>
-            Buscando en toda la base de datos...
-          </div>
-        )}
       </div>
 
+      {isSearching && (
+        <div className="bg-primary-50 text-primary-700 px-4 py-2 rounded-lg text-sm flex items-center animate-fade-in border border-primary-100">
+          <Search className="w-4 h-4 mr-2 animate-pulse" />
+          Resultados de búsqueda: <span className="font-semibold mx-1">{totalHotels}</span> hoteles encontrados
+          {searchTerm && <span> para "{searchTerm}"</span>}
+        </div>
+      )}
+
       {/* Table */}
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Proveedor
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Ubicación
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Hotel
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Servicios
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Estado
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Documento
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Acciones
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {displayHotels.map((hotel) => (
-              <tr key={hotel.id_hotel} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0 h-10 w-10">
-                      <div className="h-10 w-10 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center">
-                        <span className="text-sm font-medium text-white">
-                          {hotel.nombre_proveedor.charAt(0).toUpperCase()}
-                        </span>
-                      </div>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Proveedor</TableHead>
+            <TableHead>Ubicación</TableHead>
+            <TableHead>Hotel</TableHead>
+            <TableHead>Servicios</TableHead>
+            <TableHead>Estado</TableHead>
+            <TableHead>Documento</TableHead>
+            <TableHead className="text-right">Acciones</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {displayHotels.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={7} className="h-64 text-center">
+                <div className="flex flex-col items-center justify-center text-secondary-400">
+                  <Search className="h-12 w-12 mb-4 opacity-20" />
+                  <p className="text-lg font-medium text-secondary-900">No se encontraron hoteles</p>
+                  <p className="text-sm">Intenta ajustar los filtros de búsqueda</p>
+                  {(localSearchTerm || isSearching) && (
+                    <Button variant="ghost" onClick={handleClearSearch} className="mt-4 text-primary-600">
+                      Limpiar búsqueda
+                    </Button>
+                  )}
+                </div>
+              </TableCell>
+            </TableRow>
+          ) : (
+            displayHotels.map((hotel) => (
+              <TableRow key={hotel.id_hotel}>
+                <TableCell>
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center text-primary-700 font-bold border border-primary-200 shadow-sm shrink-0">
+                      {hotel.nombre_proveedor.charAt(0).toUpperCase()}
                     </div>
-                    <div className="ml-4">
-                      <div className="text-sm font-medium text-gray-900">
+                    <div className="min-w-0">
+                      <div className="font-medium text-secondary-900 truncate max-w-[180px]" title={hotel.nombre_proveedor}>
                         {hotel.nombre_proveedor}
                       </div>
-                      <div className="text-sm text-gray-500 flex items-center">
-                        <Mail className="h-3 w-3 mr-1" />
-                        {hotel.email || 'N/A'}
-                      </div>
-                      <div className="flex items-center mt-1">
-                        <Phone className="h-3 w-3 text-gray-400 mr-1" />
-                        <span className="text-xs text-gray-600">
-                          {hotel.telefono || 'N/A'}
-                        </span>
+                      <div className="flex flex-col gap-0.5 mt-0.5">
+                        <div className="flex items-center text-xs text-secondary-500">
+                          <Mail className="h-3 w-3 mr-1 shrink-0" />
+                          <span className="truncate max-w-[150px]">{hotel.email || 'N/A'}</span>
+                        </div>
+                        <div className="flex items-center text-xs text-secondary-500">
+                          <Phone className="h-3 w-3 mr-1 shrink-0" />
+                          <span>{hotel.telefono || 'N/A'}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center text-sm text-gray-900">
-                    <MapPin className="h-4 w-4 text-gray-400 mr-1" />
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-start gap-2 max-w-[150px]">
+                    <MapPin className="h-4 w-4 text-secondary-400 shrink-0 mt-0.5" />
                     <div>
-                      <div>{hotel.ciudad}</div>
-                      <div className="text-xs text-gray-500">{hotel.pais}</div>
+                      <div className="font-medium text-secondary-900 leading-tight">{hotel.ciudad}</div>
+                      <div className="text-xs text-secondary-500 mt-0.5">{hotel.pais}</div>
                     </div>
                   </div>
-                </td>
-              <td className="px-6 py-4">
-                <div className="space-y-1">
-                  {getStarRating(hotel.estrellas || 0)}
-                  <div className="flex items-center text-sm text-gray-600">
-                    <Building className="h-3 w-3 mr-1" />
-                    {hotel.numero_habitaciones || 0} habitaciones
+                </TableCell>
+                <TableCell>
+                  <div className="space-y-1.5">
+                    {getStarRating(hotel.estrellas || 0)}
+                    <div className="flex items-center text-xs text-secondary-600 bg-secondary-50 px-2 py-1 rounded-md w-fit border border-secondary-100">
+                      <Building className="h-3 w-3 mr-1.5" />
+                      {hotel.numero_habitaciones || 0} habs
+                    </div>
                   </div>
-                </div>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                <div className="space-y-1">
-                  <div className="flex items-center space-x-1">
-                    <span className="text-xs">24h:</span>
-                    {getServiceBadge(hotel.recepcion_24_horas || false)}
+                </TableCell>
+                <TableCell>
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between gap-2 max-w-[100px]">
+                      <span className="text-xs text-secondary-600">24h</span>
+                      {getServiceBadge(hotel.recepcion_24_horas || false)}
+                    </div>
+                    <div className="flex items-center justify-between gap-2 max-w-[100px]">
+                      <span className="text-xs text-secondary-600">Piscina</span>
+                      {getServiceBadge(hotel.piscina || false)}
+                    </div>
                   </div>
-                  <div className="flex items-center space-x-1">
-                    <span className="text-xs">Piscina:</span>
-                    {getServiceBadge(hotel.piscina || false)}
+                </TableCell>
+                <TableCell>
+                  {getVerificationBadge(hotel.verificado || false)}
+                </TableCell>
+                <TableCell>
+                  <div className="space-y-0.5">
+                    <div className="text-xs font-semibold text-secondary-700 bg-secondary-100 px-2 py-0.5 rounded w-fit">
+                      {hotel.tipo_documento || 'N/A'}
+                    </div>
+                    <div className="text-xs text-secondary-500 font-mono pl-0.5">
+                      {hotel.numero_documento || 'N/A'}
+                    </div>
                   </div>
-                </div>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                {getVerificationBadge(hotel.verificado || false)}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                <div className="space-y-1">
-                  <div className="text-xs font-medium">{hotel.tipo_documento || 'N/A'}</div>
-                  <div className="text-xs text-gray-400">{hotel.numero_documento || 'N/A'}</div>
-                </div>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => onView(hotel.id_hotel)}
-                    className="text-blue-600 hover:text-blue-900 p-2 rounded-lg hover:bg-blue-50 transition-colors"
-                    title="Ver detalles"
-                  >
-                    <Eye className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={() => onEdit(hotel.id_hotel)}
-                    className="text-indigo-600 hover:text-indigo-900 p-2 rounded-lg hover:bg-indigo-50 transition-colors"
-                    title="Editar hotel"
-                  >
-                    <Edit className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDelete(hotel.id_hotel);
-                    }}
-                    className="text-red-600 hover:text-red-900 p-2 rounded-lg hover:bg-red-50 transition-colors"
-                    title="Eliminar hotel"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
-              </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        
-        {/* Empty State */}
-        {displayHotels.length === 0 && (
-          <div className="text-center py-12">
-            <div className="text-gray-500">
-              {isSearching || searchTerm ? (
-                <div>
-                  <Search className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                  <p className="text-lg font-medium text-gray-900 mb-2">No se encontraron resultados</p>
-                  <p className="text-gray-500">
-                    No hay hoteles que coincidan con "{searchTerm || localSearchTerm}"
-                  </p>
-                  <button
-                    onClick={handleClearSearch}
-                    className="mt-4 text-blue-600 hover:text-blue-800 font-medium"
-                  >
-                    Limpiar búsqueda
-                  </button>
-                </div>
-              ) : (
-                'No hay hoteles registrados'
-              )}
-            </div>
-          </div>
-        )}
-      </div>
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex items-center justify-end gap-1">
+                    <Button variant="ghost" size="sm" onClick={() => onView(hotel.id_hotel)} className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50" title="Ver detalles">
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => onEdit(hotel.id_hotel)} className="h-8 w-8 p-0 text-amber-600 hover:text-amber-700 hover:bg-amber-50" title="Editar">
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete(hotel.id_hotel);
+                      }}
+                      className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50" title="Eliminar">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
-          <div className="flex flex-col space-y-3">
-            <div className="text-sm text-gray-600">
-              Mostrando {((currentPage - 1) * pageSize) + 1} a {Math.min(currentPage * pageSize, totalHotels)} de {totalHotels} hoteles
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-4 px-2">
+          <div className="text-sm text-secondary-500">
+            Mostrando <span className="font-medium text-secondary-900">{((currentPage - 1) * pageSize) + 1}</span> a <span className="font-medium text-secondary-900">{Math.min(currentPage * pageSize, totalHotels)}</span> de <span className="font-medium text-secondary-900">{totalHotels}</span> hoteles
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onPageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="h-9"
+              leftIcon={<ChevronLeft className="h-4 w-4" />}
+            >
+              Anterior
+            </Button>
+
+            <div className="flex items-center gap-1">
+              {generatePageNumbers().map((page, index) => (
+                <React.Fragment key={index}>
+                  {page === '...' ? (
+                    <span className="px-2 text-secondary-400">...</span>
+                  ) : (
+                    <button
+                      onClick={() => onPageChange(page as number)}
+                      className={cn(
+                        "h-9 w-9 flex items-center justify-center rounded-lg text-sm font-medium transition-colors",
+                        currentPage === page
+                          ? "bg-primary-600 text-white shadow-primary-500/30 shadow-md"
+                          : "text-secondary-600 hover:bg-secondary-100 hover:text-secondary-900"
+                      )}
+                    >
+                      {page}
+                    </button>
+                  )}
+                </React.Fragment>
+              ))}
             </div>
-            
-            <div className="flex items-center justify-end space-x-2">
-              <button
-                onClick={() => onPageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-gray-500"
-              >
-                <ChevronLeft className="h-4 w-4 mr-1" />
-                Anterior
-              </button>
-              
-              <div className="flex items-center space-x-1">
-                {generatePageNumbers().map((page, index) => (
-                  <React.Fragment key={index}>
-                    {page === '...' ? (
-                      <span className="px-3 py-2 text-sm text-gray-500">...</span>
-                    ) : (
-                      <button
-                        onClick={() => onPageChange(page as number)}
-                        className={`px-3 py-2 text-sm font-medium rounded-lg ${
-                          currentPage === page
-                            ? 'bg-blue-600 text-white'
-                            : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
-                        }`}
-                      >
-                        {page}
-                      </button>
-                    )}
-                  </React.Fragment>
-                ))}
-              </div>
-              
-              <button
-                onClick={() => onPageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className="flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-gray-500"
-              >
-                Siguiente
-                <ChevronRight className="h-4 w-4 ml-1" />
-              </button>
-            </div>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onPageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="h-9"
+              rightIcon={<ChevronRight className="h-4 w-4" />}
+            >
+              Siguiente
+            </Button>
           </div>
         </div>
       )}
