@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Search, Loader2 } from 'lucide-react';
 import { buscarServicios, ServicioOption } from '../../services/servicioSearchService';
+import { cn } from '../../lib/utils';
 
 interface ServicioAutocompleteProps {
     value: string;
     selectedName: string;
     onChange: (servicioId: string, nombre: string) => void;
     error?: string;
+    className?: string;
 }
 
 const ServicioAutocomplete: React.FC<ServicioAutocompleteProps> = ({
@@ -14,6 +16,7 @@ const ServicioAutocomplete: React.FC<ServicioAutocompleteProps> = ({
     selectedName,
     onChange,
     error,
+    className
 }) => {
     const [search, setSearch] = useState(selectedName || '');
     const [results, setResults] = useState<ServicioOption[]>([]);
@@ -96,12 +99,12 @@ const ServicioAutocomplete: React.FC<ServicioAutocompleteProps> = ({
     }, [value, selectedName]);
 
     return (
-        <div ref={dropdownRef} className="relative">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+        <div ref={dropdownRef} className={cn("relative", className)}>
+            <label className="block text-sm font-medium text-secondary-700 mb-1.5">
                 Servicio *
             </label>
             <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-secondary-400" />
                 <input
                     type="text"
                     value={search}
@@ -109,38 +112,45 @@ const ServicioAutocomplete: React.FC<ServicioAutocompleteProps> = ({
                     onFocus={() => {
                         if (results.length > 0) setShowDropdown(true);
                     }}
-                    className={`w-full pl-10 pr-10 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${error ? 'border-red-500' : 'border-gray-300'
-                        }`}
+                    className={cn(
+                        "w-full pl-10 pr-10 py-2 border rounded-lg shadow-sm transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-secondary-900 placeholder-secondary-400 text-sm",
+                        error ? "border-error-300 focus:ring-error-500" : "border-secondary-300 hover:border-secondary-400"
+                    )}
                     placeholder="Buscar servicio por nombre..."
                     autoComplete="off"
                 />
                 {loading && (
-                    <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-blue-500 animate-spin" />
+                    <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-primary-500 animate-spin" />
                 )}
             </div>
-            {selectedName && (
-                <p className="text-green-600 text-xs mt-1">✓ Seleccionado: {selectedName}</p>
-            )}
+
             {showDropdown && (
-                <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                <div className="absolute z-50 w-full mt-1 bg-white border border-secondary-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                     {results.length === 0 ? (
-                        <div className="px-4 py-3 text-sm text-gray-500">No se encontraron servicios</div>
+                        <div className="px-4 py-3 text-sm text-secondary-500">No se encontraron servicios</div>
                     ) : (
                         results.map((servicio) => (
                             <button
                                 key={servicio.id_servicio}
                                 type="button"
                                 onClick={() => handleSelect(servicio)}
-                                className="w-full text-left px-4 py-2 text-sm hover:bg-blue-50 transition-colors border-b border-gray-100 last:border-b-0"
+                                className="w-full text-left px-4 py-2.5 text-sm hover:bg-primary-50 transition-colors border-b border-secondary-100 last:border-b-0 group"
                             >
-                                <span className="font-medium text-gray-900">{servicio.nombre || 'Sin nombre'}</span>
-                                <span className="block text-xs text-gray-400 truncate">{servicio.id_servicio}</span>
+                                <span className="font-medium text-secondary-900 block group-hover:text-primary-700">{servicio.nombre || 'Sin nombre'}</span>
+                                <span className="block text-xs text-secondary-500 truncate mt-0.5">{servicio.id_servicio}</span>
                             </button>
                         ))
                     )}
                 </div>
             )}
-            {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
+
+            {error && <p className="mt-1.5 text-sm text-error-600 animate-slide-up ml-1">{error}</p>}
+
+            {selectedName && !error && (
+                <p className="mt-1.5 text-sm text-success-600 ml-1 flex items-center">
+                    <span className="mr-1">✓</span> Seleccionado: {selectedName}
+                </p>
+            )}
         </div>
     );
 };
