@@ -111,10 +111,10 @@ function App() {
 
   if (isCheckingAuth) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-pink-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Verificando autenticación...</p>
+      <div className="min-h-screen bg-secondary-50 flex items-center justify-center">
+        <div className="flex flex-col items-center">
+          <div className="w-16 h-16 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+          <p className="text-secondary-500 font-medium animate-pulse">Cargando ReservaT...</p>
         </div>
       </div>
     );
@@ -125,26 +125,21 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-pink-50 flex items-center justify-center p-4">
-      {/* Background image with 40% opacity */}
-      <div className="absolute inset-0 opacity-40">
-        <div
-          className="w-full h-full bg-cover bg-center bg-no-repeat"
-          style={{
-            backgroundImage: `url('/fondo-login.png')`
-          }}
-        ></div>
+    <div className="min-h-screen bg-secondary-50 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Abstract Background Shapes */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
+        <div className="absolute -top-[30%] -left-[10%] w-[70%] h-[70%] rounded-full bg-gradient-to-br from-primary-400/20 to-transparent blur-3xl animate-fade-in" />
+        <div className="absolute top-[20%] -right-[10%] w-[60%] h-[60%] rounded-full bg-gradient-to-bl from-complementario-1/10 to-transparent blur-3xl animate-fade-in" style={{ animationDelay: '0.2s' }} />
+        <div className="absolute -bottom-[20%] left-[20%] w-[50%] h-[50%] rounded-full bg-gradient-to-t from-primary-600/10 to-transparent blur-3xl animate-fade-in" style={{ animationDelay: '0.4s' }} />
       </div>
 
       {/* Login form container */}
-      <div className="relative z-10 w-full max-w-md">
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-white/20">
-          <LoginForm
-            onSubmit={handleLogin}
-            loading={loading}
-            error={error}
-          />
-        </div>
+      <div className="relative z-10 w-full max-w-md animate-scale-in">
+        <LoginForm
+          onSubmit={handleLogin}
+          loading={loading}
+          error={error}
+        />
       </div>
     </div>
   );

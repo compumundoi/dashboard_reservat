@@ -13,6 +13,8 @@ export interface UserData {
   email: string;
   tipo_usuario: string;
   exp: number;
+  nombre?: string;
+  rol?: string;
 }
 
 export interface ApiError {

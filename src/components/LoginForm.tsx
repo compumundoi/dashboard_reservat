@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, Mail, Lock, AlertCircle } from 'lucide-react';
 import { LoginCredentials } from '../types/auth';
+import { Button, Input, Card } from './ui';
+import { Mail, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react';
 
 interface LoginFormProps {
-  onSubmit: (credentials: LoginCredentials) => void;
+  onSubmit: (credentials: LoginCredentials) => Promise<void>;
   loading: boolean;
   error: string | null;
 }
@@ -15,9 +16,17 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, loading, error }
   });
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(credentials);
+    try {
+      await onSubmit({
+        email: credentials.email,
+        contraseña: credentials.contraseña
+      });
+    } catch (err) {
+      // Error handled by parent
+      console.error(err)
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -29,105 +38,83 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, loading, error }
   };
 
   return (
-    <div className="w-full max-w-md">
-      <div className="text-center mb-8">
-        <img 
-          src="/logo-horizontal-color.png" 
-          alt="ReservaT" 
-          className="h-16 mx-auto mb-4"
-        />
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Bienvenido a ReservaT
+    <div className="w-full max-w-md mx-auto">
+      <div className="mb-8 text-center animate-fade-in">
+        <div className="flex justify-center mb-4">
+          <div className="w-16 h-16 bg-gradient-to-tr from-primary-600 to-primary-400 rounded-2xl flex items-center justify-center shadow-lg shadow-primary-500/30 transform rotate-3">
+            <span className="text-white font-display font-bold text-3xl">R</span>
+          </div>
+        </div>
+        <h1 className="text-3xl font-display font-bold text-secondary-900 mb-2">
+          Bienvenido
         </h1>
-        <p className="text-gray-600">
-          Inicia sesión para acceder al panel de administración
+        <p className="text-secondary-500">
+          Ingresa a tu panel de administración
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center space-x-3">
-            <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
-            <p className="text-red-700 text-sm">{error}</p>
-          </div>
-        )}
+      <Card className="animate-slide-up bg-white/80 backdrop-blur-xl border-white/40 shadow-soft-xl">
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <Input
+            id="email"
+            name="email"
+            label="Correo electrónico"
+            type="email"
+            value={credentials.email}
+            onChange={handleChange}
+            placeholder="nombre@empresa.com"
+            required
+            leftIcon={<Mail className="w-4 h-4" />}
+            className="bg-white/50 focus:bg-white"
+          />
 
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-            Correo Electrónico
-          </label>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Mail className="h-5 w-5 text-gray-400" />
-            </div>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              required
-              autoComplete="email"
-              value={credentials.email}
-              onChange={handleChange}
-              className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-              placeholder="Ingresa tu correo electrónico"
-            />
-          </div>
-        </div>
-
-        <div>
-          <label htmlFor="contraseña" className="block text-sm font-medium text-gray-700 mb-2">
-            Contraseña
-          </label>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Lock className="h-5 w-5 text-gray-400" />
-            </div>
-            <input
+          <div className="space-y-1">
+            <Input
               id="contraseña"
               name="contraseña"
+              label="Contraseña"
               type={showPassword ? 'text' : 'password'}
-              required
-              autoComplete="current-password"
               value={credentials.contraseña}
               onChange={handleChange}
-              className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-              placeholder="Ingresa tu contraseña"
+              placeholder="••••••••"
+              required
+              leftIcon={<Lock className="w-4 h-4" />}
+              rightIcon={
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="focus:outline-none">
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              }
+              className="bg-white/50 focus:bg-white"
             />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute inset-y-0 right-0 pr-3 flex items-center"
-            >
-              {showPassword ? (
-                <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-              ) : (
-                <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-              )}
-            </button>
-          </div>
-        </div>
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 px-4 rounded-lg font-medium hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-[1.02]"
-        >
-          {loading ? (
-            <div className="flex items-center justify-center space-x-2">
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              <span>Iniciando sesión...</span>
+            <div className="flex justify-end">
+              <a href="#" className="text-xs font-medium text-primary-600 hover:text-primary-700 transition-colors">
+                ¿Olvidaste tu contraseña?
+              </a>
             </div>
-          ) : (
-            'Iniciar Sesión'
-          )}
-        </button>
-      </form>
+          </div>
 
-      <div className="mt-8 text-center">
-        <p className="text-xs text-gray-500">
-          © 2024 ReservaT. Todos los derechos reservados.
-        </p>
-      </div>
+          {error && (
+            <div className="p-3 rounded-xl bg-error-50 text-error-700 text-sm flex items-center gap-2 border border-error-100 animate-fade-in">
+              <span className="w-1.5 h-1.5 rounded-full bg-error-500 flex-shrink-0" />
+              {error}
+            </div>
+          )}
+
+          <Button
+            type="submit"
+            className="w-full"
+            size="lg"
+            isLoading={loading}
+            rightIcon={!loading && <ArrowRight className="w-4 h-4" />}
+          >
+            Iniciar Sesión
+          </Button>
+        </form>
+      </Card>
+
+      <p className="text-center mt-6 text-sm text-secondary-400">
+        &copy; {new Date().getFullYear()} Reservat. Todos los derechos reservados.
+      </p>
     </div>
   );
 };
