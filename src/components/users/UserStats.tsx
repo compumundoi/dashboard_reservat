@@ -1,5 +1,5 @@
 import React from 'react';
-import { Users, Shield, Store, UserCheck } from 'lucide-react';
+import { Users, Shield, Store, UserCheck, LucideIcon } from 'lucide-react';
 
 interface UserStatsProps {
   totalUsers: number;
@@ -9,6 +9,13 @@ interface UserStatsProps {
   loading?: boolean;
 }
 
+interface StatItem {
+  title: string;
+  value: number;
+  icon: LucideIcon;
+  color: 'blue' | 'green' | 'orange' | 'purple' | 'indigo';
+}
+
 export const UserStats: React.FC<UserStatsProps> = ({
   totalUsers,
   proveedores,
@@ -16,65 +23,65 @@ export const UserStats: React.FC<UserStatsProps> = ({
   administrativos,
   loading = false
 }) => {
-  const stats = [
+  const stats: StatItem[] = [
     {
       title: 'Total Usuarios',
       value: totalUsers,
       icon: Users,
-      color: 'bg-blue-500',
-      bgColor: 'bg-blue-50',
-      textColor: 'text-blue-700'
+      color: 'blue'
     },
     {
       title: 'Proveedores',
       value: proveedores,
       icon: UserCheck,
-      color: 'bg-green-500',
-      bgColor: 'bg-green-50',
-      textColor: 'text-green-700'
+      color: 'green'
     },
     {
       title: 'Mayoristas',
       value: mayoristas,
       icon: Store,
-      color: 'bg-purple-500',
-      bgColor: 'bg-purple-50',
-      textColor: 'text-purple-700'
+      color: 'purple'
     },
     {
       title: 'Administrativos',
       value: administrativos,
       icon: Shield,
-      color: 'bg-orange-500',
-      bgColor: 'bg-orange-50',
-      textColor: 'text-orange-700'
+      color: 'orange'
     }
   ];
+
+  const getColorClasses = (color: StatItem['color']) => {
+    const classes = {
+      blue: 'bg-blue-50 text-blue-600 icon-text-blue-500',
+      green: 'bg-green-50 text-green-600 icon-text-green-500',
+      purple: 'bg-purple-50 text-purple-600 icon-text-purple-500',
+      orange: 'bg-orange-50 text-orange-600 icon-text-orange-500',
+      indigo: 'bg-indigo-50 text-indigo-600 icon-text-indigo-500',
+    };
+    return classes[color];
+  };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
       {stats.map((stat, index) => {
         const Icon = stat.icon;
+        const colorClass = getColorClasses(stat.color);
+        const [bgColor, textColor, iconColor] = colorClass.split(' ');
+
         return (
-          <div key={index} className={`${stat.bgColor} rounded-xl p-6 border border-gray-100`}>
+          <div key={index} className={`${bgColor} rounded-xl p-6 border border-gray-100`}>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600 mb-1">
-                  {stat.title}
-                </p>
+                <p className="text-sm text-gray-500">{stat.title}</p>
                 {loading ? (
-                  <div className="animate-pulse">
+                  <div className="animate-pulse mt-1">
                     <div className="h-8 bg-gray-200 rounded w-16"></div>
                   </div>
                 ) : (
-                  <p className={`text-3xl font-bold ${stat.textColor}`}>
-                    {stat.value.toLocaleString()}
-                  </p>
+                  <p className={`text-3xl font-bold ${textColor}`}>{stat.value.toLocaleString()}</p>
                 )}
               </div>
-              <div className={`${stat.color} p-3 rounded-lg`}>
-                <Icon className="h-6 w-6 text-white" />
-              </div>
+              <Icon className={`h-8 w-8 ${iconColor.replace('icon-text-', 'text-')}`} />
             </div>
           </div>
         );
