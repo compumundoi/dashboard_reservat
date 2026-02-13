@@ -3,7 +3,8 @@ import ReactDOM from 'react-dom';
 import { X, Package, Building, MapPin } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { CreateServicioModalProps, DatosServicio } from '../../types/servicio';
-import { validarUUID, validarPrecio } from '../../services/servicioService';
+import { validarPrecio } from '../../services/servicioService';
+import ProveedorAutocomplete from '../common/ProveedorAutocomplete';
 
 const CreateServicioModal: React.FC<CreateServicioModalProps> = ({ isOpen, onClose, onSave }) => {
   const [formData, setFormData] = useState<DatosServicio>({
@@ -24,6 +25,7 @@ const CreateServicioModal: React.FC<CreateServicioModalProps> = ({ isOpen, onClo
   });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [selectedProveedorName, setSelectedProveedorName] = useState('');
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -59,9 +61,7 @@ const CreateServicioModal: React.FC<CreateServicioModalProps> = ({ isOpen, onClo
     }
 
     if (!formData.proveedor_id.trim()) {
-      newErrors.proveedor_id = 'El ID del proveedor es requerido';
-    } else if (!validarUUID(formData.proveedor_id)) {
-      newErrors.proveedor_id = 'El ID del proveedor debe ser un UUID válido';
+      newErrors.proveedor_id = 'Debe seleccionar un proveedor';
     }
 
     if (!validarPrecio(formData.precio)) {
@@ -115,6 +115,7 @@ const CreateServicioModal: React.FC<CreateServicioModalProps> = ({ isOpen, onClo
         ubicacion: '',
         detalles_del_servicio: ''
       });
+      setSelectedProveedorName('');
       setErrors({});
     } catch (error) {
       console.error(error);
@@ -145,6 +146,7 @@ const CreateServicioModal: React.FC<CreateServicioModalProps> = ({ isOpen, onClo
       ubicacion: '',
       detalles_del_servicio: ''
     });
+    setSelectedProveedorName('');
     setErrors({});
     onClose();
   };
@@ -247,21 +249,18 @@ const CreateServicioModal: React.FC<CreateServicioModalProps> = ({ isOpen, onClo
                 Información Comercial
               </h3>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  ID del Proveedor *
-                </label>
-                <input
-                  type="text"
-                  name="proveedor_id"
-                  value={formData.proveedor_id}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.proveedor_id ? 'border-red-500' : 'border-gray-300'
-                    }`}
-                  placeholder="UUID del proveedor (ej: 123e4567-e89b-12d3-a456-426614174000)"
-                />
-                {errors.proveedor_id && <p className="text-red-500 text-sm mt-1">{errors.proveedor_id}</p>}
-              </div>
+              <ProveedorAutocomplete
+                value={formData.proveedor_id}
+                selectedName={selectedProveedorName}
+                onChange={(id, nombre) => {
+                  setFormData(prev => ({ ...prev, proveedor_id: id }));
+                  setSelectedProveedorName(nombre);
+                  if (errors.proveedor_id) {
+                    setErrors(prev => ({ ...prev, proveedor_id: '' }));
+                  }
+                }}
+                error={errors.proveedor_id}
+              />
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
