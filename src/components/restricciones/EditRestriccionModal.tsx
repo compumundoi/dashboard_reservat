@@ -4,6 +4,7 @@ import { X, Shield, Save } from 'lucide-react';
 import { RestriccionModalProps } from '../../types/restriccion';
 import { restriccionService } from '../../services/restriccionService';
 import Swal from 'sweetalert2';
+import ServicioAutocomplete from '../common/ServicioAutocomplete';
 
 const EditRestriccionModal: React.FC<RestriccionModalProps> = ({ isOpen, onClose, restriccion, onSave }) => {
   const [formData, setFormData] = useState({
@@ -15,12 +16,13 @@ const EditRestriccionModal: React.FC<RestriccionModalProps> = ({ isOpen, onClose
   });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [selectedServicioName, setSelectedServicioName] = useState('');
 
   useEffect(() => {
     if (restriccion) {
       // Convertir la fecha al formato datetime-local
       const fechaISO = new Date(restriccion.fecha).toISOString().slice(0, 16);
-      
+
       setFormData({
         servicio_id: restriccion.servicio_id,
         fecha: fechaISO,
@@ -28,6 +30,7 @@ const EditRestriccionModal: React.FC<RestriccionModalProps> = ({ isOpen, onClose
         bloqueado_por: restriccion.bloqueado_por,
         bloqueo_activo: restriccion.bloqueo_activo
       });
+      setSelectedServicioName(restriccion.servicio_nombre || '');
     }
   }, [restriccion]);
 
@@ -35,7 +38,7 @@ const EditRestriccionModal: React.FC<RestriccionModalProps> = ({ isOpen, onClose
     const newErrors: Record<string, string> = {};
 
     if (!formData.servicio_id.trim()) {
-      newErrors.servicio_id = 'El ID del servicio es requerido';
+      newErrors.servicio_id = 'Debe seleccionar un servicio';
     }
 
     if (!formData.fecha) {
@@ -64,7 +67,7 @@ const EditRestriccionModal: React.FC<RestriccionModalProps> = ({ isOpen, onClose
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm() || !restriccion) return;
 
     try {
@@ -105,7 +108,7 @@ const EditRestriccionModal: React.FC<RestriccionModalProps> = ({ isOpen, onClose
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
-    
+
     setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value
@@ -140,26 +143,20 @@ const EditRestriccionModal: React.FC<RestriccionModalProps> = ({ isOpen, onClose
         </div>
 
         <form onSubmit={handleSubmit} className="mt-4 space-y-6">
-          {/* ID del Servicio */}
+          {/* Servicio */}
           <div>
-            <label htmlFor="servicio_id" className="block text-sm font-medium text-gray-700">
-              ID del Servicio *
-            </label>
-            <input
-              type="text"
-              id="servicio_id"
-              name="servicio_id"
+            <ServicioAutocomplete
               value={formData.servicio_id}
-              onChange={handleInputChange}
-              className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${
-                errors.servicio_id ? 'border-red-300' : 'border-gray-300'
-              }`}
-              placeholder="Ingresa el ID del servicio (UUID)"
-              disabled={loading}
+              selectedName={selectedServicioName}
+              onChange={(id, nombre) => {
+                setFormData(prev => ({ ...prev, servicio_id: id }));
+                setSelectedServicioName(nombre);
+                if (errors.servicio_id) {
+                  setErrors(prev => ({ ...prev, servicio_id: '' }));
+                }
+              }}
+              error={errors.servicio_id}
             />
-            {errors.servicio_id && (
-              <p className="mt-1 text-sm text-red-600">{errors.servicio_id}</p>
-            )}
           </div>
 
           {/* Fecha */}
@@ -173,9 +170,8 @@ const EditRestriccionModal: React.FC<RestriccionModalProps> = ({ isOpen, onClose
               name="fecha"
               value={formData.fecha}
               onChange={handleInputChange}
-              className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${
-                errors.fecha ? 'border-red-300' : 'border-gray-300'
-              }`}
+              className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${errors.fecha ? 'border-red-300' : 'border-gray-300'
+                }`}
               disabled={loading}
             />
             {errors.fecha && (
@@ -194,9 +190,8 @@ const EditRestriccionModal: React.FC<RestriccionModalProps> = ({ isOpen, onClose
               rows={4}
               value={formData.motivo}
               onChange={handleInputChange}
-              className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${
-                errors.motivo ? 'border-red-300' : 'border-gray-300'
-              }`}
+              className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${errors.motivo ? 'border-red-300' : 'border-gray-300'
+                }`}
               placeholder="Describe el motivo del bloqueo de esta fecha..."
               disabled={loading}
             />
@@ -219,9 +214,8 @@ const EditRestriccionModal: React.FC<RestriccionModalProps> = ({ isOpen, onClose
               name="bloqueado_por"
               value={formData.bloqueado_por}
               onChange={handleInputChange}
-              className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${
-                errors.bloqueado_por ? 'border-red-300' : 'border-gray-300'
-              }`}
+              className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${errors.bloqueado_por ? 'border-red-300' : 'border-gray-300'
+                }`}
               placeholder="Nombre del usuario que realiza el bloqueo"
               disabled={loading}
             />

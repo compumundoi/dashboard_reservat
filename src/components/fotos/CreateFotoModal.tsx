@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import ReactDOM from 'react-dom';
-import { X, Save, Camera, Building, Link, FileText, Hash, Star, Calendar } from 'lucide-react';
+import { X, Save, Camera, Link, FileText, Hash, Star, Calendar } from 'lucide-react';
 import { CreateFotoModalProps, DatosFoto } from '../../types/foto';
-import { validarURLImagen, validarUUID } from '../../services/fotoService';
+import { validarURLImagen } from '../../services/fotoService';
+import ServicioAutocomplete from '../common/ServicioAutocomplete';
 
 const CreateFotoModal: React.FC<CreateFotoModalProps> = ({ isOpen, onClose, onSave }) => {
   const [formData, setFormData] = useState<DatosFoto>({
@@ -16,15 +17,14 @@ const CreateFotoModal: React.FC<CreateFotoModalProps> = ({ isOpen, onClose, onSa
   });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [selectedServicioName, setSelectedServicioName] = useState('');
 
   // Validar formulario
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
     if (!formData.servicio_id) {
-      newErrors.servicio_id = 'El ID del servicio es requerido';
-    } else if (!validarUUID(formData.servicio_id)) {
-      newErrors.servicio_id = 'Debe ser un UUID válido';
+      newErrors.servicio_id = 'Debe seleccionar un servicio';
     }
 
     if (!formData.url) {
@@ -60,12 +60,12 @@ const CreateFotoModal: React.FC<CreateFotoModalProps> = ({ isOpen, onClose, onSa
   // Manejar cambios en el formulario
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
-    
+
     setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked :
-              type === 'number' ? Number(value) :
-              value
+        type === 'number' ? Number(value) :
+          value
     }));
 
     // Limpiar error del campo cuando el usuario empiece a escribir
@@ -80,7 +80,7 @@ const CreateFotoModal: React.FC<CreateFotoModalProps> = ({ isOpen, onClose, onSa
   // Manejar envío del formulario
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
@@ -92,9 +92,9 @@ const CreateFotoModal: React.FC<CreateFotoModalProps> = ({ isOpen, onClose, onSa
         ...formData,
         fecha_subida: new Date(formData.fecha_subida).toISOString()
       };
-      
+
       await onSave(dataToSend);
-      
+
       // Resetear formulario
       setFormData({
         servicio_id: '',
@@ -105,6 +105,7 @@ const CreateFotoModal: React.FC<CreateFotoModalProps> = ({ isOpen, onClose, onSa
         fecha_subida: new Date().toISOString().slice(0, 16),
         eliminado: false
       });
+      setSelectedServicioName('');
       setErrors({});
     } catch (error) {
       console.error('Error creating foto:', error);
@@ -126,6 +127,7 @@ const CreateFotoModal: React.FC<CreateFotoModalProps> = ({ isOpen, onClose, onSa
         fecha_subida: new Date().toISOString().slice(0, 16),
         eliminado: false
       });
+      setSelectedServicioName('');
       setErrors({});
     }
   };
@@ -155,25 +157,18 @@ const CreateFotoModal: React.FC<CreateFotoModalProps> = ({ isOpen, onClose, onSa
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Columna izquierda */}
             <div className="space-y-4">
-              <div>
-                <label className="flex items-center space-x-2 text-sm font-medium text-gray-700 mb-2">
-                  <Building className="h-4 w-4" />
-                  <span>ID del Servicio *</span>
-                </label>
-                <input
-                  type="text"
-                  name="servicio_id"
-                  value={formData.servicio_id}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
-                    errors.servicio_id ? 'border-red-300' : 'border-gray-300'
-                  }`}
-                  placeholder="ej: 123e4567-e89b-12d3-a456-426614174000"
-                />
-                {errors.servicio_id && (
-                  <p className="mt-1 text-sm text-red-600">{errors.servicio_id}</p>
-                )}
-              </div>
+              <ServicioAutocomplete
+                value={formData.servicio_id}
+                selectedName={selectedServicioName}
+                onChange={(id, nombre) => {
+                  setFormData(prev => ({ ...prev, servicio_id: id }));
+                  setSelectedServicioName(nombre);
+                  if (errors.servicio_id) {
+                    setErrors(prev => ({ ...prev, servicio_id: '' }));
+                  }
+                }}
+                error={errors.servicio_id}
+              />
 
               <div>
                 <label className="flex items-center space-x-2 text-sm font-medium text-gray-700 mb-2">
@@ -185,9 +180,8 @@ const CreateFotoModal: React.FC<CreateFotoModalProps> = ({ isOpen, onClose, onSa
                   name="url"
                   value={formData.url}
                   onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
-                    errors.url ? 'border-red-300' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent ${errors.url ? 'border-red-300' : 'border-gray-300'
+                    }`}
                   placeholder="https://ejemplo.com/imagen.jpg"
                 />
                 {errors.url && (
@@ -205,9 +199,8 @@ const CreateFotoModal: React.FC<CreateFotoModalProps> = ({ isOpen, onClose, onSa
                   value={formData.descripcion}
                   onChange={handleInputChange}
                   rows={3}
-                  className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
-                    errors.descripcion ? 'border-red-300' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent ${errors.descripcion ? 'border-red-300' : 'border-gray-300'
+                    }`}
                   placeholder="Descripción de la imagen"
                 />
                 {errors.descripcion && (
@@ -229,9 +222,8 @@ const CreateFotoModal: React.FC<CreateFotoModalProps> = ({ isOpen, onClose, onSa
                   value={formData.orden}
                   onChange={handleInputChange}
                   min="0"
-                  className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
-                    errors.orden ? 'border-red-300' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent ${errors.orden ? 'border-red-300' : 'border-gray-300'
+                    }`}
                   placeholder="1"
                 />
                 {errors.orden && (
@@ -249,9 +241,8 @@ const CreateFotoModal: React.FC<CreateFotoModalProps> = ({ isOpen, onClose, onSa
                   name="fecha_subida"
                   value={formData.fecha_subida}
                   onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
-                    errors.fecha_subida ? 'border-red-300' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent ${errors.fecha_subida ? 'border-red-300' : 'border-gray-300'
+                    }`}
                 />
                 {errors.fecha_subida && (
                   <p className="mt-1 text-sm text-red-600">{errors.fecha_subida}</p>

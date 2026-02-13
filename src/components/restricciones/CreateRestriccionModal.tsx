@@ -4,6 +4,7 @@ import { X, Shield, Plus } from 'lucide-react';
 import { RestriccionModalProps } from '../../types/restriccion';
 import { restriccionService } from '../../services/restriccionService';
 import Swal from 'sweetalert2';
+import ServicioAutocomplete from '../common/ServicioAutocomplete';
 
 const CreateRestriccionModal: React.FC<RestriccionModalProps> = ({ isOpen, onClose, onSave }) => {
   const [formData, setFormData] = useState({
@@ -15,6 +16,7 @@ const CreateRestriccionModal: React.FC<RestriccionModalProps> = ({ isOpen, onClo
   });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [selectedServicioName, setSelectedServicioName] = useState('');
 
   const resetForm = () => {
     setFormData({
@@ -24,6 +26,7 @@ const CreateRestriccionModal: React.FC<RestriccionModalProps> = ({ isOpen, onClo
       bloqueado_por: '',
       bloqueo_activo: true
     });
+    setSelectedServicioName('');
     setErrors({});
   };
 
@@ -31,13 +34,7 @@ const CreateRestriccionModal: React.FC<RestriccionModalProps> = ({ isOpen, onClo
     const newErrors: Record<string, string> = {};
 
     if (!formData.servicio_id.trim()) {
-      newErrors.servicio_id = 'El ID del servicio es requerido';
-    } else {
-      // Validar formato UUID básico
-      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-      if (!uuidRegex.test(formData.servicio_id.trim())) {
-        newErrors.servicio_id = 'El ID del servicio debe ser un UUID válido';
-      }
+      newErrors.servicio_id = 'Debe seleccionar un servicio';
     }
 
     if (!formData.fecha) {
@@ -66,7 +63,7 @@ const CreateRestriccionModal: React.FC<RestriccionModalProps> = ({ isOpen, onClo
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
 
     try {
@@ -108,7 +105,7 @@ const CreateRestriccionModal: React.FC<RestriccionModalProps> = ({ isOpen, onClo
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
-    
+
     setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value
@@ -150,29 +147,20 @@ const CreateRestriccionModal: React.FC<RestriccionModalProps> = ({ isOpen, onClo
         </div>
 
         <form onSubmit={handleSubmit} className="mt-4 space-y-6">
-          {/* ID del Servicio */}
+          {/* Servicio */}
           <div>
-            <label htmlFor="servicio_id" className="block text-sm font-medium text-gray-700">
-              ID del Servicio *
-            </label>
-            <input
-              type="text"
-              id="servicio_id"
-              name="servicio_id"
+            <ServicioAutocomplete
               value={formData.servicio_id}
-              onChange={handleInputChange}
-              className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${
-                errors.servicio_id ? 'border-red-300' : 'border-gray-300'
-              }`}
-              placeholder="ej: 123e4567-e89b-12d3-a456-426614174000"
-              disabled={loading}
+              selectedName={selectedServicioName}
+              onChange={(id, nombre) => {
+                setFormData(prev => ({ ...prev, servicio_id: id }));
+                setSelectedServicioName(nombre);
+                if (errors.servicio_id) {
+                  setErrors(prev => ({ ...prev, servicio_id: '' }));
+                }
+              }}
+              error={errors.servicio_id}
             />
-            {errors.servicio_id && (
-              <p className="mt-1 text-sm text-red-600">{errors.servicio_id}</p>
-            )}
-            <p className="mt-1 text-sm text-gray-500">
-              Ingresa el UUID del servicio que deseas bloquear
-            </p>
           </div>
 
           {/* Fecha */}
@@ -187,9 +175,8 @@ const CreateRestriccionModal: React.FC<RestriccionModalProps> = ({ isOpen, onClo
               value={formData.fecha}
               onChange={handleInputChange}
               min={new Date().toISOString().slice(0, 16)}
-              className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${
-                errors.fecha ? 'border-red-300' : 'border-gray-300'
-              }`}
+              className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${errors.fecha ? 'border-red-300' : 'border-gray-300'
+                }`}
               disabled={loading}
             />
             {errors.fecha && (
@@ -211,9 +198,8 @@ const CreateRestriccionModal: React.FC<RestriccionModalProps> = ({ isOpen, onClo
               rows={4}
               value={formData.motivo}
               onChange={handleInputChange}
-              className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${
-                errors.motivo ? 'border-red-300' : 'border-gray-300'
-              }`}
+              className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${errors.motivo ? 'border-red-300' : 'border-gray-300'
+                }`}
               placeholder="Describe el motivo del bloqueo de esta fecha..."
               disabled={loading}
             />
@@ -236,9 +222,8 @@ const CreateRestriccionModal: React.FC<RestriccionModalProps> = ({ isOpen, onClo
               name="bloqueado_por"
               value={formData.bloqueado_por}
               onChange={handleInputChange}
-              className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${
-                errors.bloqueado_por ? 'border-red-300' : 'border-gray-300'
-              }`}
+              className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${errors.bloqueado_por ? 'border-red-300' : 'border-gray-300'
+                }`}
               placeholder="Tu nombre o identificación"
               disabled={loading}
             />
