@@ -1,173 +1,156 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
-import { X, Package, Building, MapPin, DollarSign, Calendar, Star, FileText, Info } from 'lucide-react';
+import { Building, MapPin, Calendar, Star, FileText, Info } from 'lucide-react';
 import { ServicioDetailModalProps } from '../../types/servicio';
+import { Modal } from '../ui/Modal';
+import { Badge } from '../ui/Badge';
+import { Button } from '../ui/Button';
 
 const ServicioDetailModal: React.FC<ServicioDetailModalProps> = ({ isOpen, onClose, servicio }) => {
-  if (!isOpen || !servicio) return null;
+  if (!servicio) return null;
 
-  const modalContent = (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">Detalles del Servicio</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            <X className="h-6 w-6" />
-          </button>
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Detalles del Servicio"
+      description="Información completa sobre el servicio registrado"
+      size="lg"
+    >
+      <div className="space-y-8">
+        {/* Header Information */}
+        <div className="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between bg-secondary-50 p-6 rounded-2xl border border-secondary-100">
+          <div className="flex items-center gap-4">
+            <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-600 text-white flex items-center justify-center text-2xl font-bold shadow-lg shadow-primary-200">
+              {servicio.nombre.charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-secondary-900">{servicio.nombre}</h2>
+              <div className="flex items-center gap-2 mt-1">
+                <Badge variant="secondary" className="rounded-md capitalize">
+                  {servicio.tipo_servicio}
+                </Badge>
+                <Badge
+                  variant={servicio.activo ? 'success' : 'secondary'}
+                  className="rounded-full"
+                >
+                  {servicio.activo ? 'Activo' : 'Inactivo'}
+                </Badge>
+              </div>
+            </div>
+          </div>
+          <div className="text-right">
+            <p className="text-sm text-secondary-500 mb-1 font-medium uppercase tracking-wider text-[10px]">Precio Actual</p>
+            <p className="text-3xl font-bold text-primary-600 tracking-tight">{servicio.precioFormateado}</p>
+          </div>
         </div>
 
-        {/* Content */}
-        <div className="p-6 space-y-6">
-          {/* Información Principal */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Left Column */}
+          <div className="space-y-6">
             <div className="space-y-4">
-              <div className="flex items-start space-x-3">
-                <Package className="h-5 w-5 text-blue-600 mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Nombre del Servicio</p>
-                  <p className="text-lg font-semibold text-gray-900">{servicio.nombre}</p>
-                </div>
-              </div>
+              <h3 className="flex items-center gap-2 text-sm font-semibold text-secondary-900 uppercase tracking-wider">
+                <Info className="h-4 w-4 text-primary-500" />
+                Información General
+              </h3>
 
-              <div className="flex items-start space-x-3">
-                <FileText className="h-5 w-5 text-purple-600 mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Tipo de Servicio</p>
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                    {servicio.tipo_servicio}
-                  </span>
+              <div className="grid gap-4">
+                <div className="p-4 rounded-xl border border-secondary-100 bg-white shadow-sm space-y-1">
+                  <p className="text-xs font-medium text-secondary-400 uppercase tracking-tighter">Proveedor</p>
+                  <div className="flex items-center gap-2 text-secondary-900">
+                    <Building className="h-4 w-4 text-secondary-400" />
+                    <span className="font-semibold">{servicio.proveedorNombre}</span>
+                  </div>
+                  <p className="text-[10px] text-secondary-400 font-mono pl-6">{servicio.proveedor_id}</p>
                 </div>
-              </div>
 
-              <div className="flex items-start space-x-3">
-                <Building className="h-5 w-5 text-orange-600 mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Proveedor</p>
-                  <p className="text-base text-gray-900">{servicio.proveedorNombre}</p>
-                  <p className="text-xs text-gray-500">{servicio.proveedor_id}</p>
-                </div>
-              </div>
-
-              <div className="flex items-start space-x-3">
-                <DollarSign className="h-5 w-5 text-green-600 mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Precio</p>
-                  <p className="text-lg font-semibold text-green-600">{servicio.precioFormateado}</p>
+                <div className="p-4 rounded-xl border border-secondary-100 bg-white shadow-sm space-y-1">
+                  <p className="text-xs font-medium text-secondary-400 uppercase tracking-tighter">Relevancia</p>
+                  <div className="flex items-center gap-2 pt-1">
+                    <Star className="h-4 w-4 text-warning-400 fill-warning-400" />
+                    <Badge
+                      variant={
+                        servicio.relevancia === 'Alta' ? 'error' :
+                          servicio.relevancia === 'Media' ? 'warning' :
+                            'success'
+                      }
+                    >
+                      {servicio.relevancia}
+                    </Badge>
+                  </div>
                 </div>
               </div>
             </div>
 
             <div className="space-y-4">
-              <div className="flex items-start space-x-3">
-                <MapPin className="h-5 w-5 text-red-600 mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Ubicación</p>
-                  <p className="text-base text-gray-900">{servicio.ubicacionCompleta}</p>
-                  <p className="text-sm text-gray-600">{servicio.ubicacion}</p>
-                </div>
-              </div>
-
-              <div className="flex items-start space-x-3">
-                <Star className="h-5 w-5 text-yellow-600 mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Relevancia</p>
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium ${
-                    servicio.relevancia === 'Alta' ? 'bg-red-100 text-red-800' :
-                    servicio.relevancia === 'Media' ? 'bg-yellow-100 text-yellow-800' :
-                    'bg-green-100 text-green-800'
-                  }`}>
-                    {servicio.relevancia}
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex items-start space-x-3">
-                <Info className="h-5 w-5 text-gray-600 mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Estado</p>
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium ${
-                    servicio.activo 
-                      ? 'bg-green-100 text-green-800' 
-                      : 'bg-red-100 text-red-800'
-                  }`}>
-                    {servicio.activo ? 'Activo' : 'Inactivo'}
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex items-start space-x-3">
-                <Calendar className="h-5 w-5 text-indigo-600 mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Fechas</p>
-                  <p className="text-sm text-gray-900">
-                    <span className="font-medium">Creado:</span> {servicio.fechaCreacionFormateada}
-                  </p>
-                  <p className="text-sm text-gray-900">
-                    <span className="font-medium">Actualizado:</span> {servicio.fechaActualizacionFormateada}
-                  </p>
+              <h3 className="flex items-center gap-2 text-sm font-semibold text-secondary-900 uppercase tracking-wider">
+                <MapPin className="h-4 w-4 text-primary-500" />
+                Ubicación
+              </h3>
+              <div className="p-4 rounded-xl border border-secondary-100 bg-white shadow-sm space-y-3">
+                <div className="flex items-start gap-2">
+                  <MapPin className="h-4 w-4 text-secondary-400 mt-1 shrink-0" />
+                  <div>
+                    <p className="font-medium text-secondary-900">{servicio.ciudad}, {servicio.departamento}</p>
+                    <p className="text-sm text-secondary-500 mt-1">{servicio.ubicacion}</p>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Descripción */}
-          <div className="border-t border-gray-200 pt-6">
-            <div className="flex items-start space-x-3">
-              <FileText className="h-5 w-5 text-gray-600 mt-0.5" />
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-500 mb-2">Descripción</p>
-                <p className="text-gray-900 leading-relaxed">{servicio.descripcion}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Detalles del Servicio */}
-          {servicio.detalles_del_servicio && (
-            <div className="border-t border-gray-200 pt-6">
-              <div className="flex items-start space-x-3">
-                <Info className="h-5 w-5 text-blue-600 mt-0.5" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-500 mb-2">Detalles del Servicio</p>
-                  <p className="text-gray-900 leading-relaxed">{servicio.detalles_del_servicio}</p>
+          {/* Right Column */}
+          <div className="space-y-6">
+            <div className="space-y-4">
+              <h3 className="flex items-center gap-2 text-sm font-semibold text-secondary-900 uppercase tracking-wider">
+                <FileText className="h-4 w-4 text-primary-500" />
+                Descripción y Detalles
+              </h3>
+              <div className="p-4 rounded-xl border border-secondary-100 bg-white shadow-sm space-y-4">
+                <div>
+                  <p className="text-xs font-medium text-secondary-400 uppercase tracking-tighter mb-2">Resumen</p>
+                  <p className="text-sm text-secondary-700 leading-relaxed italic border-l-2 border-secondary-100 pl-3">
+                    "{servicio.descripcion}"
+                  </p>
                 </div>
+                {servicio.detalles_del_servicio && (
+                  <div>
+                    <p className="text-xs font-medium text-secondary-400 uppercase tracking-tighter mb-2">Detalles Adicionales</p>
+                    <p className="text-sm text-secondary-700 leading-relaxed">
+                      {servicio.detalles_del_servicio}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
-          )}
 
-          {/* Información Técnica */}
-          <div className="border-t border-gray-200 pt-6">
-            <h4 className="text-sm font-medium text-gray-500 mb-3">Información Técnica</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-              <div>
-                <span className="font-medium text-gray-700">ID del Servicio:</span>
-                <p className="text-gray-600 break-all">{servicio.id_servicio}</p>
-              </div>
-              <div>
-                <span className="font-medium text-gray-700">ID del Proveedor:</span>
-                <p className="text-gray-600 break-all">{servicio.proveedor_id}</p>
+            <div className="space-y-4">
+              <h3 className="flex items-center gap-2 text-sm font-semibold text-secondary-900 uppercase tracking-wider">
+                <Calendar className="h-4 w-4 text-primary-500" />
+                Historial
+              </h3>
+              <div className="p-4 rounded-xl border border-secondary-100 bg-white shadow-sm divide-y divide-secondary-50">
+                <div className="py-2 flex justify-between items-center text-sm">
+                  <span className="text-secondary-500">Fecha de Creación</span>
+                  <span className="font-medium text-secondary-900">{servicio.fechaCreacionFormateada}</span>
+                </div>
+                <div className="py-2 flex justify-between items-center text-sm">
+                  <span className="text-secondary-500">Última Actualización</span>
+                  <span className="font-medium text-secondary-900">{servicio.fechaActualizacionFormateada}</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="flex justify-end p-6 border-t border-gray-200">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-          >
-            Cerrar
-          </button>
+        {/* Footer Actions */}
+        <div className="pt-6 border-t border-secondary-100 flex justify-end">
+          <Button onClick={onClose} variant="secondary" className="px-8">
+            Cerrar Detalle
+          </Button>
         </div>
       </div>
-    </div>
+    </Modal>
   );
-
-  return ReactDOM.createPortal(modalContent, document.body);
 };
 
 export default ServicioDetailModal;

@@ -3,54 +3,17 @@ import { Package, CheckCircle, Tag, Building } from 'lucide-react';
 import { ServicioStatsProps } from '../../types/servicio';
 
 const ServicioStats: React.FC<ServicioStatsProps> = ({ stats, loading }) => {
-  const statsConfig = [
-    {
-      title: 'Total Servicios',
-      value: stats.totalServicios,
-      icon: Package,
-      color: 'bg-blue-500',
-      bgColor: 'bg-blue-50',
-      textColor: 'text-blue-600'
-    },
-    {
-      title: 'Servicios Activos',
-      value: stats.serviciosActivos,
-      icon: CheckCircle,
-      color: 'bg-green-500',
-      bgColor: 'bg-green-50',
-      textColor: 'text-green-600'
-    },
-    {
-      title: 'Tipos de Servicio',
-      value: stats.serviciosPorTipo,
-      icon: Tag,
-      color: 'bg-purple-500',
-      bgColor: 'bg-purple-50',
-      textColor: 'text-purple-600'
-    },
-    {
-      title: 'Proveedores con Servicios',
-      value: stats.proveedoresConServicios,
-      icon: Building,
-      color: 'bg-orange-500',
-      bgColor: 'bg-orange-50',
-      textColor: 'text-orange-600'
-    }
-  ];
-
   if (loading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[...Array(4)].map((_, index) => (
-          <div key={index} className="bg-white rounded-lg shadow p-6">
-            <div className="animate-pulse">
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-gray-200 rounded-lg"></div>
-                <div className="ml-4 flex-1">
-                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                  <div className="h-6 bg-gray-200 rounded w-1/2"></div>
-                </div>
+          <div key={index} className="bg-white rounded-xl p-6 border border-gray-100 animate-pulse">
+            <div className="flex items-center justify-between">
+              <div className="space-y-2">
+                <div className="h-4 bg-gray-200 rounded w-24"></div>
+                <div className="h-8 bg-gray-200 rounded w-16"></div>
               </div>
+              <div className="h-8 w-8 bg-gray-200 rounded-lg"></div>
             </div>
           </div>
         ))}
@@ -60,24 +23,49 @@ const ServicioStats: React.FC<ServicioStatsProps> = ({ stats, loading }) => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      {statsConfig.map((stat, index) => {
-        const IconComponent = stat.icon;
-        return (
-          <div key={index} className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
-            <div className="flex items-center">
-              <div className={`${stat.bgColor} p-3 rounded-lg`}>
-                <IconComponent className={`h-6 w-6 ${stat.textColor}`} />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">{stat.title}</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {stat.value.toLocaleString('es-ES')}
-                </p>
-              </div>
-            </div>
+      {/* Total */}
+      <div className="bg-blue-50 rounded-xl p-6 border border-gray-100">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm text-gray-500">Total Servicios</p>
+            <p className="text-3xl font-bold text-blue-600">{stats.totalServicios.toLocaleString('es-ES')}</p>
           </div>
-        );
-      })}
+          <Package className="h-8 w-8 text-blue-500" />
+        </div>
+      </div>
+
+      {/* Activos */}
+      <div className="bg-green-50 rounded-xl p-6 border border-gray-100">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm text-gray-500">Servicios Activos</p>
+            <p className="text-3xl font-bold text-green-600">{stats.serviciosActivos.toLocaleString('es-ES')}</p>
+          </div>
+          <CheckCircle className="h-8 w-8 text-green-500" />
+        </div>
+      </div>
+
+      {/* Tipos */}
+      <div className="bg-purple-50 rounded-xl p-6 border border-gray-100">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm text-gray-500">Tipos de Servicio</p>
+            <p className="text-3xl font-bold text-purple-600">{stats.serviciosPorTipo.toLocaleString('es-ES')}</p>
+          </div>
+          <Tag className="h-8 w-8 text-purple-500" />
+        </div>
+      </div>
+
+      {/* Proveedores */}
+      <div className="bg-orange-50 rounded-xl p-6 border border-gray-100">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm text-gray-500">Proveedores con Servicios</p>
+            <p className="text-3xl font-bold text-orange-600">{stats.proveedoresConServicios.toLocaleString('es-ES')}</p>
+          </div>
+          <Building className="h-8 w-8 text-orange-500" />
+        </div>
+      </div>
     </div>
   );
 };

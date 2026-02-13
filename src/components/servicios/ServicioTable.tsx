@@ -1,6 +1,11 @@
 import React from 'react';
-import { Search, Eye, Edit, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Eye, Edit, Trash2, ChevronLeft, ChevronRight, MapPin, Building, Package, X } from 'lucide-react';
 import { ServicioTableProps } from '../../types/servicio';
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '../ui/Table';
+import { Badge } from '../ui/Badge';
+import { Button } from '../ui/Button';
+import { Input } from '../ui/Input';
+import { cn } from '../../lib/utils';
 
 const ServicioTable: React.FC<ServicioTableProps> = ({
   servicios,
@@ -23,15 +28,13 @@ const ServicioTable: React.FC<ServicioTableProps> = ({
 
   if (loading) {
     return (
-      <div className="bg-white rounded-lg shadow">
-        <div className="p-6">
-          <div className="animate-pulse space-y-4">
-            <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-            <div className="space-y-3">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="h-4 bg-gray-200 rounded"></div>
-              ))}
-            </div>
+      <div className="bg-white rounded-xl border border-secondary-200 shadow-soft-sm p-8">
+        <div className="animate-pulse space-y-6">
+          <div className="h-10 bg-secondary-100 rounded-lg w-full"></div>
+          <div className="space-y-4">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="h-16 bg-secondary-50 rounded-lg w-full"></div>
+            ))}
           </div>
         </div>
       </div>
@@ -39,215 +42,236 @@ const ServicioTable: React.FC<ServicioTableProps> = ({
   }
 
   return (
-    <div className="bg-white rounded-lg shadow">
-      {/* Header con título y selector de elementos */}
-      <div className="px-6 py-4 border-b border-gray-200">
-        <div className="flex justify-between items-center">
-          <h2 className="text-lg font-semibold text-gray-900">Lista de Servicios</h2>
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-500">Mostrar:</span>
-            <select
-              value={pageSize}
-              onChange={(e) => onPageSizeChange(Number(e.target.value))}
-              className="border border-gray-300 rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value={5}>5</option>
-              <option value={10}>10</option>
-              <option value={20}>20</option>
-              <option value={50}>50</option>
-            </select>
-            <span className="text-sm text-gray-500">elementos</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Barra de búsqueda */}
-      <div className="px-6 py-4 border-b border-gray-200">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-          <input
-            type="text"
-            placeholder="Buscar por nombre, descripción, tipo, ciudad, proveedor..."
+    <div className="space-y-4">
+      {/* Filters & Search */}
+      <div className="bg-white p-4 rounded-xl border border-secondary-200 shadow-soft-sm flex flex-col md:flex-row gap-4 items-center justify-between">
+        <div className="relative w-full md:w-96">
+          <Input
+            placeholder="Buscar servicios..."
             value={searchTerm}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            leftIcon={<Search className="h-4 w-4" />}
+            rightIcon={searchTerm ? (
+              <button onClick={() => onSearchChange('')} className="hover:text-secondary-600 transition-colors">
+                <X className="h-4 w-4" />
+              </button>
+            ) : null}
           />
+        </div>
+
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <span className="text-sm text-secondary-500 whitespace-nowrap">Mostrar:</span>
+          <select
+            value={pageSize}
+            onChange={(e) => onPageSizeChange(Number(e.target.value))}
+            className="h-10 border border-secondary-200 rounded-xl px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
+          >
+            <option value={5}>5</option>
+            <option value={10}>10</option>
+            <option value={20}>20</option>
+            <option value={50}>50</option>
+          </select>
         </div>
       </div>
 
-      {/* Tabla */}
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Servicio
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Tipo
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Proveedor
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Precio
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Ubicación
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Relevancia
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Estado
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Acciones
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {servicios.length === 0 ? (
-              <tr>
-                <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
-                  {searchTerm ? 'No se encontraron servicios que coincidan con la búsqueda' : 'No hay servicios disponibles'}
-                </td>
-              </tr>
-            ) : (
-              servicios.map((servicio) => (
-                <tr key={servicio.id_servicio} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div>
-                      <div className="text-sm font-medium text-gray-900 truncate max-w-xs">
-                        {servicio.nombre}
-                      </div>
-                      <div className="text-sm text-gray-500 truncate max-w-xs">
-                        {servicio.descripcion}
-                      </div>
+      {/* Table */}
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Servicio</TableHead>
+            <TableHead>Tipo</TableHead>
+            <TableHead>Proveedor</TableHead>
+            <TableHead>Precio</TableHead>
+            <TableHead>Ubicación</TableHead>
+            <TableHead>Relevancia</TableHead>
+            <TableHead>Estado</TableHead>
+            <TableHead className="text-right">Acciones</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {servicios.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={8} className="h-64 text-center">
+                <div className="flex flex-col items-center justify-center text-secondary-400">
+                  <Package className="h-12 w-12 mb-4 opacity-20" />
+                  <p className="text-lg font-medium">No se encontraron servicios</p>
+                  <p className="text-sm">Prueba ajustando los filtros de búsqueda</p>
+                  {searchTerm && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onSearchChange('')}
+                      className="mt-4"
+                    >
+                      Limpiar búsqueda
+                    </Button>
+                  )}
+                </div>
+              </TableCell>
+            </TableRow>
+          ) : (
+            servicios.map((servicio) => (
+              <TableRow key={servicio.id_servicio}>
+                <TableCell>
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary-100 to-primary-200 text-primary-700 flex items-center justify-center font-bold border border-primary-200 shadow-sm shrink-0">
+                      {servicio.nombre.charAt(0).toUpperCase()}
                     </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                      {servicio.tipo_servicio}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{servicio.proveedorNombre}</div>
-                    <div className="text-xs text-gray-500">{servicio.proveedor_id.slice(-8)}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">
-                      {servicio.precioFormateado}
+                    <div className="flex flex-col min-w-0">
+                      <span className="font-medium text-secondary-900 truncate">{servicio.nombre}</span>
+                      <span className="text-xs text-secondary-500 truncate max-w-[200px]">{servicio.descripcion}</span>
                     </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{servicio.ciudad}</div>
-                    <div className="text-xs text-gray-500">{servicio.departamento}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      servicio.relevancia === 'Alta' ? 'bg-red-100 text-red-800' :
-                      servicio.relevancia === 'Media' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-green-100 text-green-800'
-                    }`}>
-                      {servicio.relevancia}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      servicio.activo 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-red-100 text-red-800'
-                    }`}>
-                      {servicio.activo ? 'Activo' : 'Inactivo'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => onView(servicio)}
-                        className="text-blue-600 hover:text-blue-900 p-1 rounded-full hover:bg-blue-100"
-                        title="Ver detalles"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => onEdit(servicio)}
-                        className="text-yellow-600 hover:text-yellow-900 p-1 rounded-full hover:bg-yellow-100"
-                        title="Editar"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => onDelete(servicio.id_servicio)}
-                        className="text-red-600 hover:text-red-900 p-1 rounded-full hover:bg-red-100"
-                        title="Eliminar"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <Badge variant="secondary" className="rounded-md capitalize">
+                    {servicio.tipo_servicio}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <div className="flex flex-col">
+                    <div className="flex items-center gap-1.5 text-secondary-900 font-medium">
+                      <Building className="h-3.5 w-3.5 text-secondary-400" />
+                      <span className="truncate max-w-[150px]">{servicio.proveedorNombre}</span>
                     </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+                    <span className="text-[10px] text-secondary-400 ml-5 font-mono uppercase tracking-tighter">
+                      {servicio.proveedor_id.slice(-8)}
+                    </span>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <span className="font-semibold text-secondary-900">
+                    {servicio.precioFormateado}
+                  </span>
+                </TableCell>
+                <TableCell>
+                  <div className="flex flex-col">
+                    <div className="flex items-center gap-1.5 text-secondary-700">
+                      <MapPin className="h-3.5 w-3.5 text-secondary-400" />
+                      <span>{servicio.ciudad}</span>
+                    </div>
+                    <span className="text-xs text-secondary-500 ml-5">{servicio.departamento}</span>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <Badge
+                    variant={
+                      servicio.relevancia === 'Alta' ? 'error' :
+                        servicio.relevancia === 'Media' ? 'warning' :
+                          'success'
+                    }
+                    className="rounded-full"
+                  >
+                    {servicio.relevancia}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <Badge
+                    variant={servicio.activo ? 'success' : 'secondary'}
+                    className="rounded-full"
+                  >
+                    {servicio.activo ? 'Activo' : 'Inactivo'}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex items-center justify-end gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onView(servicio)}
+                      className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                      title="Ver detalles"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onEdit(servicio)}
+                      className="text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+                      title="Editar"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onDelete(servicio.id_servicio)}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      title="Eliminar"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
 
-      {/* Paginación */}
+      {/* Pagination */}
       {totalPages > 1 && (
-        <div className="px-6 py-4 border-t border-gray-200">
-          <div className="flex items-center justify-between">
-            <div className="text-sm text-gray-700">
-              Mostrando <span className="font-medium">{startItem}</span> a{' '}
-              <span className="font-medium">{endItem}</span> de{' '}
-              <span className="font-medium">{totalItems}</span> resultados
-            </div>
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => onPageChange(currentPage - 1)}
-                disabled={currentPage === 0}
-                className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-              
-              {/* Números de página */}
-              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                let pageNum;
-                if (totalPages <= 5) {
-                  pageNum = i;
-                } else if (currentPage < 3) {
-                  pageNum = i;
-                } else if (currentPage > totalPages - 4) {
-                  pageNum = totalPages - 5 + i;
-                } else {
-                  pageNum = currentPage - 2 + i;
+        <div className="bg-white px-6 py-4 rounded-xl border border-secondary-200 shadow-soft-sm flex items-center justify-between">
+          <p className="text-sm text-secondary-500">
+            Mostrando <span className="font-medium text-secondary-900">{startItem}</span> a{' '}
+            <span className="font-medium text-secondary-900">{endItem}</span> de{' '}
+            <span className="font-medium text-secondary-900">{totalItems}</span> resultados
+          </p>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={currentPage === 0}
+              onClick={() => onPageChange(currentPage - 1)}
+              className="gap-1 px-3"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              <span className="hidden sm:inline">Anterior</span>
+            </Button>
+
+            <div className="flex items-center gap-1">
+              {Array.from({ length: totalPages }, (_, i) => i).map((pageNum) => {
+                // Logic to show only some page numbers if there are too many
+                if (
+                  totalPages > 7 &&
+                  pageNum !== 0 &&
+                  pageNum !== totalPages - 1 &&
+                  (pageNum < currentPage - 1 || pageNum > currentPage + 1)
+                ) {
+                  if (pageNum === currentPage - 2 || pageNum === currentPage + 2) {
+                    return <span key={pageNum} className="px-2 text-secondary-400">...</span>;
+                  }
+                  return null;
                 }
-                
+
                 return (
-                  <button
+                  <Button
                     key={pageNum}
+                    size="sm"
+                    variant={currentPage === pageNum ? 'primary' : 'ghost'}
                     onClick={() => onPageChange(pageNum)}
-                    className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                      currentPage === pageNum
-                        ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
-                        : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
-                    }`}
+                    className={cn(
+                      "min-w-[32px] w-8 h-8 p-0 rounded-lg",
+                      currentPage !== pageNum && "text-secondary-600 hover:bg-secondary-100"
+                    )}
                   >
                     {pageNum + 1}
-                  </button>
+                  </Button>
                 );
               })}
-              
-              <button
-                onClick={() => onPageChange(currentPage + 1)}
-                disabled={currentPage === totalPages - 1}
-                className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
             </div>
+
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={currentPage === totalPages - 1}
+              onClick={() => onPageChange(currentPage + 1)}
+              className="gap-1 px-3"
+            >
+              <span className="hidden sm:inline">Siguiente</span>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       )}

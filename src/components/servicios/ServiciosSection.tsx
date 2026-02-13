@@ -7,6 +7,7 @@ import ServicioCharts from "./ServicioCharts";
 import ServicioDetailModal from "./ServicioDetailModal";
 import EditServicioModal from "./EditServicioModal";
 import CreateServicioModal from "./CreateServicioModal";
+import { Button } from "../ui/Button";
 import {
   listarServicios,
   procesarDatosServicios,
@@ -171,15 +172,39 @@ const ServiciosSection: React.FC = () => {
 
   // Handler para eliminar
   const handleDelete = async (id: string) => {
+    const servicio = servicios.find(s => s.id_servicio === id);
+    const servicioName = servicio?.nombre || 'este servicio';
+
     const result = await Swal.fire({
       title: "¿Estás seguro?",
-      text: "Esta acción no se puede deshacer",
+      html: `
+        <div class="text-center">
+          <div class="mb-4">
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+              <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3m-4 0h14" />
+              </svg>
+            </div>
+          </div>
+          <p class="text-gray-600 mb-2">Vas a eliminar el servicio:</p>
+          <p class="font-semibold text-gray-900 text-lg">${servicioName}</p>
+          <p class="text-sm text-gray-500 mt-2">Esta acción no se puede deshacer</p>
+        </div>
+      `,
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#EF4444",
-      cancelButtonColor: "#6B7280",
+      confirmButtonColor: "#dc2626",
+      cancelButtonColor: "#6b7280",
       confirmButtonText: "Sí, eliminar",
       cancelButtonText: "Cancelar",
+      reverseButtons: true,
+      customClass: {
+        popup: 'rounded-xl shadow-2xl',
+        title: 'text-xl font-bold text-gray-900',
+        confirmButton: 'px-6 py-3 rounded-lg font-medium transition-all duration-200 hover:shadow-lg',
+        cancelButton: 'px-6 py-3 rounded-lg font-medium transition-all duration-200 hover:shadow-lg',
+      },
+      buttonsStyling: false,
     });
 
     if (result.isConfirmed) {
@@ -187,10 +212,14 @@ const ServiciosSection: React.FC = () => {
         await eliminarServicio(id);
         await Swal.fire({
           icon: "success",
-          title: "Eliminado",
+          title: "¡Eliminado!",
           text: "El servicio ha sido eliminado correctamente",
           timer: 2000,
           showConfirmButton: false,
+          customClass: {
+            popup: 'rounded-xl shadow-2xl',
+            title: 'text-xl font-bold text-gray-900',
+          }
         });
         // Recargar datos
         loadServicios(currentPage, pageSize);
@@ -201,6 +230,10 @@ const ServiciosSection: React.FC = () => {
           icon: "error",
           title: "Error",
           text: "No se pudo eliminar el servicio",
+          customClass: {
+            popup: 'rounded-xl shadow-2xl',
+            title: 'text-xl font-bold text-gray-900',
+          }
         });
       }
     }
@@ -208,35 +241,69 @@ const ServiciosSection: React.FC = () => {
 
   // Handler para crear servicio
   const handleCreateSave = async (data: DatosServicio) => {
-    await crearServicio(data);
-    await Swal.fire({
-      icon: "success",
-      title: "Creado",
-      text: "El servicio ha sido creado correctamente",
-      timer: 2000,
-      showConfirmButton: false,
-    });
-    setShowCreateModal(false);
-    // Recargar datos
-    loadServicios(currentPage, pageSize);
-    loadStatsAndCharts();
+    try {
+      await crearServicio(data);
+      await Swal.fire({
+        icon: "success",
+        title: "¡Creado!",
+        text: "El servicio ha sido creado correctamente",
+        timer: 2000,
+        showConfirmButton: false,
+        customClass: {
+          popup: 'rounded-xl shadow-2xl',
+          title: 'text-xl font-bold text-gray-900',
+        }
+      });
+      setShowCreateModal(false);
+      // Recargar datos
+      loadServicios(currentPage, pageSize);
+      loadStatsAndCharts();
+    } catch (error) {
+      console.error(error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Hubo un problema al crear el servicio",
+        customClass: {
+          popup: 'rounded-xl shadow-2xl',
+          title: 'text-xl font-bold text-gray-900',
+        }
+      });
+    }
   };
 
   // Handler para editar servicio
   const handleEditSave = async (data: ActualizarServicio) => {
-    await actualizarServicio(data.id_servicio, data);
-    await Swal.fire({
-      icon: "success",
-      title: "Actualizado",
-      text: "El servicio ha sido actualizado correctamente",
-      timer: 2000,
-      showConfirmButton: false,
-    });
-    setShowEditModal(false);
-    setSelectedServicio(null);
-    // Recargar datos
-    loadServicios(currentPage, pageSize);
-    loadStatsAndCharts();
+    try {
+      await actualizarServicio(data.id_servicio, data);
+      await Swal.fire({
+        icon: "success",
+        title: "¡Actualizado!",
+        text: "El servicio ha sido actualizado correctamente",
+        timer: 2000,
+        showConfirmButton: false,
+        customClass: {
+          popup: 'rounded-xl shadow-2xl',
+          title: 'text-xl font-bold text-gray-900',
+        }
+      });
+      setShowEditModal(false);
+      setSelectedServicio(null);
+      // Recargar datos
+      loadServicios(currentPage, pageSize);
+      loadStatsAndCharts();
+    } catch (error) {
+      console.error(error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Hubo un problema al actualizar el servicio",
+        customClass: {
+          popup: 'rounded-xl shadow-2xl',
+          title: 'text-xl font-bold text-gray-900',
+        }
+      });
+    }
   };
 
   // Handler para exportar
@@ -245,10 +312,14 @@ const ServiciosSection: React.FC = () => {
       await exportarServiciosExcel();
       Swal.fire({
         icon: "success",
-        title: "Exportado",
+        title: "¡Exportado!",
         text: "Los servicios han sido exportados correctamente",
         timer: 2000,
         showConfirmButton: false,
+        customClass: {
+          popup: 'rounded-xl shadow-2xl',
+          title: 'text-xl font-bold text-gray-900',
+        }
       });
     } catch (error) {
       console.error(error);
@@ -256,33 +327,42 @@ const ServiciosSection: React.FC = () => {
         icon: "error",
         title: "Error",
         text: "No se pudo exportar los servicios",
+        customClass: {
+          popup: 'rounded-xl shadow-2xl',
+          title: 'text-xl font-bold text-gray-900',
+        }
       });
     }
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <div className="flex items-center space-x-3">
-          <Package className="h-8 w-8 text-blue-600" />
-          <h1 className="text-2xl font-bold text-gray-900">Servicios</h1>
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="flex items-center space-x-3">
+            <Package className="h-8 w-8 text-blue-600" />
+            <h1 className="text-3xl font-bold text-gray-900">Gestión de Servicios</h1>
+          </div>
+          <p className="text-gray-600 mt-2">Administra los servicios, tours y experiencias del sistema</p>
         </div>
-        <div className="flex space-x-3">
-          <button
+        <div className="flex items-center gap-3">
+          <Button
             onClick={handleExport}
-            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            variant="outline"
+            className="flex items-center gap-2"
           >
             <Download className="h-4 w-4" />
             <span>Exportar Servicios</span>
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={handleCreate}
-            className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+            variant="primary"
+            className="flex items-center gap-2"
           >
             <Plus className="h-4 w-4" />
             <span>Crear Servicio</span>
-          </button>
+          </Button>
         </div>
       </div>
 

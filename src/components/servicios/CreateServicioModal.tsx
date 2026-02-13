@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
-import ReactDOM from 'react-dom';
-import { X, Package, Building, MapPin } from 'lucide-react';
+import { Package, Building, MapPin, Save, Info } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { CreateServicioModalProps, DatosServicio } from '../../types/servicio';
 import { validarPrecio } from '../../services/servicioService';
 import ProveedorAutocomplete from '../common/ProveedorAutocomplete';
+import { Modal } from '../ui/Modal';
+import { Input } from '../ui/Input';
+import { Select } from '../ui/Select';
+import { Textarea } from '../ui/Textarea';
+import { Button } from '../ui/Button';
 
 const CreateServicioModal: React.FC<CreateServicioModalProps> = ({ isOpen, onClose, onSave }) => {
   const [formData, setFormData] = useState<DatosServicio>({
@@ -35,7 +39,6 @@ const CreateServicioModal: React.FC<CreateServicioModalProps> = ({ isOpen, onClo
         type === 'number' ? Number(value) : value
     }));
 
-    // Limpiar error del campo cuando el usuario empiece a escribir
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
@@ -98,38 +101,25 @@ const CreateServicioModal: React.FC<CreateServicioModalProps> = ({ isOpen, onClo
     setLoading(true);
     try {
       await onSave(formData);
-      // Resetear formulario
-      setFormData({
-        proveedor_id: '',
-        nombre: '',
-        descripcion: '',
-        tipo_servicio: '',
-        precio: 0,
-        moneda: 'COP',
-        activo: true,
-        fecha_creacion: new Date().toISOString(),
-        fecha_actualizacion: new Date().toISOString(),
-        relevancia: 'Media',
-        ciudad: '',
-        departamento: '',
-        ubicacion: '',
-        detalles_del_servicio: ''
-      });
-      setSelectedProveedorName('');
-      setErrors({});
+      handleReset();
     } catch (error) {
       console.error(error);
       Swal.fire({
         icon: 'error',
         title: 'Error',
-        text: 'No se pudo crear el servicio'
+        text: 'No se pudo crear el servicio',
+        customClass: {
+          popup: 'rounded-xl shadow-2xl',
+          title: 'text-xl font-bold text-gray-900',
+          confirmButton: 'px-6 py-3 rounded-lg font-medium transition-all duration-200 hover:shadow-lg',
+        }
       });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleClose = () => {
+  const handleReset = () => {
     setFormData({
       proveedor_id: '',
       nombre: '',
@@ -148,107 +138,83 @@ const CreateServicioModal: React.FC<CreateServicioModalProps> = ({ isOpen, onClo
     });
     setSelectedProveedorName('');
     setErrors({});
+  };
+
+  const handleClose = () => {
+    handleReset();
     onClose();
   };
 
-  if (!isOpen) return null;
-
-  const modalContent = (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">Crear Nuevo Servicio</h2>
-          <button
-            onClick={handleClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            <X className="h-6 w-6" />
-          </button>
-        </div>
-
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Información Principal */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-900 flex items-center">
-                <Package className="h-5 w-5 text-blue-600 mr-2" />
-                Información Principal
-              </h3>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nombre del Servicio *
-                </label>
-                <input
-                  type="text"
-                  name="nombre"
-                  value={formData.nombre}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.nombre ? 'border-red-500' : 'border-gray-300'
-                    }`}
-                  placeholder="Ingrese el nombre del servicio"
-                />
-                {errors.nombre && <p className="text-red-500 text-sm mt-1">{errors.nombre}</p>}
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={handleClose}
+      title="Crear Nuevo Servicio"
+      description="Completa la información para registrar un nuevo servicio en el sistema"
+      size="xl"
+    >
+      <form onSubmit={handleSubmit} className="space-y-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Información Principal */}
+          <div className="space-y-6">
+            <div className="flex items-center gap-2 pb-2 border-b border-secondary-100">
+              <div className="p-1.5 bg-primary-100 text-primary-700 rounded-lg">
+                <Package className="h-5 w-5" />
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Tipo de Servicio *
-                </label>
-                <input
-                  type="text"
-                  name="tipo_servicio"
-                  value={formData.tipo_servicio}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.tipo_servicio ? 'border-red-500' : 'border-gray-300'
-                    }`}
-                  placeholder="Ej: Hospedaje, Transporte, Alimentación"
-                />
-                {errors.tipo_servicio && <p className="text-red-500 text-sm mt-1">{errors.tipo_servicio}</p>}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Descripción *
-                </label>
-                <textarea
-                  name="descripcion"
-                  value={formData.descripcion}
-                  onChange={handleInputChange}
-                  rows={4}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.descripcion ? 'border-red-500' : 'border-gray-300'
-                    }`}
-                  placeholder="Descripción detallada del servicio"
-                />
-                {errors.descripcion && <p className="text-red-500 text-sm mt-1">{errors.descripcion}</p>}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Detalles del Servicio *
-                </label>
-                <textarea
-                  name="detalles_del_servicio"
-                  value={formData.detalles_del_servicio}
-                  onChange={handleInputChange}
-                  rows={3}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.detalles_del_servicio ? 'border-red-500' : 'border-gray-300'
-                    }`}
-                  placeholder="Detalles adicionales del servicio"
-                />
-                {errors.detalles_del_servicio && <p className="text-red-500 text-sm mt-1">{errors.detalles_del_servicio}</p>}
-              </div>
+              <h3 className="text-lg font-semibold text-secondary-900">Información General</h3>
             </div>
 
-            {/* Información Comercial y Ubicación */}
             <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-900 flex items-center">
-                <Building className="h-5 w-5 text-orange-600 mr-2" />
-                Información Comercial
-              </h3>
+              <Input
+                label="Nombre del Servicio *"
+                name="nombre"
+                value={formData.nombre}
+                onChange={handleInputChange}
+                error={errors.nombre}
+                placeholder="Ej: Tour Guatavita Premium"
+              />
 
+              <Input
+                label="Tipo de Servicio *"
+                name="tipo_servicio"
+                value={formData.tipo_servicio}
+                onChange={handleInputChange}
+                error={errors.tipo_servicio}
+                placeholder="Ej: Hospedaje, Transporte, Alimentación"
+              />
+
+              <Textarea
+                label="Descripción Corta *"
+                name="descripcion"
+                value={formData.descripcion}
+                onChange={handleInputChange}
+                error={errors.descripcion}
+                placeholder="Una breve descripción para mostrar en listados"
+                rows={3}
+              />
+
+              <Textarea
+                label="Detalles del Servicio *"
+                name="detalles_del_servicio"
+                value={formData.detalles_del_servicio}
+                onChange={handleInputChange}
+                error={errors.detalles_del_servicio}
+                placeholder="Información técnica, inclusiones, restricciones, cada detalle cuenta"
+                rows={4}
+              />
+            </div>
+          </div>
+
+          {/* Información Comercial y Ubicación */}
+          <div className="space-y-6">
+            <div className="flex items-center gap-2 pb-2 border-b border-secondary-100">
+              <div className="p-1.5 bg-amber-100 text-amber-700 rounded-lg">
+                <Building className="h-5 w-5" />
+              </div>
+              <h3 className="text-lg font-semibold text-secondary-900">Información Comercial</h3>
+            </div>
+
+            <div className="space-y-4">
               <ProveedorAutocomplete
                 value={formData.proveedor_id}
                 selectedName={selectedProveedorName}
@@ -262,148 +228,126 @@ const CreateServicioModal: React.FC<CreateServicioModalProps> = ({ isOpen, onClo
                 error={errors.proveedor_id}
               />
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Precio *
-                  </label>
-                  <input
-                    type="number"
-                    name="precio"
-                    value={formData.precio}
-                    onChange={handleInputChange}
-                    min="0"
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.precio ? 'border-red-500' : 'border-gray-300'
-                      }`}
-                    placeholder="0"
-                  />
-                  {errors.precio && <p className="text-red-500 text-sm mt-1">{errors.precio}</p>}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Moneda *
-                  </label>
-                  <select
-                    name="moneda"
-                    value={formData.moneda}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="COP">COP</option>
-                    <option value="USD">USD</option>
-                    <option value="EUR">EUR</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Relevancia *
-                </label>
-                <select
-                  name="relevancia"
-                  value={formData.relevancia}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Input
+                  label="Precio Unitario *"
+                  type="number"
+                  name="precio"
+                  value={formData.precio}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="Baja">Baja</option>
-                  <option value="Media">Media</option>
-                  <option value="Alta">Alta</option>
-                </select>
-              </div>
-
-              <h3 className="text-lg font-medium text-gray-900 flex items-center pt-4">
-                <MapPin className="h-5 w-5 text-red-600 mr-2" />
-                Ubicación
-              </h3>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Ciudad *
-                  </label>
-                  <input
-                    type="text"
-                    name="ciudad"
-                    value={formData.ciudad}
-                    onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.ciudad ? 'border-red-500' : 'border-gray-300'
-                      }`}
-                    placeholder="Ciudad"
-                  />
-                  {errors.ciudad && <p className="text-red-500 text-sm mt-1">{errors.ciudad}</p>}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Departamento *
-                  </label>
-                  <input
-                    type="text"
-                    name="departamento"
-                    value={formData.departamento}
-                    onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.departamento ? 'border-red-500' : 'border-gray-300'
-                      }`}
-                    placeholder="Departamento"
-                  />
-                  {errors.departamento && <p className="text-red-500 text-sm mt-1">{errors.departamento}</p>}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Ubicación Específica *
-                </label>
-                <input
-                  type="text"
-                  name="ubicacion"
-                  value={formData.ubicacion}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.ubicacion ? 'border-red-500' : 'border-gray-300'
-                    }`}
-                  placeholder="Dirección o ubicación específica"
+                  error={errors.precio}
+                  min="0"
+                  placeholder="0"
                 />
-                {errors.ubicacion && <p className="text-red-500 text-sm mt-1">{errors.ubicacion}</p>}
+                <Select
+                  label="Moneda *"
+                  name="moneda"
+                  value={formData.moneda}
+                  onChange={handleInputChange}
+                  options={[
+                    { value: 'COP', label: 'COP - Peso Colombiano' },
+                    { value: 'USD', label: 'USD - Dólar Americano' },
+                    { value: 'EUR', label: 'EUR - Euro' }
+                  ]}
+                />
               </div>
 
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  name="activo"
-                  checked={formData.activo}
-                  onChange={handleInputChange}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
-                <label className="ml-2 block text-sm text-gray-900">
-                  Servicio activo
-                </label>
+              <Select
+                label="Nivel de Relevancia"
+                name="relevancia"
+                value={formData.relevancia}
+                onChange={handleInputChange}
+                options={[
+                  { value: 'Baja', label: 'Baja' },
+                  { value: 'Media', label: 'Media' },
+                  { value: 'Alta', label: 'Alta' }
+                ]}
+              />
+            </div>
+
+            <div className="flex items-center gap-2 pb-2 border-b border-secondary-100 pt-4">
+              <div className="p-1.5 bg-rose-100 text-rose-700 rounded-lg">
+                <MapPin className="h-5 w-5" />
               </div>
+              <h3 className="text-lg font-semibold text-secondary-900">Ubicación</h3>
+            </div>
+
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Input
+                  label="Ciudad *"
+                  name="ciudad"
+                  value={formData.ciudad}
+                  onChange={handleInputChange}
+                  error={errors.ciudad}
+                  placeholder="Ciudad"
+                />
+                <Input
+                  label="Departamento *"
+                  name="departamento"
+                  value={formData.departamento}
+                  onChange={handleInputChange}
+                  error={errors.departamento}
+                  placeholder="Departamento"
+                />
+              </div>
+              <Input
+                label="Dirección / Punto de Encuentro *"
+                name="ubicacion"
+                value={formData.ubicacion}
+                onChange={handleInputChange}
+                error={errors.ubicacion}
+                placeholder="Ubicación exacta o descripción del punto de encuentro"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Footer and Settings */}
+        <div className="pt-6 border-t border-secondary-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center group cursor-pointer">
+            <div className="relative flex items-center">
+              <input
+                type="checkbox"
+                name="activo"
+                id="activo-create"
+                checked={formData.activo}
+                onChange={handleInputChange}
+                className="h-5 w-5 text-primary-600 focus:ring-primary-500 border-secondary-300 rounded-md transition-all cursor-pointer"
+              />
+            </div>
+            <label htmlFor="activo-create" className="ml-3 text-sm font-medium text-secondary-700 cursor-pointer">
+              Marcar como servicio activo
+            </label>
+            <div className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <Info className="h-4 w-4 text-secondary-400" />
             </div>
           </div>
 
-          {/* Footer */}
-          <div className="flex justify-end space-x-3 mt-8 pt-6 border-t border-gray-200">
-            <button
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <Button
               type="button"
+              variant="outline"
               onClick={handleClose}
-              className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+              className="flex-1 sm:flex-none"
             >
               Cancelar
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
+              variant="primary"
               disabled={loading}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+              isLoading={loading}
+              className="flex-1 sm:flex-none gap-2"
             >
-              {loading ? 'Creando...' : 'Crear Servicio'}
-            </button>
+              {!loading && <Save className="h-4 w-4" />}
+              Crear Servicio
+            </Button>
           </div>
-        </form>
-      </div>
-    </div>
+        </div>
+      </form>
+    </Modal>
   );
-
-  return ReactDOM.createPortal(modalContent, document.body);
 };
 
 export default CreateServicioModal;
