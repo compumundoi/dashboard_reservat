@@ -29,7 +29,7 @@ function App() {
       console.log('🚀 Iniciando proceso de login...');
       const response = await loginUser(credentials);
       console.log('✅ Respuesta de login exitosa:', response);
-      
+
       // Si el servidor devuelve un token, lo establecemos manualmente
       if (response.access_token) {
         console.log('🔐 Token recibido, estableciendo cookie...');
@@ -39,14 +39,14 @@ function App() {
         } catch (e) {
           console.warn('⚠️ No se pudo guardar token en localStorage:', e);
         }
-        
+
         // Verificar que el token sea válido antes de guardarlo
         const testUserData = decodeJWT(response.access_token);
         if (!testUserData) {
           console.error('❌ Token recibido pero no es válido');
           throw new Error('Token recibido del servidor pero no es válido');
         }
-        
+
         console.log('✅ Token válido y guardado en cookie:', testUserData.email);
         setUser(testUserData);
         try {
@@ -73,7 +73,7 @@ function App() {
           setError('No se recibió token de acceso. Contacta al administrador.');
         }
       }
-      
+
     } catch (err) {
       console.error('❌ Error en el proceso de login:', err);
       if (err instanceof Error) {
@@ -128,7 +128,7 @@ function App() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-pink-50 flex items-center justify-center p-4">
       {/* Background image with 40% opacity */}
       <div className="absolute inset-0 opacity-40">
-        <div 
+        <div
           className="w-full h-full bg-cover bg-center bg-no-repeat"
           style={{
             backgroundImage: `url('/fondo-login.png')`
@@ -139,7 +139,7 @@ function App() {
       {/* Login form container */}
       <div className="relative z-10 w-full max-w-md">
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-white/20">
-          <LoginForm 
+          <LoginForm
             onSubmit={handleLogin}
             loading={loading}
             error={error}
