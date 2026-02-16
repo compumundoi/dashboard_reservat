@@ -16,7 +16,6 @@ import {
   LayoutDashboard
 } from 'lucide-react';
 import { cn } from '../lib/utils';
-import { Button } from './ui';
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -111,24 +110,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
           );
         })}
       </nav>
-
-      <div className="p-4 border-t border-secondary-100 bg-secondary-50/30">
-        {!isCollapsed ? (
-          <div className="bg-gradient-to-br from-primary-900 to-primary-800 rounded-2xl p-4 text-white shadow-lg shadow-primary-900/20">
-            <h4 className="font-semibold text-sm mb-1">¿Necesitas ayuda?</h4>
-            <p className="text-primary-200 text-xs mb-3">Contacta a soporte técnico</p>
-            <Button variant="secondary" size="sm" className="w-full text-xs h-8 bg-white/10 text-white border-white/20 hover:bg-white/20">
-              Contáctanos
-            </Button>
-          </div>
-        ) : (
-          <div className="flex justify-center">
-            <div className="w-8 h-8 rounded-full bg-secondary-100 flex items-center justify-center">
-              <span className="text-xs text-secondary-500 font-bold">?</span>
-            </div>
-          </div>
-        )}
-      </div>
     </div>
   );
 };
