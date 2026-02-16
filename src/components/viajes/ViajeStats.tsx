@@ -8,33 +8,33 @@ const ViajeStats: React.FC<ViajeStatsProps> = ({ stats, loading }) => {
       title: 'Total Viajes',
       value: stats.totalViajes,
       icon: Plane,
-      color: 'bg-blue-500',
-      bgColor: 'bg-blue-50',
-      textColor: 'text-blue-700'
+      className: 'bg-blue-50 border-blue-100',
+      textColor: 'text-blue-600',
+      iconColor: 'text-blue-500'
     },
     {
       title: 'Viajes Activos',
       value: stats.viajesActivos,
       icon: CheckCircle,
-      color: 'bg-green-500',
-      bgColor: 'bg-green-50',
-      textColor: 'text-green-700'
+      className: 'bg-green-50 border-green-100',
+      textColor: 'text-green-600',
+      iconColor: 'text-green-500'
     },
     {
       title: 'Viajes en Curso',
       value: stats.viajesEnCurso,
       icon: Clock,
-      color: 'bg-yellow-500',
-      bgColor: 'bg-yellow-50',
-      textColor: 'text-yellow-700'
+      className: 'bg-purple-50 border-purple-100',
+      textColor: 'text-purple-600',
+      iconColor: 'text-purple-500'
     },
     {
-      title: 'Capacidad Promedio Disponible',
+      title: 'Capacidad Promedio',
       value: stats.capacidadPromedioDisponible,
       icon: Users,
-      color: 'bg-purple-500',
-      bgColor: 'bg-purple-50',
-      textColor: 'text-purple-700',
+      className: 'bg-orange-50 border-orange-100',
+      textColor: 'text-orange-600',
+      iconColor: 'text-orange-500',
       suffix: ' plazas'
     }
   ];
@@ -43,15 +43,13 @@ const ViajeStats: React.FC<ViajeStatsProps> = ({ stats, loading }) => {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[...Array(4)].map((_, index) => (
-          <div key={index} className="bg-white rounded-lg shadow p-6">
-            <div className="animate-pulse">
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-gray-200 rounded-lg"></div>
-                <div className="ml-4 flex-1">
-                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                  <div className="h-6 bg-gray-200 rounded w-1/2"></div>
-                </div>
+          <div key={index} className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
+            <div className="animate-pulse flex items-center justify-between">
+              <div className="space-y-2">
+                <div className="h-4 bg-gray-200 rounded w-24"></div>
+                <div className="h-8 bg-gray-200 rounded w-16"></div>
               </div>
+              <div className="h-12 w-12 bg-gray-200 rounded-lg"></div>
             </div>
           </div>
         ))}
@@ -64,17 +62,23 @@ const ViajeStats: React.FC<ViajeStatsProps> = ({ stats, loading }) => {
       {statsData.map((stat, index) => {
         const IconComponent = stat.icon;
         return (
-          <div key={index} className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
-            <div className="flex items-center">
-              <div className={`${stat.bgColor} ${stat.color} p-3 rounded-lg`}>
-                <IconComponent className="h-6 w-6 text-white" />
+          <div
+            key={index}
+            className={`${stat.className} rounded-xl p-6 border transition-all duration-200 hover:shadow-md`}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600 mb-1">{stat.title}</p>
+                <div className="flex items-baseline gap-1">
+                  <p className={`text-3xl font-bold ${stat.textColor}`}>
+                    {stat.value.toLocaleString('es-ES')}
+                  </p>
+                  {stat.suffix && (
+                    <span className="text-sm text-gray-500 font-medium">{stat.suffix}</span>
+                  )}
+                </div>
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">{stat.title}</p>
-                <p className={`text-2xl font-bold ${stat.textColor}`}>
-                  {stat.value.toLocaleString('es-ES')}{stat.suffix || ''}
-                </p>
-              </div>
+              <IconComponent className={`h-8 w-8 ${stat.iconColor}`} />
             </div>
           </div>
         );

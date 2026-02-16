@@ -7,11 +7,11 @@ const ViajeCharts: React.FC<ViajeChartsProps> = ({ chartData, loading }) => {
     return (
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {[...Array(2)].map((_, index) => (
-          <div key={index} className="bg-white rounded-lg shadow p-6">
+          <div key={index} className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
             <div className="animate-pulse">
               <div className="flex items-center mb-6">
-                <div className="w-6 h-6 bg-gray-200 rounded mr-3"></div>
-                <div className="h-5 bg-gray-200 rounded w-1/2"></div>
+                <div className="w-8 h-8 bg-gray-200 rounded-lg mr-3"></div>
+                <div className="h-6 bg-gray-200 rounded w-1/3"></div>
               </div>
               <div className="space-y-4">
                 {[...Array(4)].map((_, i) => (
@@ -54,33 +54,36 @@ const ViajeCharts: React.FC<ViajeChartsProps> = ({ chartData, loading }) => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Distribución por Estado */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <div className="flex items-center mb-6">
-          <BarChart3 className="h-6 w-6 text-blue-600 mr-3" />
-          <h3 className="text-lg font-semibold text-gray-900">Distribución por Estado</h3>
+      <div className="bg-white rounded-2xl p-6 border-none shadow-soft-xl">
+        <div className="flex items-center mb-8">
+          <div className="bg-blue-50 p-2 rounded-lg mr-3">
+            <BarChart3 className="h-5 w-5 text-blue-600" />
+          </div>
+          <h3 className="text-lg font-bold text-gray-900">Distribución por Estado</h3>
         </div>
-        <div className="space-y-4">
+        <div className="space-y-5">
           {chartData.estadoDistribution.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">No hay datos disponibles</p>
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <div className="bg-gray-50 p-3 rounded-full mb-3">
+                <BarChart3 className="h-6 w-6 text-gray-400" />
+              </div>
+              <p className="text-gray-500 font-medium">No hay datos disponibles</p>
+            </div>
           ) : (
             chartData.estadoDistribution.map((item, index) => (
-              <div key={index} className="flex items-center">
-                <div className="w-24 text-sm text-gray-600 font-medium capitalize">
+              <div key={index} className="flex items-center group">
+                <div className="w-28 text-sm text-gray-600 font-medium capitalize group-hover:text-gray-900 transition-colors">
                   {item.estado.replace('_', ' ')}
                 </div>
-                <div className="flex-1 mx-3">
-                  <div className="bg-gray-200 rounded-full h-6 relative overflow-hidden">
-                    <div 
-                      className={`h-full bg-gradient-to-r ${getEstadoColor(item.estado)} transition-all duration-500 ease-out flex items-center justify-end pr-2`}
+                <div className="flex-1 mx-4">
+                  <div className="bg-gray-100 rounded-full h-2.5 overflow-hidden">
+                    <div
+                      className={`h-full bg-gradient-to-r ${getEstadoColor(item.estado)} transition-all duration-1000 ease-out rounded-full`}
                       style={{ width: `${item.percentage}%` }}
-                    >
-                      <span className="text-white text-xs font-medium">
-                        {item.percentage}%
-                      </span>
-                    </div>
+                    />
                   </div>
                 </div>
-                <div className="w-12 text-right text-sm font-semibold text-gray-900">
+                <div className="w-12 text-right text-sm font-bold text-gray-900 tabular-nums">
                   {item.count}
                 </div>
               </div>
@@ -90,37 +93,40 @@ const ViajeCharts: React.FC<ViajeChartsProps> = ({ chartData, loading }) => {
       </div>
 
       {/* Viajes por Mes */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <div className="flex items-center mb-6">
-          <TrendingUp className="h-6 w-6 text-green-600 mr-3" />
-          <h3 className="text-lg font-semibold text-gray-900">Viajes por Mes</h3>
+      <div className="bg-white rounded-2xl p-6 border-none shadow-soft-xl">
+        <div className="flex items-center mb-8">
+          <div className="bg-green-50 p-2 rounded-lg mr-3">
+            <TrendingUp className="h-5 w-5 text-green-600" />
+          </div>
+          <h3 className="text-lg font-bold text-gray-900">Viajes por Mes</h3>
         </div>
-        <div className="space-y-4">
+        <div className="space-y-5">
           {chartData.viajePorMes.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">No hay datos disponibles</p>
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <div className="bg-gray-50 p-3 rounded-full mb-3">
+                <TrendingUp className="h-6 w-6 text-gray-400" />
+              </div>
+              <p className="text-gray-500 font-medium">No hay datos disponibles</p>
+            </div>
           ) : (
             chartData.viajePorMes.map((item, index) => {
               const maxCount = Math.max(...chartData.viajePorMes.map(v => v.count));
               const percentage = maxCount > 0 ? (item.count / maxCount) * 100 : 0;
-              
+
               return (
-                <div key={index} className="flex items-center">
-                  <div className="w-24 text-sm text-gray-600 font-medium">
+                <div key={index} className="flex items-center group">
+                  <div className="w-28 text-sm text-gray-600 font-medium group-hover:text-gray-900 transition-colors">
                     {item.mes}
                   </div>
-                  <div className="flex-1 mx-3">
-                    <div className="bg-gray-200 rounded-full h-6 relative overflow-hidden">
-                      <div 
-                        className={`h-full bg-gradient-to-r ${getMesColor(index)} transition-all duration-500 ease-out flex items-center justify-end pr-2`}
+                  <div className="flex-1 mx-4">
+                    <div className="bg-gray-100 rounded-full h-2.5 overflow-hidden">
+                      <div
+                        className={`h-full bg-gradient-to-r ${getMesColor(index)} transition-all duration-1000 ease-out rounded-full`}
                         style={{ width: `${percentage}%` }}
-                      >
-                        <span className="text-white text-xs font-medium">
-                          {item.count}
-                        </span>
-                      </div>
+                      />
                     </div>
                   </div>
-                  <div className="w-12 text-right text-sm font-semibold text-gray-900">
+                  <div className="w-12 text-right text-sm font-bold text-gray-900 tabular-nums">
                     {item.count}
                   </div>
                 </div>

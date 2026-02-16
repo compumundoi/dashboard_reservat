@@ -9,6 +9,7 @@ import ViajeCharts from './ViajeCharts';
 import ViajeDetailModal from './ViajeDetailModal';
 import EditViajeModal from './EditViajeModal';
 import CreateViajeModal from './CreateViajeModal';
+import { Button } from '../ui/Button';
 import Swal from 'sweetalert2';
 
 const ViajesSection: React.FC = () => {
@@ -245,32 +246,32 @@ const ViajesSection: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center space-x-3">
-            <MapPin className="h-8 w-8 text-blue-600" />
-            <h1 className="text-2xl font-bold text-gray-900">Viajes</h1>
+            <div className="bg-blue-600 p-2 rounded-lg">
+              <MapPin className="h-6 w-6 text-white" />
+            </div>
+            <h1 className="text-3xl font-bold text-gray-900">Gestión de Viajes</h1>
           </div>
-          <p className="text-sm text-gray-500 mt-1">
-            {displayTotalItems} viajes encontrados
-          </p>
+          <p className="text-gray-600 mt-2">Administra los viajes, asignaciones y disponibilidad</p>
         </div>
-        <div className="flex space-x-3 mt-4 sm:mt-0">
-          <button
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
             onClick={handleExport}
             disabled={loading || displayViajes.length === 0}
-            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            leftIcon={<Download className="h-4 w-4" />}
           >
-            <Download className="h-4 w-4 mr-2" />
-            Exportar Viajes
-          </button>
-          <button
+            Exportar
+          </Button>
+          <Button
+            variant="primary"
             onClick={() => setShowCreateModal(true)}
-            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+            leftIcon={<Plus className="h-4 w-4" />}
           >
-            <Plus className="h-4 w-4 mr-2" />
             Crear Viaje
-          </button>
+          </Button>
         </div>
       </div>
 
