@@ -1,6 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { Search, Eye, Edit, Trash2, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import React from 'react';
+import { Search, Eye, Edit, Trash2, ChevronLeft, ChevronRight, X, User } from 'lucide-react';
 import { MayoristaData } from '../../types/mayorista';
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '../ui/Table';
+import { Badge } from '../ui/Badge';
+import { Button } from '../ui/Button';
+import { Input } from '../ui/Input';
+import { cn } from '../../lib/utils';
 
 interface MayoristaTableProps {
   mayoristas: MayoristaData[];
@@ -33,75 +38,18 @@ const MayoristaTable: React.FC<MayoristaTableProps> = ({
   onEditMayorista,
   onDeleteMayorista,
 }) => {
-  const [localSearchTerm, setLocalSearchTerm] = useState(searchTerm);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      onSearchChange(localSearchTerm);
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [localSearchTerm, onSearchChange]);
-
-  const getActivoBadge = (activo: boolean) => {
-    return activo 
-      ? 'bg-green-100 text-green-800'
-      : 'bg-red-100 text-red-800';
-  };
-
-  const getVerificadoBadge = (verificado: boolean) => {
-    return verificado
-      ? 'bg-green-100 text-green-800'
-      : 'bg-red-100 text-red-800';
-  };
-
-  const renderPaginationNumbers = () => {
-    const pages = [];
-    const maxVisiblePages = 5;
-    
-    if (totalPages <= maxVisiblePages) {
-      for (let i = 1; i <= totalPages; i++) {
-        pages.push(i);
-      }
-    } else {
-      if (currentPage <= 3) {
-        pages.push(1, 2, 3, 4, '...', totalPages);
-      } else if (currentPage >= totalPages - 2) {
-        pages.push(1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
-      } else {
-        pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
-      }
-    }
-
-    return pages.map((page, index) => (
-      <button
-        key={index}
-        onClick={() => typeof page === 'number' && onPageChange(page)}
-        disabled={page === '...' || page === currentPage}
-        className={`px-3 py-2 text-sm font-medium rounded-md ${
-          page === currentPage
-            ? 'bg-blue-600 text-white'
-            : page === '...'
-            ? 'text-gray-400 cursor-not-allowed'
-            : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
-        }`}
-      >
-        {page}
-      </button>
-    ));
-  };
+  // Calcular rango de elementos mostrados
+  const startItem = (currentPage - 1) * pageSize + 1;
+  const endItem = Math.min(currentPage * pageSize, totalItems);
 
   if (loading) {
     return (
-      <div className="bg-white rounded-lg shadow">
-        <div className="p-6">
-          <div className="flex justify-between items-center mb-4">
-            <div className="h-8 bg-gray-200 rounded animate-pulse w-64"></div>
-            <div className="h-8 bg-gray-200 rounded animate-pulse w-32"></div>
-          </div>
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-8">
+        <div className="animate-pulse space-y-6">
+          <div className="h-10 bg-gray-100 rounded-lg w-full"></div>
           <div className="space-y-4">
-            {[...Array(5)].map((_, index) => (
-              <div key={index} className="h-16 bg-gray-200 rounded animate-pulse"></div>
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="h-16 bg-gray-50 rounded-lg w-full"></div>
             ))}
           </div>
         </div>
@@ -110,214 +58,230 @@ const MayoristaTable: React.FC<MayoristaTableProps> = ({
   }
 
   return (
-    <div className="bg-white rounded-lg shadow">
-      <div className="p-6">
-        {/* Header con título y controles */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-medium text-gray-900">
-              Lista de Mayoristas ({totalItems} total)
-            </h3>
-            <div className="flex items-center space-x-2">
-              <span className="text-sm text-gray-700">Mostrar</span>
-              <select
-                value={pageSize}
-                onChange={(e) => onPageSizeChange(Number(e.target.value))}
-                className="border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-              >
-                <option value={5}>5</option>
-                <option value={10}>10</option>
-                <option value={20}>20</option>
-                <option value={50}>50</option>
-              </select>
-              <span className="text-sm text-gray-700">
-                de {totalItems} mayoristas
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Barra de búsqueda */}
-        <div className="mb-4">
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-gray-400" />
-            </div>
-            <input
-              type="text"
-              className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-              placeholder="Buscar mayoristas..."
-              value={localSearchTerm}
-              onChange={(e) => setLocalSearchTerm(e.target.value)}
-            />
-            {localSearchTerm && (
-              <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-                <button
-                  onClick={() => setLocalSearchTerm('')}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Tabla */}
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Mayorista
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Contacto
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Ubicación
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Tipo/Intereses
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Estado
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Verificado
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Acciones
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {mayoristas.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center">
-                    <div className="text-gray-500">
-                      {searchTerm ? (
-                        <>
-                          <p className="text-lg font-medium">No se encontraron resultados</p>
-                          <p className="text-sm">No hay mayoristas que coincidan con "{searchTerm}"</p>
-                        </>
-                      ) : (
-                        <>
-                          <p className="text-lg font-medium">No hay mayoristas registrados</p>
-                          <p className="text-sm">Comienza creando tu primer mayorista</p>
-                        </>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                mayoristas.map((mayorista) => (
-                  <tr key={mayorista.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0 h-10 w-10">
-                          <div className="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center">
-                            <span className="text-white font-medium text-sm">
-                              {mayorista.nombre.charAt(0).toUpperCase()}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
-                            {mayorista.nombre} {mayorista.apellidos}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {mayorista.tipo_documento}: {mayorista.numero_documento}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{mayorista.email}</div>
-                      <div className="text-sm text-gray-500">{mayorista.telefono}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{mayorista.ciudad}</div>
-                      <div className="text-sm text-gray-500">{mayorista.pais}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
-                        {mayorista.recurente ? 'Recurrente' : 'Ocasional'}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {mayorista.intereses || 'Sin intereses especificados'}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getActivoBadge(mayorista.activo)}`}>
-                        {mayorista.activo ? 'Activo' : 'Inactivo'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getVerificadoBadge(mayorista.verificado)}`}>
-                        {mayorista.verificado ? 'Verificado' : 'No verificado'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => onViewMayorista(mayorista.id)}
-                          className="text-blue-600 hover:text-blue-900 transition-colors"
-                          title="Ver detalles"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => onEditMayorista(mayorista.id)}
-                          className="text-yellow-600 hover:text-yellow-900 transition-colors"
-                          title="Editar"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => onDeleteMayorista(mayorista.id)}
-                          className="text-red-600 hover:text-red-900 transition-colors"
-                          title="Eliminar"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Paginación */}
-        {totalItems > 0 && (
-          <div className="flex items-center justify-between mt-6">
-            <div className="text-sm text-gray-700">
-              Mostrando {((currentPage - 1) * pageSize) + 1} a {Math.min(currentPage * pageSize, totalItems)} de {totalItems} mayoristas
-            </div>
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => onPageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="p-2 text-gray-400 hover:text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <ChevronLeft className="w-5 h-5" />
+    <div className="space-y-4">
+      {/* Filters & Search */}
+      <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
+        <div className="relative w-full md:w-96">
+          <Input
+            placeholder="Buscar mayoristas..."
+            value={searchTerm}
+            onChange={(e) => onSearchChange(e.target.value)}
+            leftIcon={<Search className="h-4 w-4" />}
+            rightIcon={searchTerm ? (
+              <button onClick={() => onSearchChange('')} className="hover:text-gray-600 transition-colors">
+                <X className="h-4 w-4" />
               </button>
-              <div className="flex space-x-1">
-                {renderPaginationNumbers()}
-              </div>
-              <button
-                onClick={() => onPageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className="p-2 text-gray-400 hover:text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <ChevronRight className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-        )}
+            ) : null}
+          />
+        </div>
+
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <span className="text-sm text-gray-500 whitespace-nowrap">Mostrar:</span>
+          <select
+            value={pageSize}
+            onChange={(e) => onPageSizeChange(Number(e.target.value))}
+            className="h-10 border border-gray-200 rounded-xl px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+          >
+            <option value={5}>5</option>
+            <option value={10}>10</option>
+            <option value={20}>20</option>
+            <option value={50}>50</option>
+          </select>
+        </div>
       </div>
+
+      {/* Table */}
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Mayorista</TableHead>
+            <TableHead>Contacto</TableHead>
+            <TableHead>Ubicación</TableHead>
+            <TableHead>Tipo/Intereses</TableHead>
+            <TableHead>Estado</TableHead>
+            <TableHead>Verificado</TableHead>
+            <TableHead className="text-right">Acciones</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {mayoristas.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={7} className="h-64 text-center">
+                <div className="flex flex-col items-center justify-center text-gray-400">
+                  <User className="h-12 w-12 mb-4 opacity-20" />
+                  <p className="text-lg font-medium">No se encontraron resultados</p>
+                  <p className="text-sm">Prueba ajustando los filtros de búsqueda</p>
+                  {searchTerm && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onSearchChange('')}
+                      className="mt-4"
+                    >
+                      Limpiar búsqueda
+                    </Button>
+                  )}
+                </div>
+              </TableCell>
+            </TableRow>
+          ) : (
+            mayoristas.map((mayorista) => (
+              <TableRow key={mayorista.id}>
+                <TableCell>
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold border border-blue-200 shadow-sm shrink-0">
+                      {mayorista.nombre.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                      <span className="font-medium text-gray-900 truncate">
+                        {mayorista.nombre} {mayorista.apellidos}
+                      </span>
+                      <span className="text-xs text-gray-500 truncate max-w-[200px]">
+                        {mayorista.tipo_documento}: {mayorista.numero_documento}
+                      </span>
+                    </div>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="flex flex-col">
+                    <span className="text-sm text-gray-900">{mayorista.email}</span>
+                    <span className="text-xs text-gray-500">{mayorista.telefono}</span>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="flex flex-col">
+                    <span className="text-sm text-gray-900">{mayorista.ciudad}</span>
+                    <span className="text-xs text-gray-500">{mayorista.pais}</span>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="flex flex-col">
+                    <span className="font-medium text-gray-900">
+                      {mayorista.recurente ? 'Recurrente' : 'Ocasional'}
+                    </span>
+                    <span className="text-xs text-gray-500 truncate max-w-[150px]">
+                      {mayorista.intereses || 'Sin intereses'}
+                    </span>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <Badge
+                    variant={mayorista.activo ? 'success' : 'secondary'}
+                    className="rounded-full"
+                  >
+                    {mayorista.activo ? 'Activo' : 'Inactivo'}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <Badge
+                    variant={mayorista.verificado ? 'success' : 'warning'}
+                    className="rounded-full"
+                  >
+                    {mayorista.verificado ? 'Verificado' : 'No verificado'}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex items-center justify-end gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onViewMayorista(mayorista.id)}
+                      className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                      title="Ver detalles"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onEditMayorista(mayorista.id)}
+                      className="text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+                      title="Editar"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onDeleteMayorista(mayorista.id)}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      title="Eliminar"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="bg-white px-6 py-4 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between">
+          <p className="text-sm text-gray-500">
+            Mostrando <span className="font-medium text-gray-900">{startItem}</span> a{' '}
+            <span className="font-medium text-gray-900">{endItem}</span> de{' '}
+            <span className="font-medium text-gray-900">{totalItems}</span> resultados
+          </p>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={currentPage === 1}
+              onClick={() => onPageChange(currentPage - 1)}
+              className="gap-1 px-3"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              <span className="hidden sm:inline">Anterior</span>
+            </Button>
+
+            <div className="flex items-center gap-1">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => {
+                // Logic to show only some page numbers if there are too many
+                if (
+                  totalPages > 7 &&
+                  pageNum !== 1 &&
+                  pageNum !== totalPages &&
+                  (pageNum < currentPage - 1 || pageNum > currentPage + 1)
+                ) {
+                  if (pageNum === currentPage - 2 || pageNum === currentPage + 2) {
+                    return <span key={pageNum} className="px-2 text-gray-400">...</span>;
+                  }
+                  return null;
+                }
+
+                return (
+                  <Button
+                    key={pageNum}
+                    size="sm"
+                    variant={currentPage === pageNum ? 'primary' : 'ghost'}
+                    onClick={() => onPageChange(pageNum)}
+                    className={cn(
+                      "min-w-[32px] w-8 h-8 p-0 rounded-lg",
+                      currentPage !== pageNum && "text-gray-600 hover:bg-gray-100"
+                    )}
+                  >
+                    {pageNum}
+                  </Button>
+                );
+              })}
+            </div>
+
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={currentPage === totalPages}
+              onClick={() => onPageChange(currentPage + 1)}
+              className="gap-1 px-3"
+            >
+              <span className="hidden sm:inline">Siguiente</span>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

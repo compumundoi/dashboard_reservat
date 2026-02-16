@@ -8,52 +8,17 @@ interface MayoristaStatsProps {
 }
 
 const MayoristaStats: React.FC<MayoristaStatsProps> = ({ stats, loading }) => {
-  const statsData = [
-    {
-      title: 'Total Mayoristas',
-      value: stats.total,
-      icon: Users,
-      color: 'bg-blue-500',
-      bgColor: 'bg-blue-50',
-      textColor: 'text-blue-700'
-    },
-    {
-      title: 'Mayoristas Activos',
-      value: stats.activos,
-      icon: CheckCircle,
-      color: 'bg-green-500',
-      bgColor: 'bg-green-50',
-      textColor: 'text-green-700'
-    },
-    {
-      title: 'Mayoristas Verificados',
-      value: stats.verificados,
-      icon: Shield,
-      color: 'bg-orange-500',
-      bgColor: 'bg-orange-50',
-      textColor: 'text-orange-700'
-    },
-    {
-      title: 'Mayoristas Recurrentes',
-      value: stats.recurrentes,
-      icon: Repeat,
-      color: 'bg-purple-500',
-      bgColor: 'bg-purple-50',
-      textColor: 'text-purple-700'
-    }
-  ];
-
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[...Array(4)].map((_, index) => (
-          <div key={index} className="bg-white rounded-lg shadow p-6">
+          <div key={index} className="bg-white rounded-xl p-6 border border-gray-100 animate-pulse">
             <div className="flex items-center justify-between">
-              <div>
-                <div className="h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
-                <div className="h-8 bg-gray-200 rounded animate-pulse w-16"></div>
+              <div className="space-y-2">
+                <div className="h-4 bg-gray-200 rounded w-24"></div>
+                <div className="h-8 bg-gray-200 rounded w-16"></div>
               </div>
-              <div className="w-12 h-12 bg-gray-200 rounded-full animate-pulse"></div>
+              <div className="h-8 w-8 bg-gray-200 rounded-lg"></div>
             </div>
           </div>
         ))}
@@ -62,27 +27,50 @@ const MayoristaStats: React.FC<MayoristaStatsProps> = ({ stats, loading }) => {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-      {statsData.map((stat, index) => {
-        const IconComponent = stat.icon;
-        return (
-          <div key={index} className="bg-white rounded-lg shadow p-6 transition-all duration-200 hover:shadow-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">{stat.title}</p>
-                {loading ? (
-                  <div className="h-8 bg-gray-200 rounded animate-pulse mt-2"></div>
-                ) : (
-                  <p className="text-3xl font-bold text-gray-900">{stat.value.toLocaleString()}</p>
-                )}
-              </div>
-              <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
-                <IconComponent className="w-6 h-6 text-gray-600" />
-              </div>
-            </div>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Total */}
+      <div className="bg-blue-50 rounded-xl p-6 border border-gray-100">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm text-gray-500">Total Mayoristas</p>
+            <p className="text-3xl font-bold text-blue-600">{stats.total.toLocaleString('es-ES')}</p>
           </div>
-        );
-      })}
+          <Users className="h-8 w-8 text-blue-500" />
+        </div>
+      </div>
+
+      {/* Activos */}
+      <div className="bg-green-50 rounded-xl p-6 border border-gray-100">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm text-gray-500">Mayoristas Activos</p>
+            <p className="text-3xl font-bold text-green-600">{stats.activos.toLocaleString('es-ES')}</p>
+          </div>
+          <CheckCircle className="h-8 w-8 text-green-500" />
+        </div>
+      </div>
+
+      {/* Verificados */}
+      <div className="bg-orange-50 rounded-xl p-6 border border-gray-100">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm text-gray-500">Mayoristas Verificados</p>
+            <p className="text-3xl font-bold text-orange-600">{stats.verificados.toLocaleString('es-ES')}</p>
+          </div>
+          <Shield className="h-8 w-8 text-orange-500" />
+        </div>
+      </div>
+
+      {/* Recurrentes */}
+      <div className="bg-purple-50 rounded-xl p-6 border border-gray-100">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm text-gray-500">Mayoristas Recurrentes</p>
+            <p className="text-3xl font-bold text-purple-600">{stats.recurrentes.toLocaleString('es-ES')}</p>
+          </div>
+          <Repeat className="h-8 w-8 text-purple-500" />
+        </div>
+      </div>
     </div>
   );
 };
