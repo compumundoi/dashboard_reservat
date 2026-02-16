@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, Download, Shield } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Plus, Download, ShieldAlert } from 'lucide-react';
 import { RestriccionData, RestriccionStatsData, RestriccionChartData } from '../../types/restriccion';
 import { restriccionService } from '../../services/restriccionService';
 import RestriccionTable from './RestriccionTable';
@@ -8,6 +8,7 @@ import RestriccionCharts from './RestriccionCharts';
 import RestriccionDetailModal from './RestriccionDetailModal';
 import EditRestriccionModal from './EditRestriccionModal';
 import CreateRestriccionModal from './CreateRestriccionModal';
+import { Button } from '../ui/Button';
 import Swal from 'sweetalert2';
 
 const RestriccionesSection: React.FC = () => {
@@ -42,21 +43,21 @@ const RestriccionesSection: React.FC = () => {
   const [selectedRestriccionId, setSelectedRestriccionId] = useState<string | null>(null);
 
   // Cargar restricciones
-  const loadRestricciones = async (page: number = currentPage, size: number = pageSize) => {
+  const loadRestricciones = useCallback(async (page: number = currentPage, size: number = pageSize) => {
     try {
       setLoading(true);
       const response = await restriccionService.getRestricciones(page - 1, size); // API usa paginación 0-based
-      
+
       const processedData = restriccionService.processRestriccionesForUI(response.fechas_bloqueadas);
       setRestricciones(processedData);
       setTotalItems(response.total);
       setTotalPages(Math.ceil(response.total / size));
-      
+
       // Si no hay búsqueda activa, usar los datos paginados de la API
       if (!searchTerm) {
         setFilteredRestricciones(processedData);
       }
-      
+
     } catch (error) {
       console.error('Error loading restricciones:', error);
       Swal.fire({
@@ -68,10 +69,10 @@ const RestriccionesSection: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, pageSize, searchTerm]);
 
   // Cargar estadísticas
-  const loadStats = async () => {
+  const loadStats = useCallback(async () => {
     try {
       setStatsLoading(true);
       const statsData = await restriccionService.calculateStats();
@@ -81,10 +82,10 @@ const RestriccionesSection: React.FC = () => {
     } finally {
       setStatsLoading(false);
     }
-  };
+  }, []);
 
   // Cargar datos para gráficos
-  const loadChartData = async () => {
+  const loadChartData = useCallback(async () => {
     try {
       setChartsLoading(true);
       const chartData = await restriccionService.generateChartData();
@@ -94,7 +95,7 @@ const RestriccionesSection: React.FC = () => {
     } finally {
       setChartsLoading(false);
     }
-  };
+  }, []);
 
   // Filtrado local para búsqueda
   useEffect(() => {
@@ -119,14 +120,14 @@ const RestriccionesSection: React.FC = () => {
     loadRestricciones();
     loadStats();
     loadChartData();
-  }, []);
+  }, [loadRestricciones, loadStats, loadChartData]);
 
   // Cargar restricciones cuando cambie la página o el tamaño de página (solo si no hay búsqueda activa)
   useEffect(() => {
     if (!searchTerm) {
       loadRestricciones(currentPage, pageSize);
     }
-  }, [currentPage, pageSize]);
+  }, [currentPage, pageSize, searchTerm, loadRestricciones]);
 
   // Handlers
   const handlePageChange = (page: number) => {
@@ -163,18 +164,27 @@ const RestriccionesSection: React.FC = () => {
         confirmButtonColor: '#ef4444',
         cancelButtonColor: '#6b7280',
         confirmButtonText: 'Sí, eliminar',
-        cancelButtonText: 'Cancelar'
+        cancelButtonText: 'Cancelar',
+        customClass: {
+          popup: 'rounded-xl shadow-2xl',
+          title: 'text-xl font-bold text-gray-900',
+          confirmButton: 'px-6 py-3 rounded-lg font-medium transition-all duration-200 hover:shadow-lg',
+          cancelButton: 'px-6 py-3 rounded-lg font-medium transition-all duration-200 hover:shadow-lg',
+        }
       });
 
       if (result.isConfirmed) {
         await restriccionService.deleteRestriccion(id);
-        
+
         Swal.fire({
           icon: 'success',
           title: 'Eliminado',
           text: 'La restricción ha sido eliminada correctamente',
           timer: 2000,
-          showConfirmButton: false
+          showConfirmButton: false,
+          customClass: {
+            popup: 'rounded-xl shadow-2xl',
+          }
         });
 
         await loadRestricciones();
@@ -187,6 +197,9 @@ const RestriccionesSection: React.FC = () => {
         icon: 'error',
         title: 'Error',
         text: 'No se pudo eliminar la restricción. Por favor, intenta de nuevo.',
+        customClass: {
+          popup: 'rounded-xl shadow-2xl',
+        }
       });
     }
   };
@@ -199,7 +212,10 @@ const RestriccionesSection: React.FC = () => {
         title: 'Exportación exitosa',
         text: 'El archivo Excel ha sido descargado correctamente',
         timer: 2000,
-        showConfirmButton: false
+        showConfirmButton: false,
+        customClass: {
+          popup: 'rounded-xl shadow-2xl',
+        }
       });
     } catch (error) {
       console.error('Error al exportar:', error);
@@ -207,6 +223,9 @@ const RestriccionesSection: React.FC = () => {
         icon: 'error',
         title: 'Error en la exportación',
         text: 'No se pudo exportar el archivo. Por favor, intenta de nuevo.',
+        customClass: {
+          popup: 'rounded-xl shadow-2xl',
+        }
       });
     }
   };
@@ -217,36 +236,38 @@ const RestriccionesSection: React.FC = () => {
     await loadChartData();
   };
 
-  const selectedRestriccion = selectedRestriccionId 
-    ? restricciones.find(r => r.id === selectedRestriccionId) 
+  const selectedRestriccion = selectedRestriccionId
+    ? restricciones.find(r => r.id === selectedRestriccionId)
     : null;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center">
-            <Shield className="h-6 w-6 mr-2 text-red-600" />
-            Gestión de Restricciones
-          </h1>
-          <p className="text-gray-600">Administra las fechas bloqueadas del sistema</p>
+          <div className="flex items-center space-x-3">
+            <ShieldAlert className="h-8 w-8 text-blue-600" />
+            <h1 className="text-3xl font-bold text-gray-900">Gestión de Restricciones</h1>
+          </div>
+          <p className="text-gray-600 mt-2">Administra las fechas bloqueadas y restricciones del sistema</p>
         </div>
-        <div className="flex space-x-3">
-          <button
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
             onClick={handleExport}
-            className="flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="flex items-center gap-2"
           >
-            <Download className="h-4 w-4 mr-2" />
-            Exportar Restricciones
-          </button>
-          <button
+            <Download className="h-4 w-4" />
+            <span>Exportar</span>
+          </Button>
+          <Button
+            variant="primary"
             onClick={() => setCreateModalOpen(true)}
-            className="flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+            className="flex items-center gap-2"
           >
-            <Plus className="h-4 w-4 mr-2" />
-            Crear Restricción
-          </button>
+            <Plus className="h-4 w-4" />
+            <span>Crear Restricción</span>
+          </Button>
         </div>
       </div>
 

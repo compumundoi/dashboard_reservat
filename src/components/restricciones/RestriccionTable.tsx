@@ -1,6 +1,12 @@
 import React from 'react';
-import { Search, Eye, Edit, Trash2, Calendar, User, Shield, Clock } from 'lucide-react';
+import { Search, Eye, Edit, Trash2, Calendar, User, X } from 'lucide-react';
 import { RestriccionTableProps } from '../../types/restriccion';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../ui/Table';
+import { Button } from '../ui/Button';
+import { Input } from '../ui/Input';
+import { Badge } from '../ui/Badge';
+import { RestriccionData } from '../../types/restriccion';
+import { cn } from '../../lib/utils';
 
 const RestriccionTable: React.FC<RestriccionTableProps> = ({
   restricciones,
@@ -25,296 +31,250 @@ const RestriccionTable: React.FC<RestriccionTableProps> = ({
     onSearch('');
   };
 
-  const renderPagination = () => {
-    if (totalPages <= 1) return null;
-
-    const getVisiblePages = () => {
-      const delta = 2;
-      const range = [];
-      const rangeWithDots = [];
-
-      for (let i = Math.max(2, currentPage - delta); i <= Math.min(totalPages - 1, currentPage + delta); i++) {
-        range.push(i);
-      }
-
-      if (currentPage - delta > 2) {
-        rangeWithDots.push(1, '...');
-      } else {
-        rangeWithDots.push(1);
-      }
-
-      rangeWithDots.push(...range);
-
-      if (currentPage + delta < totalPages - 1) {
-        rangeWithDots.push('...', totalPages);
-      } else {
-        rangeWithDots.push(totalPages);
-      }
-
-      return rangeWithDots;
-    };
-
-    return (
-      <div className="flex items-center justify-center space-x-2 mt-4">
-        <button
-          onClick={() => onPageChange(currentPage - 1)}
-          disabled={currentPage === 1}
-          className="px-3 py-1 rounded-md border border-gray-300 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          Anterior
-        </button>
-
-        {getVisiblePages().map((page, index) => (
-          <button
-            key={index}
-            onClick={() => typeof page === 'number' ? onPageChange(page) : undefined}
-            disabled={typeof page !== 'number'}
-            className={`px-3 py-1 rounded-md text-sm font-medium ${
-              page === currentPage
-                ? 'bg-blue-600 text-white border border-blue-600'
-                : typeof page === 'number'
-                ? 'border border-gray-300 text-gray-500 hover:text-gray-700 hover:border-gray-400'
-                : 'text-gray-400 cursor-default'
-            }`}
-          >
-            {page}
-          </button>
-        ))}
-
-        <button
-          onClick={() => onPageChange(currentPage + 1)}
-          disabled={currentPage === totalPages}
-          className="px-3 py-1 rounded-md border border-gray-300 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          Siguiente
-        </button>
-      </div>
-    );
+  const getStatusBadgeVariant = (active: boolean) => {
+    return active ? 'success' : 'secondary';
   };
 
-  if (loading) {
-    return (
-      <div className="bg-white shadow rounded-lg">
-        <div className="px-4 py-5 sm:p-6">
-          <div className="animate-pulse">
-            <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
-            <div className="space-y-3">
+  return (
+    <div className="space-y-6">
+      {/* Search & Filters Container */}
+      <div className="bg-white p-4 rounded-xl border border-secondary-200 shadow-soft-sm flex flex-col md:flex-row gap-4 items-center justify-between">
+        <div className="relative w-full md:w-96">
+          <Input
+            placeholder="Buscar por motivo, servicio, fecha..."
+            value={searchTerm}
+            onChange={handleSearchChange}
+            leftIcon={<Search className="h-4 w-4" />}
+            rightIcon={searchTerm ? (
+              <button onClick={clearSearch} className="hover:text-secondary-600 transition-colors">
+                <X className="h-4 w-4" />
+              </button>
+            ) : null}
+          />
+        </div>
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <span className="text-sm text-secondary-500 whitespace-nowrap">Mostrar:</span>
+          <select
+            value={pageSize}
+            onChange={(e) => onPageSizeChange(Number(e.target.value))}
+            className="h-10 border border-secondary-200 rounded-xl px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
+          >
+            <option value={5}>5</option>
+            <option value={10}>10</option>
+            <option value={20}>20</option>
+            <option value={50}>50</option>
+          </select>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="bg-white rounded-xl border border-secondary-200 shadow-soft-sm p-8">
+          <div className="animate-pulse space-y-6">
+            <div className="h-10 bg-secondary-100 rounded-lg w-full"></div>
+            <div className="space-y-4">
               {[...Array(5)].map((_, i) => (
-                <div key={i} className="h-4 bg-gray-200 rounded"></div>
+                <div key={i} className="h-16 bg-secondary-50 rounded-lg w-full"></div>
               ))}
             </div>
           </div>
         </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="bg-white shadow rounded-lg">
-      <div className="px-4 py-5 sm:p-6">
-        {/* Header con título y controles */}
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-medium text-gray-900">
-            Lista de Restricciones ({totalItems} total)
-          </h3>
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-500">Mostrar</span>
-            <select
-              value={pageSize}
-              onChange={(e) => onPageSizeChange(Number(e.target.value))}
-              className="border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value={5}>5</option>
-              <option value={10}>10</option>
-              <option value={20}>20</option>
-              <option value={50}>50</option>
-            </select>
-            <span className="text-sm text-gray-500">de {totalItems} restricciones</span>
-          </div>
-        </div>
-
-        {/* Barra de búsqueda */}
-        <div className="relative mb-4">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="h-5 w-5 text-gray-400" />
-          </div>
-          <input
-            type="text"
-            placeholder="Buscar restricciones..."
-            value={searchTerm}
-            onChange={handleSearchChange}
-            className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-          />
-          {searchTerm && (
-            <button
-              onClick={clearSearch}
-              className="absolute inset-y-0 right-0 pr-3 flex items-center"
-            >
-              <span className="text-gray-400 hover:text-gray-600 text-sm">✕</span>
-            </button>
-          )}
-        </div>
-
-        {/* Tabla */}
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Servicio
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Fecha
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Motivo
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Bloqueado Por
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Estado
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Días Restantes
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Acciones
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+      ) : (
+        <>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Servicio</TableHead>
+                <TableHead>Fecha</TableHead>
+                <TableHead>Motivo</TableHead>
+                <TableHead>Bloqueado Por</TableHead>
+                <TableHead>Estado</TableHead>
+                <TableHead>Tiempo</TableHead>
+                <TableHead className="text-right">Acciones</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {restricciones.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
-                    {searchTerm ? 'No se encontraron restricciones que coincidan con la búsqueda.' : 'No hay restricciones registradas.'}
-                  </td>
-                </tr>
+                <TableRow>
+                  <TableCell colSpan={7} className="h-64 text-center">
+                    <div className="flex flex-col items-center justify-center text-secondary-400">
+                      <Calendar className="h-12 w-12 mb-4 opacity-20" />
+                      <p className="text-lg font-medium">No se encontraron restricciones</p>
+                      <p className="text-sm">Prueba ajustando los filtros de búsqueda</p>
+                      {searchTerm && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={clearSearch}
+                          className="mt-4"
+                        >
+                          Limpiar búsqueda
+                        </Button>
+                      )}
+                    </div>
+                  </TableCell>
+                </TableRow>
               ) : (
-                restricciones.map((restriccion) => (
-                  <tr key={restriccion.id} className="hover:bg-gray-50">
-                    {/* Servicio */}
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0 h-10 w-10">
-                          <div className="h-10 w-10 rounded-full bg-gradient-to-r from-purple-500 to-purple-600 flex items-center justify-center">
-                            <span className="text-sm font-medium text-white">
-                              {restriccion.servicio_nombre?.charAt(0) || 'S'}
-                            </span>
-                          </div>
+                restricciones.map((restriccion: RestriccionData) => (
+                  <TableRow key={restriccion.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-full bg-gradient-to-br from-orange-100 to-orange-200 text-orange-700 flex items-center justify-center font-bold border border-orange-200 shadow-sm shrink-0">
+                          {restriccion.servicio_nombre?.charAt(0) || 'S'}
                         </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
-                            {restriccion.servicio_nombre || 'Servicio no especificado'}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            ID: {restriccion.servicio_id.slice(-8)}
-                          </div>
+                        <div className="flex flex-col min-w-0">
+                          <span className="font-medium text-secondary-900 truncate max-w-[200px]">{restriccion.servicio_nombre || 'Sin nombre'}</span>
+                          <span className="text-xs text-secondary-500 font-mono uppercase tracking-tighter">ID: {restriccion.servicio_id.slice(0, 8)}...</span>
                         </div>
                       </div>
-                    </td>
-
-                    {/* Fecha */}
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center space-y-1">
-                        <Calendar className="h-3 w-3 text-gray-400 mr-2" />
-                        <div>
-                          <div className="text-sm text-gray-900">
-                            {restriccion.fecha_formateada}
-                          </div>
-                        </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1.5 text-secondary-700">
+                        <Calendar className="h-3.5 w-3.5 text-secondary-400" />
+                        <span className="font-medium">{restriccion.fecha_formateada}</span>
                       </div>
-                    </td>
-
-                    {/* Motivo */}
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-gray-900 max-w-xs truncate" title={restriccion.motivo}>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-secondary-600 truncate max-w-[200px] block" title={restriccion.motivo}>
                         {restriccion.motivo}
-                      </div>
-                    </td>
-
-                    {/* Bloqueado Por */}
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <User className="h-3 w-3 text-gray-400 mr-2" />
-                        <div className="text-sm text-gray-900">
-                          {restriccion.bloqueado_por}
-                        </div>
-                      </div>
-                    </td>
-
-                    {/* Estado */}
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        restriccion.bloqueo_activo
-                          ? 'bg-red-100 text-red-800'
-                          : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        <Shield className="h-3 w-3 mr-1" />
-                        {restriccion.bloqueo_activo ? 'Activo' : 'Inactivo'}
                       </span>
-                    </td>
-
-                    {/* Días Restantes */}
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <Clock className="h-3 w-3 text-gray-400 mr-2" />
-                        <div className="text-sm text-gray-900">
-                          {restriccion.dias_hasta_fecha !== undefined ? (
-                            restriccion.dias_hasta_fecha > 0 ? (
-                              <span className="text-orange-600">
-                                {restriccion.dias_hasta_fecha} días
-                              </span>
-                            ) : restriccion.dias_hasta_fecha === 0 ? (
-                              <span className="text-red-600 font-medium">Hoy</span>
-                            ) : (
-                              <span className="text-gray-500">
-                                {Math.abs(restriccion.dias_hasta_fecha)} días atrás
-                              </span>
-                            )
-                          ) : (
-                            'N/A'
-                          )}
-                        </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1.5 text-secondary-700">
+                        <User className="h-3.5 w-3.5 text-secondary-400" />
+                        <span>{restriccion.bloqueado_por}</span>
                       </div>
-                    </td>
-
-                    {/* Acciones */}
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex space-x-2">
-                        <button
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={getStatusBadgeVariant(restriccion.bloqueo_activo)} className="rounded-full">
+                        {restriccion.bloqueo_activo ? 'Activo' : 'Inactivo'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {restriccion.dias_hasta_fecha !== undefined ? (
+                        restriccion.dias_hasta_fecha > 0 ? (
+                          <Badge variant="warning" className="rounded-full">
+                            {restriccion.dias_hasta_fecha} días
+                          </Badge>
+                        ) : restriccion.dias_hasta_fecha === 0 ? (
+                          <Badge variant="error" className="rounded-full animate-pulse">
+                            Hoy
+                          </Badge>
+                        ) : (
+                          <span className="text-secondary-400 text-sm">Pasado</span>
+                        )
+                      ) : (
+                        <span className="text-secondary-400 text-sm">N/A</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                           onClick={() => onView(restriccion.id)}
-                          className="text-blue-600 hover:text-blue-900 p-1 rounded-full hover:bg-blue-100"
                           title="Ver detalles"
                         >
                           <Eye className="h-4 w-4" />
-                        </button>
-                        <button
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-amber-600 hover:text-amber-700 hover:bg-amber-50"
                           onClick={() => onEdit(restriccion.id)}
-                          className="text-yellow-600 hover:text-yellow-900 p-1 rounded-full hover:bg-yellow-100"
                           title="Editar"
                         >
                           <Edit className="h-4 w-4" />
-                        </button>
-                        <button
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
                           onClick={() => onDelete(restriccion.id)}
-                          className="text-red-600 hover:text-red-900 p-1 rounded-full hover:bg-red-100"
                           title="Eliminar"
                         >
                           <Trash2 className="h-4 w-4" />
-                        </button>
+                        </Button>
                       </div>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))
               )}
-            </tbody>
-          </table>
-        </div>
+            </TableBody>
+          </Table>
 
-        {/* Paginación */}
-        {renderPagination()}
-      </div>
+          {totalPages > 1 && (
+            <div className="bg-white px-6 py-4 rounded-xl border border-secondary-200 shadow-soft-sm flex items-center justify-between">
+              <p className="text-sm text-secondary-500">
+                Mostrando <span className="font-medium text-secondary-900">{(currentPage - 1) * pageSize + 1}</span> a{' '}
+                <span className="font-medium text-secondary-900">{Math.min(currentPage * pageSize, totalItems)}</span> de{' '}
+                <span className="font-medium text-secondary-900">{totalItems}</span> resultados
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={currentPage === 1}
+                  onClick={() => onPageChange(currentPage - 1)}
+                  className="gap-1 px-3"
+                >
+                  Anterior
+                </Button>
+
+                <div className="flex items-center gap-1">
+                  {/* Simplified pagination logic for now, can be expanded if needed or reuse existing function */}
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                    const pageNum = page;
+                    // Logic to show only some page numbers if there are too many
+                    // ServicioTable uses 0-based index for logic but displays pageNum+1. 
+                    // Here our pageNum is 1-based.
+                    // Let's adapt ServicioTable logic:
+                    // ServicioTable: current index vs totalPages count.
+                    // Here currentPage is 1-based.
+
+                    if (
+                      totalPages > 7 &&
+                      pageNum !== 1 &&
+                      pageNum !== totalPages &&
+                      (pageNum < currentPage - 1 || pageNum > currentPage + 1)
+                    ) {
+                      if (pageNum === currentPage - 2 || pageNum === currentPage + 2) {
+                        return <span key={pageNum} className="px-2 text-secondary-400">...</span>;
+                      }
+                      return null;
+                    }
+
+                    return (
+                      <Button
+                        key={pageNum}
+                        size="sm"
+                        variant={currentPage === pageNum ? 'primary' : 'ghost'}
+                        onClick={() => onPageChange(pageNum)}
+                        className={cn(
+                          "min-w-[32px] w-8 h-8 p-0 rounded-lg",
+                          currentPage !== pageNum && "text-secondary-600 hover:bg-secondary-100"
+                        )}
+                      >
+                        {pageNum}
+                      </Button>
+                    );
+                  })}
+                </div>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={currentPage === totalPages}
+                  onClick={() => onPageChange(currentPage + 1)}
+                  className="gap-1 px-3"
+                >
+                  Siguiente
+                </Button>
+              </div>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 };

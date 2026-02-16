@@ -1,159 +1,139 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
-import { X, Calendar, User, Shield, Server, FileText, Clock } from 'lucide-react';
+import { Shield, Calendar, Activity, FileText } from 'lucide-react';
 import { RestriccionModalProps } from '../../types/restriccion';
+import { Modal } from '../ui/Modal';
+import { Badge } from '../ui/Badge';
+import { Button } from '../ui/Button';
 
 const RestriccionDetailModal: React.FC<RestriccionModalProps> = ({ isOpen, onClose, restriccion }) => {
   if (!isOpen || !restriccion) return null;
 
-  const modalContent = (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
-      <div className="relative mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center pb-3 border-b border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900">
-            Detalles de la Restricción
-          </h3>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 focus:outline-none"
-          >
-            <X className="h-6 w-6" />
-          </button>
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Detalle de la Restricción"
+      size="lg"
+    >
+      <div className="space-y-6">
+
+        {/* Status Banner */}
+        <div className="bg-gray-50 rounded-xl p-4 border border-gray-100 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className={`p-2 rounded-lg ${restriccion.bloqueo_activo ? 'bg-green-100 text-green-600' : 'bg-gray-200 text-gray-500'}`}>
+              <Activity className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-500">Estado De la Restricción</p>
+              <div className="mt-1">
+                <Badge variant={restriccion.bloqueo_activo ? 'success' : 'secondary'}>
+                  {restriccion.bloqueo_activo ? 'Activa' : 'Inactiva'}
+                </Badge>
+              </div>
+            </div>
+          </div>
+          <div className="text-right">
+            <p className="text-sm font-medium text-gray-500">ID Referencia</p>
+            <p className="text-sm font-bold text-gray-900 font-mono mt-1">#{restriccion.id.slice(0, 8)}</p>
+          </div>
         </div>
 
-        <div className="mt-4 space-y-6">
-          {/* Información General */}
-          <div>
-            <h4 className="text-md font-medium text-gray-900 mb-3 flex items-center">
-              <FileText className="h-5 w-5 mr-2 text-blue-500" />
-              Información General
-            </h4>
-            <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+          {/* Service Information */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
+              <div className="p-1.5 bg-blue-100 text-blue-700 rounded-lg">
+                <Shield className="h-5 w-5" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">Servicio Asociado</h3>
+            </div>
+            <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
+              <div className="space-y-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">ID de Restricción</label>
-                  <p className="mt-1 text-sm text-gray-900 font-mono bg-white px-2 py-1 rounded border">
-                    {restriccion.id}
-                  </p>
+                  <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Nombre del Servicio</p>
+                  <p className="text-gray-900 font-medium mt-1">{restriccion.servicio_nombre || 'No disponible'}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Estado</label>
-                  <div className="mt-1">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      restriccion.bloqueo_activo
-                        ? 'bg-red-100 text-red-800'
-                        : 'bg-gray-100 text-gray-800'
-                    }`}>
-                      <Shield className="h-3 w-3 mr-1" />
-                      {restriccion.bloqueo_activo ? 'Activo' : 'Inactivo'}
-                    </span>
-                  </div>
+                  <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold">ID Servicio</p>
+                  <p className="text-gray-500 font-mono text-sm mt-1">{restriccion.servicio_id}</p>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Información del Servicio */}
-          <div>
-            <h4 className="text-md font-medium text-gray-900 mb-3 flex items-center">
-              <Server className="h-5 w-5 mr-2 text-purple-500" />
-              Servicio Asociado
-            </h4>
-            <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">ID del Servicio</label>
-                <p className="mt-1 text-sm text-gray-900 font-mono bg-white px-2 py-1 rounded border">
-                  {restriccion.servicio_id}
-                </p>
+          {/* Date & Time Information */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
+              <div className="p-1.5 bg-purple-100 text-purple-700 rounded-lg">
+                <Calendar className="h-5 w-5" />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Nombre del Servicio</label>
-                <p className="mt-1 text-sm text-gray-900">
-                  {restriccion.servicio_nombre || 'No especificado'}
-                </p>
-              </div>
+              <h3 className="text-lg font-semibold text-gray-900">Fecha y Tiempo</h3>
             </div>
-          </div>
-
-          {/* Información de Fecha y Tiempo */}
-          <div>
-            <h4 className="text-md font-medium text-gray-900 mb-3 flex items-center">
-              <Calendar className="h-5 w-5 mr-2 text-orange-500" />
-              Fecha y Tiempo
-            </h4>
-            <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
+              <div className="space-y-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Fecha Bloqueada</label>
-                  <p className="mt-1 text-sm text-gray-900">
-                    {restriccion.fecha_formateada}
-                  </p>
+                  <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Fecha Restringida</p>
+                  <p className="text-gray-900 font-medium mt-1 capitalize">{restriccion.fecha_formateada}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Días Restantes</label>
-                  <div className="mt-1 flex items-center">
-                    <Clock className="h-4 w-4 text-gray-400 mr-2" />
-                    <span className="text-sm text-gray-900">
-                      {restriccion.dias_hasta_fecha !== undefined ? (
-                        restriccion.dias_hasta_fecha > 0 ? (
-                          <span className="text-orange-600 font-medium">
-                            {restriccion.dias_hasta_fecha} días
-                          </span>
-                        ) : restriccion.dias_hasta_fecha === 0 ? (
-                          <span className="text-red-600 font-medium">Hoy</span>
-                        ) : (
-                          <span className="text-gray-500">
-                            {Math.abs(restriccion.dias_hasta_fecha)} días atrás
-                          </span>
-                        )
+                  <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Tiempo Restante</p>
+                  {restriccion.dias_hasta_fecha !== undefined ? (
+                    <div className="mt-1">
+                      {restriccion.dias_hasta_fecha > 0 ? (
+                        <Badge variant="warning">{restriccion.dias_hasta_fecha} días restantes</Badge>
+                      ) : restriccion.dias_hasta_fecha === 0 ? (
+                        <Badge variant="error" className="animate-pulse">Hoy</Badge>
                       ) : (
-                        'N/A'
+                        <Badge variant="secondary">Fecha pasada</Badge>
                       )}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Información del Bloqueo */}
-          <div>
-            <h4 className="text-md font-medium text-gray-900 mb-3 flex items-center">
-              <User className="h-5 w-5 mr-2 text-green-500" />
-              Información del Bloqueo
-            </h4>
-            <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Bloqueado Por</label>
-                <p className="mt-1 text-sm text-gray-900">
-                  {restriccion.bloqueado_por}
-                </p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Motivo del Bloqueo</label>
-                <div className="mt-1 bg-white border rounded-md p-3">
-                  <p className="text-sm text-gray-900 whitespace-pre-wrap">
-                    {restriccion.motivo}
-                  </p>
+                    </div>
+                  ) : (
+                    <p className="text-gray-500 text-sm mt-1">No calculado</p>
+                  )}
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="flex justify-end pt-4 border-t border-gray-200 mt-6">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
-          >
+        {/* Blocking Information */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
+            <div className="p-1.5 bg-orange-100 text-orange-700 rounded-lg">
+              <FileText className="h-5 w-5" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900">Detalles del Bloqueo</h3>
+          </div>
+          <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="col-span-1 md:col-span-2">
+                <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Motivo</p>
+                <p className="text-gray-700 mt-1 leading-relaxed bg-gray-50 p-3 rounded-lg border border-gray-100">
+                  {restriccion.motivo}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Bloqueado Por</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <div className="h-6 w-6 rounded-full bg-gray-200 flex items-center justify-center text-xs text-gray-600 font-bold">
+                    {restriccion.bloqueado_por.charAt(0)}
+                  </div>
+                  <span className="text-gray-900 font-medium">{restriccion.bloqueado_por}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex justify-end pt-4 border-t border-gray-100 mt-2">
+          <Button onClick={onClose}>
             Cerrar
-          </button>
+          </Button>
         </div>
       </div>
-    </div>
+    </Modal>
   );
-
-  return ReactDOM.createPortal(modalContent, document.body);
 };
 
 export default RestriccionDetailModal;

@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import ReactDOM from 'react-dom';
-import { X, Shield, Plus } from 'lucide-react';
+import { Shield, Plus, Calendar, FileText, User } from 'lucide-react';
 import { RestriccionModalProps } from '../../types/restriccion';
 import { restriccionService } from '../../services/restriccionService';
 import Swal from 'sweetalert2';
 import ServicioAutocomplete from '../common/ServicioAutocomplete';
+import { Modal } from '../ui/Modal';
+import { Button } from '../ui/Button';
+import { Input } from '../ui/Input';
 
 const CreateRestriccionModal: React.FC<RestriccionModalProps> = ({ isOpen, onClose, onSave }) => {
   const [formData, setFormData] = useState({
@@ -84,7 +86,10 @@ const CreateRestriccionModal: React.FC<RestriccionModalProps> = ({ isOpen, onClo
         title: 'Restricción creada',
         text: 'La restricción ha sido creada correctamente',
         timer: 2000,
-        showConfirmButton: false
+        showConfirmButton: false,
+        customClass: {
+          popup: 'rounded-xl shadow-2xl',
+        }
       });
 
       resetForm();
@@ -96,6 +101,9 @@ const CreateRestriccionModal: React.FC<RestriccionModalProps> = ({ isOpen, onClo
         icon: 'error',
         title: 'Error',
         text: 'No se pudo crear la restricción. Por favor, intenta de nuevo.',
+        customClass: {
+          popup: 'rounded-xl shadow-2xl',
+        }
       });
     } finally {
       setLoading(false);
@@ -111,7 +119,6 @@ const CreateRestriccionModal: React.FC<RestriccionModalProps> = ({ isOpen, onClo
       [name]: type === 'checkbox' ? checked : value
     }));
 
-    // Limpiar error del campo cuando el usuario empiece a escribir
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
@@ -127,164 +134,155 @@ const CreateRestriccionModal: React.FC<RestriccionModalProps> = ({ isOpen, onClo
     }
   };
 
-  if (!isOpen) return null;
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={handleClose}
+      title="Crear Nueva Restricción"
+      size="lg"
+    >
+      <form onSubmit={handleSubmit} className="space-y-8">
+        <div className="grid grid-cols-1 gap-8">
 
-  const modalContent = (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
-      <div className="relative mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center pb-3 border-b border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900 flex items-center">
-            <Shield className="h-5 w-5 mr-2 text-blue-500" />
-            Crear Nueva Restricción
-          </h3>
-          <button
-            onClick={handleClose}
-            className="text-gray-400 hover:text-gray-600 focus:outline-none"
-            disabled={loading}
-          >
-            <X className="h-6 w-6" />
-          </button>
+          {/* Section: General Info */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
+              <div className="p-1.5 bg-blue-100 text-blue-700 rounded-lg">
+                <Calendar className="h-5 w-5" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">Información del Bloqueo</h3>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="col-span-1 md:col-span-2">
+                <ServicioAutocomplete
+                  value={formData.servicio_id}
+                  selectedName={selectedServicioName}
+                  onChange={(id, nombre) => {
+                    setFormData(prev => ({ ...prev, servicio_id: id }));
+                    setSelectedServicioName(nombre);
+                    if (errors.servicio_id) {
+                      setErrors(prev => ({ ...prev, servicio_id: '' }));
+                    }
+                  }}
+                  error={errors.servicio_id}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="fecha" className="block text-sm font-medium text-gray-700 mb-1">
+                  Fecha y Hora *
+                </label>
+                <input
+                  type="datetime-local"
+                  id="fecha"
+                  name="fecha"
+                  value={formData.fecha}
+                  onChange={handleInputChange}
+                  min={new Date().toISOString().slice(0, 16)}
+                  className={`flex h-10 w-full rounded-xl border border-secondary-200 bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200 ${errors.fecha ? 'border-red-500 focus-visible:ring-red-500' : ''
+                    }`}
+                  disabled={loading}
+                />
+                {errors.fecha && (
+                  <p className="mt-1 text-xs text-red-600 font-medium flex items-center gap-1">
+                    <Shield className="h-3 w-3" /> {errors.fecha}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <Input
+                  label="Bloqueado Por *"
+                  name="bloqueado_por"
+                  value={formData.bloqueado_por}
+                  onChange={handleInputChange}
+                  placeholder="Usuario responsable"
+                  error={errors.bloqueado_por}
+                  leftIcon={<User className="h-4 w-4" />}
+                  disabled={loading}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Section: Details */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
+              <div className="p-1.5 bg-purple-100 text-purple-700 rounded-lg">
+                <FileText className="h-5 w-5" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">Detalles y Estado</h3>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="motivo" className="block text-sm font-medium text-gray-700 mb-1">
+                  Motivo del Bloqueo *
+                </label>
+                <textarea
+                  id="motivo"
+                  name="motivo"
+                  rows={3}
+                  value={formData.motivo}
+                  onChange={handleInputChange}
+                  className={`flex w-full rounded-xl border border-secondary-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-secondary-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200 ${errors.motivo ? 'border-red-500 focus-visible:ring-red-500' : ''
+                    }`}
+                  placeholder="Describe el motivo del bloqueo..."
+                  disabled={loading}
+                />
+                {errors.motivo ? (
+                  <p className="mt-1 text-xs text-red-600 font-medium">{errors.motivo}</p>
+                ) : (
+                  <p className="mt-1 text-xs text-gray-500 text-right">
+                    {formData.motivo.length}/10 min car.
+                  </p>
+                )}
+              </div>
+
+              <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="bloqueo_activo"
+                    name="bloqueo_activo"
+                    checked={formData.bloqueo_activo}
+                    onChange={handleInputChange}
+                    className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded transition-colors"
+                    disabled={loading}
+                  />
+                  <label htmlFor="bloqueo_activo" className="ml-3 block text-sm font-medium text-gray-900 cursor-pointer">
+                    Activar bloqueo inmediatamente
+                  </label>
+                </div>
+                <p className="mt-1 ml-8 text-xs text-gray-500">
+                  El servicio no estará disponible para reservas en la fecha seleccionada.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="mt-4 space-y-6">
-          {/* Servicio */}
-          <div>
-            <ServicioAutocomplete
-              value={formData.servicio_id}
-              selectedName={selectedServicioName}
-              onChange={(id, nombre) => {
-                setFormData(prev => ({ ...prev, servicio_id: id }));
-                setSelectedServicioName(nombre);
-                if (errors.servicio_id) {
-                  setErrors(prev => ({ ...prev, servicio_id: '' }));
-                }
-              }}
-              error={errors.servicio_id}
-            />
-          </div>
-
-          {/* Fecha */}
-          <div>
-            <label htmlFor="fecha" className="block text-sm font-medium text-gray-700">
-              Fecha y Hora *
-            </label>
-            <input
-              type="datetime-local"
-              id="fecha"
-              name="fecha"
-              value={formData.fecha}
-              onChange={handleInputChange}
-              min={new Date().toISOString().slice(0, 16)}
-              className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${errors.fecha ? 'border-red-300' : 'border-gray-300'
-                }`}
-              disabled={loading}
-            />
-            {errors.fecha && (
-              <p className="mt-1 text-sm text-red-600">{errors.fecha}</p>
-            )}
-            <p className="mt-1 text-sm text-gray-500">
-              Selecciona la fecha y hora que deseas bloquear
-            </p>
-          </div>
-
-          {/* Motivo */}
-          <div>
-            <label htmlFor="motivo" className="block text-sm font-medium text-gray-700">
-              Motivo del Bloqueo *
-            </label>
-            <textarea
-              id="motivo"
-              name="motivo"
-              rows={4}
-              value={formData.motivo}
-              onChange={handleInputChange}
-              className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${errors.motivo ? 'border-red-300' : 'border-gray-300'
-                }`}
-              placeholder="Describe el motivo del bloqueo de esta fecha..."
-              disabled={loading}
-            />
-            {errors.motivo && (
-              <p className="mt-1 text-sm text-red-600">{errors.motivo}</p>
-            )}
-            <p className="mt-1 text-sm text-gray-500">
-              Mínimo 10 caracteres. Actual: {formData.motivo.length}
-            </p>
-          </div>
-
-          {/* Bloqueado Por */}
-          <div>
-            <label htmlFor="bloqueado_por" className="block text-sm font-medium text-gray-700">
-              Bloqueado Por *
-            </label>
-            <input
-              type="text"
-              id="bloqueado_por"
-              name="bloqueado_por"
-              value={formData.bloqueado_por}
-              onChange={handleInputChange}
-              className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${errors.bloqueado_por ? 'border-red-300' : 'border-gray-300'
-                }`}
-              placeholder="Tu nombre o identificación"
-              disabled={loading}
-            />
-            {errors.bloqueado_por && (
-              <p className="mt-1 text-sm text-red-600">{errors.bloqueado_por}</p>
-            )}
-            <p className="mt-1 text-sm text-gray-500">
-              Nombre del usuario que realiza el bloqueo
-            </p>
-          </div>
-
-          {/* Estado del Bloqueo */}
-          <div>
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="bloqueo_activo"
-                name="bloqueo_activo"
-                checked={formData.bloqueo_activo}
-                onChange={handleInputChange}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                disabled={loading}
-              />
-              <label htmlFor="bloqueo_activo" className="ml-2 block text-sm text-gray-700">
-                Activar bloqueo inmediatamente
-              </label>
-            </div>
-            <p className="mt-1 text-sm text-gray-500">
-              Si está marcado, el bloqueo estará activo desde el momento de la creación
-            </p>
-          </div>
-
-          {/* Botones */}
-          <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
-            <button
-              type="button"
-              onClick={handleClose}
-              className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              disabled={loading}
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-              ) : (
-                <Plus className="h-4 w-4 mr-2" />
-              )}
-              {loading ? 'Creando...' : 'Crear Restricción'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <div className="flex justify-end gap-3 pt-6 border-t border-gray-100 mt-2">
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={handleClose}
+            disabled={loading}
+          >
+            Cancelar
+          </Button>
+          <Button
+            type="submit"
+            isLoading={loading}
+            leftIcon={<Plus className="h-4 w-4" />}
+          >
+            Crear Restricción
+          </Button>
+        </div>
+      </form>
+    </Modal>
   );
-
-  return ReactDOM.createPortal(modalContent, document.body);
 };
 
 export default CreateRestriccionModal;
