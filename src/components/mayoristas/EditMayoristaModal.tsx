@@ -1,10 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useCallback } from 'react';
-import ReactDOM from 'react-dom';
-import { X, User, Phone, DollarSign } from 'lucide-react';
+import { User, Phone, DollarSign } from 'lucide-react';
 import { CreateMayoristaData, MayoristaData } from '../../types/mayorista';
 import { mayoristaService } from '../../services/mayoristaService';
 import Swal from 'sweetalert2';
+import { Modal } from '../ui/Modal';
+import { Input } from '../ui/Input';
+import { Select } from '../ui/Select';
+import { Textarea } from '../ui/Textarea';
+import { Button } from '../ui/Button';
 
 interface EditMayoristaModalProps {
   isOpen: boolean;
@@ -185,7 +189,6 @@ const EditMayoristaModal: React.FC<EditMayoristaModalProps> = ({
       [name]: processedValue
     }));
 
-    // Clear error when user starts typing
     if (errors[name as keyof CreateMayoristaData]) {
       setErrors(prev => ({
         ...prev,
@@ -196,374 +199,263 @@ const EditMayoristaModal: React.FC<EditMayoristaModalProps> = ({
 
   if (!isOpen) return null;
 
-  const modalContent = (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-yellow-50">
-          <div className="flex items-center">
-            <User className="w-8 h-8 text-yellow-600 mr-3" />
-            <h2 className="text-2xl font-bold text-gray-800">Editar Mayorista</h2>
-          </div>
-          <button
-            onClick={handleClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            <X className="w-6 h-6" />
-          </button>
-        </div>
-
-        {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
-          {loadingData ? (
-            <div className="space-y-6">
-              {[...Array(3)].map((_, index) => (
-                <div key={index} className="space-y-4">
-                  <div className="h-6 bg-gray-200 rounded animate-pulse w-48"></div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {[...Array(4)].map((_, i) => (
-                      <div key={i} className="h-10 bg-gray-200 rounded animate-pulse"></div>
-                    ))}
-                  </div>
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={handleClose}
+      title="Editar Mayorista"
+      description="Modifica la información del mayorista seleccionado."
+      size="2xl"
+    >
+      {loadingData ? (
+        <div className="space-y-6">
+          <div className="animate-pulse space-y-4">
+            <div className="h-8 bg-gray-100 rounded w-1/4"></div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="space-y-2">
+                  <div className="h-4 bg-gray-100 rounded w-20"></div>
+                  <div className="h-10 bg-gray-50 rounded"></div>
                 </div>
               ))}
             </div>
-          ) : (
-            <form onSubmit={handleSubmit}>
-              <div className="space-y-8">
-                {/* Información Básica */}
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                    <User className="w-5 h-5 mr-2 text-blue-600" />
-                    Información Básica
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Nombre *
-                      </label>
-                      <input
-                        type="text"
-                        name="nombre"
-                        value={formData.nombre}
-                        onChange={handleInputChange}
-                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.nombre ? 'border-red-500' : 'border-gray-300'
-                          }`}
-                        placeholder="Nombre del mayorista"
-                      />
-                      {errors.nombre && <p className="text-red-500 text-xs mt-1">{errors.nombre}</p>}
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Email *
-                      </label>
-                      <input
-                        type="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleInputChange}
-                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.email ? 'border-red-500' : 'border-gray-300'
-                          }`}
-                        placeholder="email@ejemplo.com"
-                      />
-                      {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Teléfono *
-                      </label>
-                      <input
-                        type="text"
-                        name="telefono"
-                        value={formData.telefono}
-                        onChange={handleInputChange}
-                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.telefono ? 'border-red-500' : 'border-gray-300'
-                          }`}
-                        placeholder="+57 300 123 4567"
-                      />
-                      {errors.telefono && <p className="text-red-500 text-xs mt-1">{errors.telefono}</p>}
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Tipo de Documento *
-                      </label>
-                      <select
-                        name="tipo_documento"
-                        value={formData.tipo_documento}
-                        onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      >
-                        <option value="NIT">NIT</option>
-                        <option value="CC">Cédula de Ciudadanía</option>
-                        <option value="CE">Cédula de Extranjería</option>
-                        <option value="RUT">RUT</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Número de Documento *
-                      </label>
-                      <input
-                        type="text"
-                        name="numero_documento"
-                        value={formData.numero_documento}
-                        onChange={handleInputChange}
-                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.numero_documento ? 'border-red-500' : 'border-gray-300'
-                          }`}
-                        placeholder="123456789"
-                      />
-                      {errors.numero_documento && <p className="text-red-500 text-xs mt-1">{errors.numero_documento}</p>}
-                    </div>
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Dirección *
-                      </label>
-                      <input
-                        type="text"
-                        name="direccion"
-                        value={formData.direccion}
-                        onChange={handleInputChange}
-                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.direccion ? 'border-red-500' : 'border-gray-300'
-                          }`}
-                        placeholder="Calle 123 #45-67"
-                      />
-                      {errors.direccion && <p className="text-red-500 text-xs mt-1">{errors.direccion}</p>}
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Ciudad *
-                      </label>
-                      <input
-                        type="text"
-                        name="ciudad"
-                        value={formData.ciudad}
-                        onChange={handleInputChange}
-                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.ciudad ? 'border-red-500' : 'border-gray-300'
-                          }`}
-                        placeholder="Bogotá"
-                      />
-                      {errors.ciudad && <p className="text-red-500 text-xs mt-1">{errors.ciudad}</p>}
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        País *
-                      </label>
-                      <input
-                        type="text"
-                        name="pais"
-                        value={formData.pais}
-                        onChange={handleInputChange}
-                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.pais ? 'border-red-500' : 'border-gray-300'
-                          }`}
-                        placeholder="Colombia"
-                      />
-                      {errors.pais && <p className="text-red-500 text-xs mt-1">{errors.pais}</p>}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Información de Contacto */}
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                    <Phone className="w-5 h-5 mr-2 text-green-600" />
-                    Contacto Principal
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Nombre del Contacto *
-                      </label>
-                      <input
-                        type="text"
-                        name="contacto_principal"
-                        value={formData.contacto_principal || ''}
-                        onChange={handleInputChange}
-                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.contacto_principal ? 'border-red-500' : 'border-gray-300'
-                          }`}
-                        placeholder="Juan Pérez"
-                      />
-                      {errors.contacto_principal && <p className="text-red-500 text-xs mt-1">{errors.contacto_principal}</p>}
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Teléfono de Contacto *
-                      </label>
-                      <input
-                        type="text"
-                        name="telefono_contacto"
-                        value={formData.telefono_contacto || ''}
-                        onChange={handleInputChange}
-                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.telefono_contacto ? 'border-red-500' : 'border-gray-300'
-                          }`}
-                        placeholder="+57 300 123 4567"
-                      />
-                      {errors.telefono_contacto && <p className="text-red-500 text-xs mt-1">{errors.telefono_contacto}</p>}
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Email de Contacto *
-                      </label>
-                      <input
-                        type="email"
-                        name="email_contacto"
-                        value={formData.email_contacto || ''}
-                        onChange={handleInputChange}
-                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.email_contacto ? 'border-red-500' : 'border-gray-300'
-                          }`}
-                        placeholder="contacto@ejemplo.com"
-                      />
-                      {errors.email_contacto && <p className="text-red-500 text-xs mt-1">{errors.email_contacto}</p>}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Información Comercial */}
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                    <DollarSign className="w-5 h-5 mr-2 text-purple-600" />
-                    Información Comercial
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Comisión (%) *
-                      </label>
-                      <input
-                        type="number"
-                        name="comision_porcentaje"
-                        value={formData.comision_porcentaje ?? 0}
-                        onChange={handleInputChange}
-                        min="0"
-                        max="100"
-                        step="0.1"
-                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.comision_porcentaje ? 'border-red-500' : 'border-gray-300'
-                          }`}
-                        placeholder="10.5"
-                      />
-                      {errors.comision_porcentaje && <p className="text-red-500 text-xs mt-1">{errors.comision_porcentaje}</p>}
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Límite de Crédito (COP) *
-                      </label>
-                      <input
-                        type="number"
-                        name="limite_credito"
-                        value={formData.limite_credito ?? 0}
-                        onChange={handleInputChange}
-                        min="0"
-                        step="1000"
-                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.limite_credito ? 'border-red-500' : 'border-gray-300'
-                          }`}
-                        placeholder="1000000"
-                      />
-                      {errors.limite_credito && <p className="text-red-500 text-xs mt-1">{errors.limite_credito}</p>}
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Estado *
-                      </label>
-                      <select
-                        name="estado"
-                        value={formData.estado || 'activo'}
-                        onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      >
-                        <option value="activo">Activo</option>
-                        <option value="inactivo">Inactivo</option>
-                        <option value="suspendido">Suspendido</option>
-                      </select>
-                    </div>
-                    <div className="flex items-center space-x-4">
-                      <div className="flex items-center">
-                        <input
-                          type="checkbox"
-                          name="verificado"
-                          checked={formData.verificado}
-                          onChange={handleInputChange}
-                          className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                        />
-                        <label className="ml-2 text-sm font-medium text-gray-700">
-                          Verificado
-                        </label>
-                      </div>
-                      <div className="flex items-center">
-                        <input
-                          type="checkbox"
-                          name="recurente"
-                          checked={formData.recurente}
-                          onChange={handleInputChange}
-                          className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                        />
-                        <label className="ml-2 text-sm font-medium text-gray-700">
-                          Recurrente
-                        </label>
-                      </div>
-                      <div className="flex items-center">
-                        <input
-                          type="checkbox"
-                          name="activo"
-                          checked={formData.activo}
-                          onChange={handleInputChange}
-                          className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                        />
-                        <label className="ml-2 text-sm font-medium text-gray-700">
-                          Activo
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Observaciones */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Observaciones
-                  </label>
-                  <textarea
-                    name="observaciones"
-                    value={formData.observaciones || ''}
-                    onChange={handleInputChange}
-                    rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Observaciones adicionales..."
-                  />
-                </div>
-              </div>
-
-              {/* Buttons */}
-              <div className="flex justify-end space-x-4 mt-8 pt-6 border-t border-gray-200">
-                <button
-                  type="button"
-                  onClick={handleClose}
-                  className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                  disabled={loading}
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="px-6 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-                >
-                  {loading ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Actualizando...
-                    </>
-                  ) : (
-                    'Actualizar Mayorista'
-                  )}
-                </button>
-              </div>
-            </form>
-          )}
+          </div>
         </div>
-      </div>
-    </div>
-  );
+      ) : (
+        <form onSubmit={handleSubmit} className="space-y-8">
+          {/* Información Básica */}
+          <section>
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center border-b pb-2">
+              <User className="w-5 h-5 mr-2 text-primary-600" />
+              Información Básica
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Input
+                label="Nombre *"
+                name="nombre"
+                value={formData.nombre}
+                onChange={handleInputChange}
+                error={errors.nombre}
+                placeholder="Nombre del mayorista"
+              />
+              <Input
+                label="Email *"
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                error={errors.email}
+                placeholder="email@ejemplo.com"
+              />
+              <Input
+                label="Teléfono *"
+                name="telefono"
+                value={formData.telefono}
+                onChange={handleInputChange}
+                error={errors.telefono}
+                placeholder="+57 300 123 4567"
+              />
+              <Select
+                label="Tipo de Documento *"
+                name="tipo_documento"
+                value={formData.tipo_documento}
+                onChange={handleInputChange}
+                error={errors.tipo_documento}
+                options={[
+                  { value: 'NIT', label: 'NIT' },
+                  { value: 'CC', label: 'Cédula de Ciudadanía' },
+                  { value: 'CE', label: 'Cédula de Extranjería' },
+                  { value: 'RUT', label: 'RUT' }
+                ]}
+              />
+              <Input
+                label="Número de Documento *"
+                name="numero_documento"
+                value={formData.numero_documento}
+                onChange={handleInputChange}
+                error={errors.numero_documento}
+                placeholder="123456789"
+              />
+              <Input
+                label="Ciudad *"
+                name="ciudad"
+                value={formData.ciudad}
+                onChange={handleInputChange}
+                error={errors.ciudad}
+                placeholder="Bogotá"
+              />
+              <Input
+                label="País *"
+                name="pais"
+                value={formData.pais}
+                onChange={handleInputChange}
+                error={errors.pais}
+                placeholder="Colombia"
+              />
+              <div className="md:col-span-2">
+                <Input
+                  label="Dirección *"
+                  name="direccion"
+                  value={formData.direccion}
+                  onChange={handleInputChange}
+                  error={errors.direccion}
+                  placeholder="Calle 123 #45-67"
+                />
+              </div>
+            </div>
+          </section>
 
-  return ReactDOM.createPortal(modalContent, document.body);
+          {/* Información de Contacto */}
+          <section>
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center border-b pb-2">
+              <Phone className="w-5 h-5 mr-2 text-emerald-600" />
+              Contacto Principal
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Input
+                label="Nombre del Contacto *"
+                name="contacto_principal"
+                value={formData.contacto_principal || ''}
+                onChange={handleInputChange}
+                error={errors.contacto_principal}
+                placeholder="Juan Pérez"
+              />
+              <Input
+                label="Teléfono de Contacto *"
+                name="telefono_contacto"
+                value={formData.telefono_contacto || ''}
+                onChange={handleInputChange}
+                error={errors.telefono_contacto}
+                placeholder="+57 300 123 4567"
+              />
+              <div className="md:col-span-2">
+                <Input
+                  label="Email de Contacto *"
+                  type="email"
+                  name="email_contacto"
+                  value={formData.email_contacto || ''}
+                  onChange={handleInputChange}
+                  error={errors.email_contacto}
+                  placeholder="contacto@ejemplo.com"
+                />
+              </div>
+            </div>
+          </section>
+
+          {/* Información Comercial */}
+          <section>
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center border-b pb-2">
+              <DollarSign className="w-5 h-5 mr-2 text-purple-600" />
+              Información Comercial
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Input
+                label="Comisión (%) *"
+                type="number"
+                name="comision_porcentaje"
+                value={formData.comision_porcentaje ?? 0}
+                onChange={handleInputChange}
+                error={errors.comision_porcentaje}
+                min={0}
+                max={100}
+                step={0.1}
+                placeholder="10.5"
+              />
+              <Input
+                label="Límite de Crédito (COP) *"
+                type="number"
+                name="limite_credito"
+                value={formData.limite_credito ?? 0}
+                onChange={handleInputChange}
+                error={errors.limite_credito}
+                min={0}
+                step={1000}
+                placeholder="1000000"
+              />
+              <Select
+                label="Estado *"
+                name="estado"
+                value={formData.estado || 'activo'}
+                onChange={handleInputChange}
+                error={errors.estado}
+                options={[
+                  { value: 'activo', label: 'Activo' },
+                  { value: 'inactivo', label: 'Inactivo' },
+                  { value: 'suspendido', label: 'Suspendido' }
+                ]}
+              />
+
+              {/* Checkboxes */}
+              <div className="grid grid-cols-3 gap-4 pt-4 md:col-span-2">
+                <label className="flex items-center space-x-2 cursor-pointer p-3 border rounded-xl hover:bg-gray-50 transition-colors">
+                  <input
+                    type="checkbox"
+                    name="verificado"
+                    checked={formData.verificado}
+                    onChange={handleInputChange}
+                    className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                  />
+                  <span className="text-sm font-medium text-gray-700">Verificado</span>
+                </label>
+                <label className="flex items-center space-x-2 cursor-pointer p-3 border rounded-xl hover:bg-gray-50 transition-colors">
+                  <input
+                    type="checkbox"
+                    name="recurente"
+                    checked={formData.recurente}
+                    onChange={handleInputChange}
+                    className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                  />
+                  <span className="text-sm font-medium text-gray-700">Recurrente</span>
+                </label>
+                <label className="flex items-center space-x-2 cursor-pointer p-3 border rounded-xl hover:bg-gray-50 transition-colors">
+                  <input
+                    type="checkbox"
+                    name="activo"
+                    checked={formData.activo}
+                    onChange={handleInputChange}
+                    className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                  />
+                  <span className="text-sm font-medium text-gray-700">Activo</span>
+                </label>
+              </div>
+
+              <div className="md:col-span-2">
+                <Textarea
+                  label="Observaciones"
+                  name="observaciones"
+                  value={formData.observaciones || ''}
+                  onChange={handleInputChange}
+                  error={errors.observaciones}
+                  rows={3}
+                  placeholder="Observaciones adicionales..."
+                />
+              </div>
+            </div>
+          </section>
+
+          {/* Buttons */}
+          <div className="flex justify-end gap-3 pt-6 border-t border-gray-100">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={handleClose}
+              disabled={loading}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              disabled={loading}
+              className="w-full md:w-auto"
+            >
+              {loading ? 'Actualizando...' : 'Actualizar Mayorista'}
+            </Button>
+          </div>
+        </form>
+      )}
+    </Modal>
+  );
 };
 
 export default EditMayoristaModal;
