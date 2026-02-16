@@ -1,11 +1,11 @@
 ---
 name: replicate-design-system
-description: Replicate the Hotels module design system in other modules (tables, modals, forms, stats).
+description: Replicate the Hotels/Services module design system in other modules (tables, modals, forms, stats).
 ---
 
 # Design System Replication Skill
 
-Use this skill when the user asks to refactor a module to match the Hotels module design system.
+Use this skill when the user asks to refactor a module to match the Hotels/Services module design system.
 
 ## 1. General Section Structure (`[Module]Section.tsx`)
 
@@ -23,19 +23,20 @@ Layout pattern:
       <p className="text-gray-600 mt-2">Administra [brief description]</p>
     </div>
     <div className="flex items-center gap-3">
-       {/* Actions */}
+       {/* Actions Grouped on Right */}
        <Button variant="outline" ...><Download /> Exportar</Button>
        <Button variant="primary" ...><Plus /> Crear [Entity]</Button>
     </div>
   </div>
 
   {/* Stats Cards Grid */}
-  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-    {/* See Stats Section below */}
-  </div>
+  <[Module]Stats ... />
 
-  {/* Table */}
+  {/* Table Section */}
   <[Module]Table ... />
+
+  {/* Visual Charts */}
+  <[Module]Charts ... />
 
   {/* Modals */}
   <Create[Module]Modal ... />
@@ -44,91 +45,97 @@ Layout pattern:
 </div>
 ```
 
-## 2. Stats Cards
+## 2. Stats Cards (`[Module]Stats.tsx`)
 
-Use this structure and classes for KPI cards:
+Use this structure for the 4-card KPI grid:
 
-- **Container**: `bg-[color]-50 rounded-xl p-6 border border-gray-100`
-- **Layout**: `flex items-center justify-between`
-- **Label**: `text-sm text-gray-500`
-- **Value**: `text-3xl font-bold text-[color]-600`
-- **Icon**: `h-8 w-8 text-[color]-500`
+- **Grid**: `grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6`
+- **Card Styling**: `rounded-xl p-6 border border-gray-100` with colored backgrounds.
+- **Inner Layout**: `flex items-center justify-between`
 
-**Recommended Colors**:
+**Color Patterns**:
 
-- Total: `blue`
-- Active/Verified: `green`
-- Pending/Warning: `orange`
-- Other: `purple`, `indigo`
+1.  **Total Count**: `bg-blue-50`, Text `text-blue-600`, Icon `text-blue-500` (Icon: Package/Compass).
+2.  **Active/Verified**: `bg-green-50`, Text `text-green-600`, Icon `text-green-500` (Icon: CheckCircle).
+3.  **Categories/Types**: `bg-purple-50`, Text `text-purple-600`, Icon `text-purple-500` (Icon: Tag/Award).
+4.  **Locations/Providers**: `bg-orange-50`, Text `text-orange-600`, Icon `text-orange-500` (Icon: MapPin/Globe).
 
 ## 3. Data Table (`[Module]Table.tsx`)
 
-### Search & Filters
+### Search & Filters Container
 
-- **Container**: `bg-white p-4 rounded-xl border border-secondary-200 shadow-soft-sm` (flex for responsive).
-- **Search Input**: Use `Input` component with `leftIcon={<Search className="h-4 w-4" />}`.
-- **Clear Button**: Inside input (`rightIcon`), visible only if text exists.
+**CRITICAL**: Separate the search bar from the table itself into a distinct white card.
+
+```tsx
+<div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
+  <div className="relative w-full md:w-96">
+    <Input
+      placeholder="Buscar..."
+      leftIcon={<Search className="h-4 w-4" />}
+      rightIcon={searchTerm ? <X ... /> : null}
+    />
+  </div>
+  <div className="flex items-center gap-3">
+    {/* Page Size Selector / Filters */}
+  </div>
+</div>
+```
 
 ### Table Structure
 
-- Components: `Table`, `TableHeader`, `TableRow`, `TableHead`, `TableBody`, `TableCell` from `../ui/Table`.
-- **Header**: Simple text. Numeric columns or actions right-aligned (`text-right`).
-- **Empty State**: `TableCell` with `colSpan` total, fixed height (`h-64`), large icon (`h-12 w-12 opacity-20`), help text, and clear filters button.
+- **Table Component**: `Table` from `../ui/Table`.
+- **Badges**: Use `Badge` component. `rounded-full` for status (Active/Inactive), `rounded-md` for categories.
+- **Empty State**:
+  - `TableCell` with `colSpan={total_columns}`.
+  - Height `h-64`, centered flex column.
+  - Icon: Large (`h-12 w-12`), low opacity (`opacity-20`, `text-gray-400`).
+  - Text: "No se encontraron resultados".
+  - Action: "Limpiar búsqueda" button if search is active.
 
-### Cells & Styling
+### Actions Column
 
-- **Primary Identifier**:
-  - Avatar/Initial: `h-10 w-10 rounded-full bg-gradient-to-br from-primary-100 to-primary-200 text-primary-700 font-bold border border-primary-200`.
-  - Main Text: `font-medium text-secondary-900`.
-  - Subtext (Email, Tel): `text-xs text-secondary-500` with small icons (`h-3 w-3`).
-- **Badges**:
-  - Use `Badge` component (`../ui/Badge`).
-  - Variants: `success` (Verified, Active), `error` (Inactive, Not Verified), `secondary` (Boolean false), `warning`.
-  - Style: `rounded-full` for status, `rounded-md` for tags/categories.
-- **Actions**:
-  - Use `Button` with `variant="ghost" size="sm"`.
-  - **View**: `text-blue-600 hover:text-blue-700 hover:bg-blue-50`
-  - **Edit**: `text-amber-600 hover:text-amber-700 hover:bg-amber-50`
-  - **Delete**: `text-red-600 hover:text-red-700 hover:bg-red-50`
+Use `Button` with `variant="ghost" size="sm"` and specific colors:
 
-### Pagination
-
-- Same style as `HotelTable`.
-- Buttons "Previous"/"Next" as `outline`.
-- Page numbers: Active `bg-primary-600 text-white`, Inactive `text-secondary-600 hover:bg-secondary-100`.
+- **View**: `text-blue-600 hover:text-blue-700 hover:bg-blue-50` (Icon: `Eye`)
+- **Edit**: `text-amber-600 hover:text-amber-700 hover:bg-amber-50` (Icon: `Edit`)
+- **Delete**: `text-red-600 hover:text-red-700 hover:bg-red-50` (Icon: `Trash2`)
 
 ## 4. Modals & Forms (`Create/Edit[Module]Modal.tsx`)
 
-### Modal Wrapper
+### Layout Strategy
 
-- Use `Modal` component (`../ui/Modal`).
-- Size: Usually `3xl` for complex forms, `2xl` or `lg` for simple ones.
+- **Grid Layout**: Split complex forms into two columns: `grid grid-cols-1 md:grid-cols-2 gap-8`.
+- **Section Headers**: Use visual headers to separate logical groups (e.g., Profile vs. Details).
 
-### Form Layout
+**Section Header Pattern**:
 
-- **Vertical Spacing**: `className="space-y-8"` on `form`.
-- **Sections**:
-  - Title: `flex items-center gap-2 pb-2 border-b border-secondary-100`.
-  - Icon: `p-1.5 bg-primary-100 text-primary-700 rounded-lg`.
-  - Input Grid: `grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4`.
+```tsx
+<div className="flex items-center gap-2 pb-2 border-b border-gray-100">
+  <div className="p-1.5 bg-[color]-100 text-[color]-700 rounded-lg">
+    <Icon className="h-5 w-5" />
+  </div>
+  <h3 className="text-lg font-semibold text-gray-900">Title</h3>
+</div>
+```
 
-### Inputs & Controls
+_Colors: Blue for Profile/General, Green/Amber for Details/Settings, Rose for Location._
+
+### Inputs
 
 - Always use `Input`, `Select`, `Textarea` from `../ui/*`.
-- **Labels**: Clear, with asterisk `*` if required.
-- **Checkbox Groups**:
-  - Container: `grid grid-cols-2 ... gap-3`.
-  - Item Style: `flex items-center gap-2 ... p-2 hover:bg-secondary-50 rounded-lg border border-transparent hover:border-secondary-100`.
+- Use `leftIcon` props for inputs to add visual cues (e.g., `Mail` for email, `Phone` for telephone).
+- **Validation**: Show validation errors with `border-red-500` and error messages.
 
-### Footer (Actions)
+## 5. Charts (`[Module]Charts.tsx`)
 
-- Container: `flex justify-end gap-3 pt-6 border-t border-secondary-100`.
-- **Cancel**: `Button` variant `outline`.
-- **Save**: `Button` variant `primary`, with `Save` icon and `isLoading` state.
+- **Card Styling**: `border-none shadow-soft-xl` (Clean, elevated look).
+- **Icons**: Use colored backgrounds for chart title icons (e.g., `bg-blue-50 text-blue-600`).
+- **Loading State**: Include skeleton loaders matching the chart shape.
+- **Empty State**: Centered text/icon when no data is available.
 
-## 5. Alerts (`SweetAlert2`)
+## 6. Alerts (`SweetAlert2`)
 
-Use `Swal.fire` with `customClass` to match Tailwind:
+Match the Tailwind styling exactly:
 
 ```javascript
 customClass: {
@@ -138,12 +145,3 @@ customClass: {
   cancelButton: 'px-6 py-3 rounded-lg font-medium transition-all duration-200 hover:shadow-lg',
 }
 ```
-
-- **Delete Confirmation**: Large warning icon, `confirmButtonColor: '#dc2626'`.
-- **Success**: Success icon, `confirmButtonColor: '#10b981'`, `timer: 2000`.
-
-## 6. Common Resources
-
-- Icons: Use `lucide-react`.
-- Utilities: Use `cn` from `../../lib/utils`.
-- Types: Ensure TS interfaces are defined in `src/types/`.

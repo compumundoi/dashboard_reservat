@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import ReactDOM from 'react-dom';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import React, { useState, useEffect, useCallback } from 'react';
 import { X, Save, Loader } from 'lucide-react';
-import { RestauranteData, UpdateRestauranteData } from '../../types/restaurante';
+import { UpdateRestauranteData } from '../../types/restaurante';
 import { restauranteService } from '../../services/restauranteService';
 import Swal from 'sweetalert2';
 
@@ -20,20 +20,12 @@ const EditRestauranteModal: React.FC<EditRestauranteModalProps> = ({
 }) => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [restaurante, setRestaurante] = useState<RestauranteData | null>(null);
   const [formData, setFormData] = useState<UpdateRestauranteData>({});
 
-  useEffect(() => {
-    if (isOpen && restauranteId) {
-      loadRestauranteData();
-    }
-  }, [isOpen, restauranteId]);
-
-  const loadRestauranteData = async () => {
+  const loadRestauranteData = useCallback(async () => {
     try {
       setLoading(true);
       const data = await restauranteService.getRestauranteById(restauranteId);
-      setRestaurante(data);
       setFormData({
         // Datos del proveedor
         tipo: data.tipo,
@@ -55,7 +47,7 @@ const EditRestauranteModal: React.FC<EditRestauranteModalProps> = ({
         tipo_documento: data.tipo_documento,
         numero_documento: data.numero_documento,
         activo: data.activo,
-        
+
         // Datos específicos del restaurante
         tipo_cocina: data.tipo_cocina,
         horario_apertura: data.horario_apertura,
@@ -95,7 +87,13 @@ const EditRestauranteModal: React.FC<EditRestauranteModalProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [restauranteId]);
+
+  useEffect(() => {
+    if (isOpen && restauranteId) {
+      loadRestauranteData();
+    }
+  }, [isOpen, restauranteId, loadRestauranteData]);
 
   const handleInputChange = (field: keyof UpdateRestauranteData, value: any) => {
     setFormData(prev => ({
@@ -106,7 +104,7 @@ const EditRestauranteModal: React.FC<EditRestauranteModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       setSaving(true);
       await restauranteService.updateRestaurante(restauranteId, formData);
@@ -158,7 +156,7 @@ const EditRestauranteModal: React.FC<EditRestauranteModalProps> = ({
                   {/* Información del Proveedor */}
                   <div className="space-y-4">
                     <h4 className="text-lg font-semibold text-gray-900 border-b pb-2">Información del Proveedor</h4>
-                    
+
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Nombre *
@@ -323,7 +321,7 @@ const EditRestauranteModal: React.FC<EditRestauranteModalProps> = ({
                   {/* Información del Restaurante */}
                   <div className="space-y-4">
                     <h4 className="text-lg font-semibold text-gray-900 border-b pb-2">Información del Restaurante</h4>
-                    
+
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Tipo de Cocina *
@@ -437,7 +435,7 @@ const EditRestauranteModal: React.FC<EditRestauranteModalProps> = ({
                 {/* Servicios y Características */}
                 <div className="space-y-4">
                   <h4 className="text-lg font-semibold text-gray-900 border-b pb-2">Servicios y Características</h4>
-                  
+
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     {[
                       { key: 'wifi', label: 'WiFi' },

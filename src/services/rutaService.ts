@@ -1,9 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   DatosRuta,
   RutaData,
   ActualizarRuta,
   RutasResponse,
-  DatosOrigenDestino,
 } from "../types/ruta";
 
 const API_BASE_URL =
