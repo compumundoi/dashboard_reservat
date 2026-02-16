@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Download, Plus, Store } from 'lucide-react';
+import { Button } from "../ui/Button";
 import { MayoristaData, MayoristaStats as MayoristaStatsType, MayoristaChartData } from '../../types/mayorista';
 import { mayoristaService } from '../../services/mayoristaService';
 import MayoristaTable from './MayoristaTable';
@@ -46,11 +47,57 @@ const MayoristasSection: React.FC = () => {
     verificacion: []
   });
 
+  const loadMayoristas = React.useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await mayoristaService.getMayoristas(currentPage - 1, pageSize);
+      setMayoristas(response.mayoristas);
+      setFilteredMayoristas(response.mayoristas);
+      setTotalItems(response.total);
+      setTotalPages(response.totalPages);
+    } catch (error) {
+      console.error('Error loading mayoristas:', error);
+      await Swal.fire({
+        title: 'Error',
+        text: 'Error al cargar los mayoristas',
+        icon: 'error',
+        confirmButtonText: 'Aceptar',
+        confirmButtonColor: '#EF4444'
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [currentPage, pageSize]);
+
+  const loadStats = React.useCallback(async () => {
+    try {
+      setStatsLoading(true);
+      const statsData = await mayoristaService.getMayoristaStats();
+      setStats(statsData);
+    } catch (error) {
+      console.error('Error loading stats:', error);
+    } finally {
+      setStatsLoading(false);
+    }
+  }, []);
+
+  const loadChartData = React.useCallback(async () => {
+    try {
+      setChartsLoading(true);
+      const data = await mayoristaService.getMayoristaChartData();
+      setChartData(data);
+    } catch (error) {
+      console.error('Error loading chart data:', error);
+    } finally {
+      setChartsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     loadMayoristas();
     loadStats();
     loadChartData();
-  }, [currentPage, pageSize]);
+  }, [loadMayoristas, loadStats, loadChartData]);
 
   useEffect(() => {
     if (searchTerm.trim()) {
@@ -77,52 +124,6 @@ const MayoristasSection: React.FC = () => {
       // Estos valores ya vienen correctos de la API
     }
   }, [searchTerm, mayoristas, pageSize]);
-
-  const loadMayoristas = async () => {
-    try {
-      setLoading(true);
-      const response = await mayoristaService.getMayoristas(currentPage - 1, pageSize);
-      setMayoristas(response.mayoristas);
-      setFilteredMayoristas(response.mayoristas);
-      setTotalItems(response.total);
-      setTotalPages(response.totalPages);
-    } catch (error) {
-      console.error('Error loading mayoristas:', error);
-      await Swal.fire({
-        title: 'Error',
-        text: 'Error al cargar los mayoristas',
-        icon: 'error',
-        confirmButtonText: 'Aceptar',
-        confirmButtonColor: '#EF4444'
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadStats = async () => {
-    try {
-      setStatsLoading(true);
-      const statsData = await mayoristaService.getMayoristaStats();
-      setStats(statsData);
-    } catch (error) {
-      console.error('Error loading stats:', error);
-    } finally {
-      setStatsLoading(false);
-    }
-  };
-
-  const loadChartData = async () => {
-    try {
-      setChartsLoading(true);
-      const data = await mayoristaService.getMayoristaChartData();
-      setChartData(data);
-    } catch (error) {
-      console.error('Error loading chart data:', error);
-    } finally {
-      setChartsLoading(false);
-    }
-  };
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -200,7 +201,7 @@ const MayoristasSection: React.FC = () => {
   const handleExportMayoristas = async () => {
     try {
       const { mayoristas: allMayoristas } = await mayoristaService.getMayoristas(1, 1000);
-      
+
       const exportData = allMayoristas.map(mayorista => ({
         'ID': mayorista.id,
         'Nombre': mayorista.nombre,
@@ -225,7 +226,7 @@ const MayoristasSection: React.FC = () => {
       const worksheet = XLSX.utils.json_to_sheet(exportData);
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, 'Mayoristas');
-      
+
       // Ajustar ancho de columnas
       const colWidths = [
         { wch: 10 }, // ID
@@ -283,31 +284,33 @@ const MayoristasSection: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center space-x-3">
             <Store className="h-8 w-8 text-blue-600" />
-            <h1 className="text-3xl font-bold text-gray-900">Mayoristas</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Gestión de Mayoristas</h1>
           </div>
-          <p className="text-gray-600 mt-1">Gestiona los mayoristas del sistema</p>
+          <p className="text-gray-600 mt-2">Administra los mayoristas y sus relaciones comerciales</p>
         </div>
-        <div className="flex space-x-4">
-          <button
+        <div className="flex items-center gap-3">
+          <Button
             onClick={handleExportMayoristas}
-            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            variant="outline"
+            className="flex items-center gap-2"
           >
-            <Download className="w-4 h-4 mr-2" />
-            Exportar Mayoristas
-          </button>
-          <button
+            <Download className="h-4 w-4" />
+            <span>Exportar Mayoristas</span>
+          </Button>
+          <Button
             onClick={() => setCreateOpen(true)}
-            className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+            variant="primary"
+            className="flex items-center gap-2"
           >
-            <Plus className="w-4 h-4 mr-2" />
-            Crear Mayorista
-          </button>
+            <Plus className="h-4 w-4" />
+            <span>Crear Mayorista</span>
+          </Button>
         </div>
       </div>
 
