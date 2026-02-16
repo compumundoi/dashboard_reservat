@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Car, Save, Truck, Building, Mail, Phone, MapPin, Shield, Wifi, Wind, Info } from 'lucide-react';
+import { Save, Truck, Info } from 'lucide-react';
 import { TransporteModalProps } from '../../types/transporte';
 import { transporteService } from '../../services/transporteService';
 import { Modal } from '../ui/Modal';
@@ -7,7 +7,6 @@ import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { Select } from '../ui/Select';
 import { Textarea } from '../ui/Textarea';
-import { cn } from '../../lib/utils';
 import Swal from 'sweetalert2';
 
 const EditTransporteModal: React.FC<TransporteModalProps> = ({ isOpen, onClose, transporte, onSave }) => {
@@ -105,6 +104,11 @@ const EditTransporteModal: React.FC<TransporteModalProps> = ({ isOpen, onClose, 
     if (!formData.transporte.modelo.trim()) newErrors['transporte.modelo'] = 'El modelo es requerido';
     if (!formData.transporte.placa.trim()) newErrors['transporte.placa'] = 'La placa es requerida';
     if (formData.transporte.capacidad <= 0) newErrors['transporte.capacidad'] = 'La capacidad debe ser > 0';
+
+    const currentYear = new Date().getFullYear();
+    if (formData.transporte.anio < 1900 || formData.transporte.anio > currentYear + 1) {
+      newErrors['transporte.anio'] = `El año debe estar entre 1900 y ${currentYear + 1}`;
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -303,6 +307,7 @@ const EditTransporteModal: React.FC<TransporteModalProps> = ({ isOpen, onClose, 
               type="number"
               value={formData.transporte.anio}
               onChange={(e) => handleInputChange('transporte', 'anio', Number(e.target.value))}
+              error={errors['transporte.anio']}
             />
             <Input
               label="Capacidad (pasajeros) *"

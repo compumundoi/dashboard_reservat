@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react';
 import {
-  X, Car, User, Mail, Phone, MapPin, Globe, Star, Shield,
+  Car, Truck, Mail, Phone, MapPin, Globe, Star, Shield,
   Wifi, Users, Calendar, Fuel, Building, Activity, Info,
   CheckCircle2, AlertCircle, Wind
 } from 'lucide-react';
@@ -280,7 +280,7 @@ const TransporteDetailModal: React.FC<TransporteModalProps> = ({ isOpen, onClose
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold text-secondary-400 uppercase tracking-widest">Estado de Relevancia:</span>
             <Badge
-              variant={transporte.proveedor.relevancia === 'Alta' ? 'primary' : 'secondary'}
+              variant={transporte.proveedor.relevancia === 'Alta' ? 'info' : 'secondary'}
               className={cn(
                 "px-3 py-1",
                 transporte.proveedor.relevancia === 'Alta' && "bg-primary-50 text-primary-700 border-primary-100"
