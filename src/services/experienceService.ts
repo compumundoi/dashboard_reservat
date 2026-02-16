@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   ExperienciaCompleta,
   ExperienciaApiResponse,
@@ -66,6 +67,11 @@ class ExperienceService {
       proveedor_rating: item.proveedor.rating_promedio,
       proveedor_verificado: item.proveedor.verificado,
       proveedor_activo: item.proveedor.activo,
+      proveedor_direccion: item.proveedor.direccion,
+      proveedor_descripcion: item.proveedor.descripcion,
+      proveedor_tipo_documento: item.proveedor.tipo_documento,
+      proveedor_numero_documento: item.proveedor.numero_documento,
+      proveedor_sitio_web: item.proveedor.sitio_web,
       fecha_registro: item.proveedor.fecha_registro,
 
       // Datos de la experiencia
@@ -92,7 +98,7 @@ class ExperienceService {
       );
 
       const response = await fetch(
-        `${API_BASE_URL}/experiencias/listar/?page=${page}&size=${size}`,
+        `${API_BASE_URL}/experiencias/listar/?pagina=${page}&limite=${size}`,
         {
           method: "GET",
           headers: this.getAuthHeaders(),
@@ -184,7 +190,7 @@ class ExperienceService {
 
       // Obtener todas las experiencias para calcular estadísticas
       const response = await fetch(
-        `${API_BASE_URL}/experiencias/listar/?page=1&size=1000`,
+        `${API_BASE_URL}/experiencias/listar/?pagina=1&limite=1000`,
         {
           method: "GET",
           headers: this.getAuthHeaders(),
@@ -211,12 +217,14 @@ class ExperienceService {
         espanol: allExperiences.filter(
           (exp) =>
             exp.idioma.toLowerCase().includes("español") ||
-            exp.idioma.toLowerCase().includes("spanish"),
+            exp.idioma.toLowerCase().includes("spanish") ||
+            exp.idioma.toLowerCase() === "es",
         ).length,
         ingles: allExperiences.filter(
           (exp) =>
             exp.idioma.toLowerCase().includes("inglés") ||
-            exp.idioma.toLowerCase().includes("english"),
+            exp.idioma.toLowerCase().includes("english") ||
+            exp.idioma.toLowerCase() === "en",
         ).length,
       };
 
@@ -317,6 +325,7 @@ class ExperienceService {
           console.error("Error en respuesta de actualización:", errorData);
           errorMessage = errorData.detail || errorData.message || errorMessage;
         } catch (parseError) {
+          console.error(parseError);
           try {
             const errorText = await response.text();
             console.error(
@@ -325,6 +334,7 @@ class ExperienceService {
             );
             errorMessage = errorText || errorMessage;
           } catch (textError) {
+            console.error(textError);
             console.error("No se pudo obtener el mensaje de error");
           }
         }
@@ -367,11 +377,13 @@ class ExperienceService {
           console.error("Error en respuesta DELETE:", errorData);
           errorMessage = errorData.detail || errorData.message || errorMessage;
         } catch (parseError) {
+          console.log(parseError);
           try {
             const errorText = await response.text();
             console.error("Error en respuesta DELETE (texto):", errorText);
             errorMessage = errorText || errorMessage;
           } catch (textError) {
+            console.log(textError);
             console.error("No se pudo obtener el mensaje de error");
           }
         }
@@ -384,6 +396,7 @@ class ExperienceService {
         console.log("✅ Respuesta exitosa del servidor:", responseData);
         return responseData;
       } catch (parseError) {
+        console.log(parseError);
         // If no JSON response, that's fine for DELETE operations
         console.log("✅ Experiencia eliminada exitosamente del servidor");
       }

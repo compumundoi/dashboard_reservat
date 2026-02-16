@@ -1,764 +1,380 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from 'react';
-import ReactDOM from 'react-dom';
-import { X, Save, User, Star, MapPin, Clock, Users, Globe, Shield, Mail, Phone, ExternalLink, Calendar } from 'lucide-react';
-
-interface ExperienceEditData {
-  proveedor: {
-    tipo: string;
-    nombre: string;
-    descripcion: string;
-    email: string;
-    telefono: string;
-    direccion: string;
-    ciudad: string;
-    pais: string;
-    sitio_web: string;
-    rating_promedio: number;
-    verificado: boolean;
-    fecha_registro: string;
-    ubicacion: string;
-    redes_sociales: string;
-    relevancia: string;
-    usuario_creador: string;
-    tipo_documento: string;
-    numero_documento: string;
-    activo: boolean;
-  };
-  experiencia: {
-    duracion: number;
-    dificultad: string;
-    idioma: string;
-    incluye_transporte: boolean;
-    grupo_maximo: number;
-    guia_incluido: boolean;
-    equipamiento_requerido: string;
-    punto_de_encuentro: string;
-    numero_rnt: string;
-  };
-}
-
-interface EditExperienceModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  experienceData: any | null;
-  onSave: (data: ExperienceEditData) => void;
-  loading: boolean;
-  saveLoading: boolean;
-}
+import { User, Compass, MapPin, Save, Info, Mail, Phone, Shield, Clock, Users, Globe2, Briefcase } from 'lucide-react';
+import { Modal } from '../ui/Modal';
+import { Input } from '../ui/Input';
+import { Button } from '../ui/Button';
+import { Textarea } from '../ui/Textarea';
+import { Select } from '../ui/Select';
+import { EditExperienceModalProps } from '../../types/experience';
 
 export const EditExperienceModal: React.FC<EditExperienceModalProps> = ({
   isOpen,
   onClose,
-  experienceData,
   onSave,
+  experience,
   loading,
-  saveLoading
+  isSaving
 }) => {
-  const [formData, setFormData] = useState<ExperienceEditData>({
+  const [formData, setFormData] = useState<any>({
     proveedor: {
-      tipo: '',
       nombre: '',
-      descripcion: '',
       email: '',
+      numero_documento: '',
       telefono: '',
-      direccion: '',
       ciudad: '',
       pais: '',
-      sitio_web: '',
-      rating_promedio: 0,
+      direccion: '',
+      descripcion: '',
       verificado: false,
-      fecha_registro: '',
-      ubicacion: '',
-      redes_sociales: '',
-      relevancia: '',
-      usuario_creador: '',
-      tipo_documento: '',
-      numero_documento: '',
       activo: true,
+      tipo: 'tour',
+      sitio_web: '',
     },
     experiencia: {
-      duracion: 0,
-      dificultad: '',
-      idioma: '',
-      incluye_transporte: false,
-      grupo_maximo: 0,
-      guia_incluido: false,
-      equipamiento_requerido: '',
+      duracion: 1,
+      grupo_maximo: 1,
+      dificultad: 'Fácil',
+      idioma: 'Español',
       punto_de_encuentro: '',
       numero_rnt: '',
+      equipamiento_requerido: '',
+      incluye_transporte: false,
+      guia_incluido: false,
     }
   });
 
-  const [errors, setErrors] = useState<{[key: string]: string}>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    if (experienceData) {
+    if (experience) {
       setFormData({
         proveedor: {
-          tipo: experienceData.proveedor?.tipo || '',
-          nombre: experienceData.proveedor?.nombre || '',
-          descripcion: experienceData.proveedor?.descripcion || '',
-          email: experienceData.proveedor?.email || '',
-          telefono: experienceData.proveedor?.telefono || '',
-          direccion: experienceData.proveedor?.direccion || '',
-          ciudad: experienceData.proveedor?.ciudad || '',
-          pais: experienceData.proveedor?.pais || '',
-          sitio_web: experienceData.proveedor?.sitio_web || '',
-          rating_promedio: experienceData.proveedor?.rating_promedio || 0,
-          verificado: experienceData.proveedor?.verificado || false,
-          fecha_registro: experienceData.proveedor?.fecha_registro || '',
-          ubicacion: experienceData.proveedor?.ubicacion || '',
-          redes_sociales: experienceData.proveedor?.redes_sociales || '',
-          relevancia: experienceData.proveedor?.relevancia || '',
-          usuario_creador: experienceData.proveedor?.usuario_creador || '',
-          tipo_documento: experienceData.proveedor?.tipo_documento || '',
-          numero_documento: experienceData.proveedor?.numero_documento || '',
-          activo: experienceData.proveedor?.activo ?? true,
+          nombre: experience.proveedor_nombre || '',
+          email: experience.proveedor_email || '',
+          numero_documento: experience.proveedor_numero_documento || '',
+          telefono: experience.proveedor_telefono || '',
+          ciudad: experience.proveedor_ciudad || '',
+          pais: experience.proveedor_pais || '',
+          direccion: experience.proveedor_direccion || '',
+          descripcion: experience.proveedor_descripcion || '',
+          verificado: experience.proveedor_verificado || false,
+          activo: experience.proveedor_activo || false,
+          tipo: 'tour',
+          sitio_web: experience.proveedor_sitio_web || '',
         },
         experiencia: {
-          duracion: experienceData.experiencia?.duracion || 0,
-          dificultad: experienceData.experiencia?.dificultad || '',
-          idioma: experienceData.experiencia?.idioma || '',
-          incluye_transporte: experienceData.experiencia?.incluye_transporte || false,
-          grupo_maximo: experienceData.experiencia?.grupo_maximo || 0,
-          guia_incluido: experienceData.experiencia?.guia_incluido || false,
-          equipamiento_requerido: experienceData.experiencia?.equipamiento_requerido || '',
-          punto_de_encuentro: experienceData.experiencia?.punto_de_encuentro || '',
-          numero_rnt: experienceData.experiencia?.numero_rnt || '',
+          duracion: experience.duracion || 1,
+          grupo_maximo: experience.grupo_maximo || 1,
+          dificultad: experience.dificultad || 'Fácil',
+          idioma: experience.idioma || 'Español',
+          punto_de_encuentro: experience.punto_de_encuentro || '',
+          numero_rnt: experience.numero_rnt || '',
+          equipamiento_requerido: experience.equipamiento_requerido || '',
+          incluye_transporte: experience.incluye_transporte || false,
+          guia_incluido: experience.guia_incluido || false,
         }
       });
     }
-  }, [experienceData]);
+  }, [experience]);
 
-  const handleInputChange = (section: 'proveedor' | 'experiencia', field: string, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      [section]: {
-        ...prev[section],
-        [field]: value
-      }
-    }));
-
-    // Clear error when user starts typing
-    if (errors[`${section}.${field}`]) {
-      setErrors(prev => ({
-        ...prev,
-        [`${section}.${field}`]: ''
-      }));
-    }
-  };
-
-  const validateForm = () => {
-    const newErrors: {[key: string]: string} = {};
-
-    // Validaciones del proveedor
-    if (!formData.proveedor.nombre.trim()) {
-      newErrors['proveedor.nombre'] = 'El nombre es requerido';
-    }
-
-    if (!formData.proveedor.telefono.trim()) {
-      newErrors['proveedor.telefono'] = 'El teléfono es requerido';
-    }
-
-    if (!formData.proveedor.direccion.trim()) {
-      newErrors['proveedor.direccion'] = 'La dirección es requerida';
-    }
-
-    if (!formData.proveedor.ciudad.trim()) {
-      newErrors['proveedor.ciudad'] = 'La ciudad es requerida';
-    }
-
-    if (!formData.proveedor.pais.trim()) {
-      newErrors['proveedor.pais'] = 'El país es requerido';
-    }
-
-    // Validaciones de la experiencia
-    if (formData.experiencia.duracion <= 0) {
-      newErrors['experiencia.duracion'] = 'La duración debe ser mayor a 0';
-    }
-
-    if (!formData.experiencia.dificultad) {
-      newErrors['experiencia.dificultad'] = 'La dificultad es requerida';
-    }
-
-    if (!formData.experiencia.idioma.trim()) {
-      newErrors['experiencia.idioma'] = 'El idioma es requerido';
-    }
-
-    if (formData.experiencia.grupo_maximo <= 0) {
-      newErrors['experiencia.grupo_maximo'] = 'El grupo máximo debe ser mayor a 0';
-    }
-
-    if (!formData.experiencia.punto_de_encuentro.trim()) {
-      newErrors['experiencia.punto_de_encuentro'] = 'El punto de encuentro es requerido';
-    }
-
-    if (!formData.experiencia.numero_rnt.trim()) {
-      newErrors['experiencia.numero_rnt'] = 'El número RNT es requerido';
-    }
+  const validate = () => {
+    const newErrors: Record<string, string> = {};
+    if (!formData.proveedor.nombre?.trim()) newErrors['proveedor.nombre'] = 'Nombre comercial requerido';
+    if (!formData.proveedor.email?.trim()) newErrors['proveedor.email'] = 'Email de contacto requerido';
+    if (!formData.experiencia.punto_de_encuentro?.trim()) newErrors['experiencia.punto_de_encuentro'] = 'Punto de encuentro requerido';
+    if (!formData.experiencia.numero_rnt?.trim()) newErrors['experiencia.numero_rnt'] = 'RNT requerido';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (validateForm()) {
-      onSave(formData);
+  const updateFormValue = (path: string, value: any) => {
+    setFormData((prev: any) => {
+      const copy = JSON.parse(JSON.stringify(prev));
+      const parts = path.split('.');
+      let ref = copy;
+      for (let i = 0; i < parts.length - 1; i++) {
+        ref = ref[parts[i]];
+      }
+      ref[parts[parts.length - 1]] = value;
+      return copy;
+    });
+
+    if (errors[path]) {
+      setErrors(prev => {
+        const newErrs = { ...prev };
+        delete newErrs[path];
+        return newErrs;
+      });
     }
   };
 
-  const handleClose = () => {
-    setFormData({
-      proveedor: {
-        tipo: '',
-        nombre: '',
-        descripcion: '',
-        email: '',
-        telefono: '',
-        direccion: '',
-        ciudad: '',
-        pais: '',
-        sitio_web: '',
-        rating_promedio: 0,
-        verificado: false,
-        fecha_registro: '',
-        ubicacion: '',
-        redes_sociales: '',
-        relevancia: '',
-        usuario_creador: '',
-        tipo_documento: '',
-        numero_documento: '',
-        activo: true,
-      },
-      experiencia: {
-        duracion: 0,
-        dificultad: '',
-        idioma: '',
-        incluye_transporte: false,
-        grupo_maximo: 0,
-        guia_incluido: false,
-        equipamiento_requerido: '',
-        punto_de_encuentro: '',
-        numero_rnt: '',
-      }
-    });
-    setErrors({});
-    onClose();
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (validate()) {
+      await onSave(formData);
+    }
   };
 
-  if (!isOpen || !experienceData) return null;
-
-  const modalContent = (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <Star className="h-5 w-5 text-blue-600" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">
-                Editar Experiencia
-              </h3>
-              <p className="text-sm text-gray-600">
-                Modifica la información del proveedor y experiencia
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={handleClose}
-            className="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100"
-          >
-            <X className="h-5 w-5" />
-          </button>
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Editar Experiencia"
+      description={`Editando: ${experience?.proveedor_nombre || 'Experiencia'}`}
+      size="2xl"
+    >
+      {loading ? (
+        <div className="flex flex-col items-center justify-center py-20">
+          <div className="w-12 h-12 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin mb-4"></div>
+          <p className="text-gray-500 font-medium">Cargando datos...</p>
         </div>
+      ) : (
+        <form onSubmit={handleSubmit} className="space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
 
-        {/* Content */}
-        {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="text-center">
-              <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-gray-600">Cargando datos para edición...</p>
+            {/* Columna Izquierda: Información del Proveedor */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
+                <div className="p-1.5 bg-blue-100 text-blue-700 rounded-lg">
+                  <User className="h-5 w-5" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">Perfil del Proveedor</h3>
+              </div>
+
+              <div className="space-y-4">
+                <Input
+                  label="Nombre del Negocio *"
+                  value={formData.proveedor.nombre}
+                  onChange={(e) => updateFormValue('proveedor.nombre', e.target.value)}
+                  placeholder="Ej: Amazonia Tours"
+                  className={errors['proveedor.nombre'] ? "border-red-500" : ""}
+                  error={errors['proveedor.nombre']}
+                />
+
+                <div className="grid grid-cols-2 gap-4">
+                  <Input
+                    label="NIT / Documento *"
+                    value={formData.proveedor.numero_documento}
+                    onChange={(e) => updateFormValue('proveedor.numero_documento', e.target.value)}
+                    placeholder="900.123..."
+                    leftIcon={<Shield className="h-3 w-3 text-gray-400" />}
+                  />
+                  <Input
+                    label="Teléfono"
+                    value={formData.proveedor.telefono}
+                    onChange={(e) => updateFormValue('proveedor.telefono', e.target.value)}
+                    placeholder="+57..."
+                    leftIcon={<Phone className="h-3 w-3 text-gray-400" />}
+                  />
+                </div>
+
+                <Input
+                  label="Email de Contacto *"
+                  type="email"
+                  value={formData.proveedor.email}
+                  onChange={(e) => updateFormValue('proveedor.email', e.target.value)}
+                  placeholder="contacto@ejemplo.com"
+                  leftIcon={<Mail className="h-3 w-3 text-gray-400" />}
+                  className={errors['proveedor.email'] ? "border-red-500" : ""}
+                  error={errors['proveedor.email']}
+                />
+
+                <div className="grid grid-cols-2 gap-4">
+                  <Input
+                    label="Ciudad"
+                    value={formData.proveedor.ciudad}
+                    onChange={(e) => updateFormValue('proveedor.ciudad', e.target.value)}
+                  />
+                  <Input
+                    label="País"
+                    value={formData.proveedor.pais}
+                    onChange={(e) => updateFormValue('proveedor.pais', e.target.value)}
+                  />
+                </div>
+
+                <Input
+                  label="Dirección Física"
+                  value={formData.proveedor.direccion}
+                  onChange={(e) => updateFormValue('proveedor.direccion', e.target.value)}
+                  leftIcon={<MapPin className="h-3 w-3 text-gray-400" />}
+                />
+
+                <Textarea
+                  label="Descripción del Proveedor"
+                  value={formData.proveedor.descripcion}
+                  onChange={(e) => updateFormValue('proveedor.descripcion', e.target.value)}
+                  placeholder="Breve reseña sobre la empresa..."
+                  rows={3}
+                />
+
+                <div className="flex items-center gap-2 pt-2">
+                  <label className="flex items-center gap-2 cursor-pointer select-none p-2 hover:bg-gray-50 rounded-lg border border-transparent hover:border-gray-100 w-full">
+                    <input
+                      type="checkbox"
+                      checked={formData.proveedor.verificado}
+                      onChange={(e) => updateFormValue('proveedor.verificado', e.target.checked)}
+                      className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className="text-sm text-gray-700">Proveedor Verificado</span>
+                    <Shield className="h-3 w-3 text-blue-500 ml-auto" />
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            {/* Columna Derecha: Detalles de la Experiencia */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
+                <div className="p-1.5 bg-green-100 text-green-700 rounded-lg">
+                  <Compass className="h-5 w-5" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">Detalles de la Actividad</h3>
+              </div>
+
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <Input
+                    label="Duración (hs)"
+                    type="number"
+                    min={1}
+                    value={formData.experiencia.duracion}
+                    onChange={(e) => updateFormValue('experiencia.duracion', parseInt(e.target.value))}
+                    leftIcon={<Clock className="h-3 w-3 text-gray-400" />}
+                  />
+                  <Input
+                    label="Max. Personas"
+                    type="number"
+                    min={1}
+                    value={formData.experiencia.grupo_maximo}
+                    onChange={(e) => updateFormValue('experiencia.grupo_maximo', parseInt(e.target.value))}
+                    leftIcon={<Users className="h-3 w-3 text-gray-400" />}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <Select
+                    label="Dificultad"
+                    value={formData.experiencia.dificultad}
+                    onChange={(e) => updateFormValue('experiencia.dificultad', e.target.value)}
+                    options={[
+                      { value: 'Fácil', label: 'Fácil' },
+                      { value: 'Moderado', label: 'Moderado' },
+                      { value: 'Difícil', label: 'Difícil' },
+                      { value: 'Extremo', label: 'Extremo' },
+                    ]}
+                  />
+                  <Input
+                    label="Idioma"
+                    value={formData.experiencia.idioma}
+                    onChange={(e) => updateFormValue('experiencia.idioma', e.target.value)}
+                    leftIcon={<Globe2 className="h-3 w-3 text-gray-400" />}
+                  />
+                </div>
+
+                <Input
+                  label="Punto de Encuentro *"
+                  value={formData.experiencia.punto_de_encuentro}
+                  onChange={(e) => updateFormValue('experiencia.punto_de_encuentro', e.target.value)}
+                  placeholder="Ej: Lobby del hotel..."
+                  leftIcon={<MapPin className="h-3 w-3 text-gray-400" />}
+                  className={errors['experiencia.punto_de_encuentro'] ? "border-red-500" : ""}
+                  error={errors['experiencia.punto_de_encuentro']}
+                />
+
+                <Input
+                  label="Registro RNT *"
+                  value={formData.experiencia.numero_rnt}
+                  onChange={(e) => updateFormValue('experiencia.numero_rnt', e.target.value)}
+                  placeholder="12345"
+                  leftIcon={<Briefcase className="h-3 w-3 text-gray-400" />}
+                  className={errors['experiencia.numero_rnt'] ? "border-red-500" : ""}
+                  error={errors['experiencia.numero_rnt']}
+                />
+
+                <Textarea
+                  label="Equipamiento Recomendado"
+                  value={formData.experiencia.equipamiento_requerido}
+                  onChange={(e) => updateFormValue('experiencia.equipamiento_requerido', e.target.value)}
+                  placeholder="Ej: Ropa cómoda, bloqueador..."
+                  rows={3}
+                />
+
+                <div className="grid grid-cols-2 gap-3 pt-2">
+                  <label className="flex items-center gap-2 cursor-pointer select-none p-2 hover:bg-gray-50 rounded-lg border border-transparent hover:border-gray-100">
+                    <input
+                      type="checkbox"
+                      checked={formData.experiencia.incluye_transporte}
+                      onChange={(e) => updateFormValue('experiencia.incluye_transporte', e.target.checked)}
+                      className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                    />
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium text-gray-900">Transporte</span>
+                      <span className="text-[10px] text-gray-500">Incluido</span>
+                    </div>
+                  </label>
+
+                  <label className="flex items-center gap-2 cursor-pointer select-none p-2 hover:bg-gray-50 rounded-lg border border-transparent hover:border-gray-100">
+                    <input
+                      type="checkbox"
+                      checked={formData.experiencia.guia_incluido}
+                      onChange={(e) => updateFormValue('experiencia.guia_incluido', e.target.checked)}
+                      className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                    />
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium text-gray-900">Guía</span>
+                      <span className="text-[10px] text-gray-500">Profesional</span>
+                    </div>
+                  </label>
+                </div>
+              </div>
             </div>
           </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="p-6 space-y-8">
-            {/* Información del Proveedor */}
-            <div className="bg-gray-50 rounded-xl p-6">
-              <h4 className="text-lg font-semibold text-gray-900 flex items-center mb-6">
-                <User className="h-5 w-5 mr-2 text-blue-600" />
-                Información del Proveedor
-              </h4>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Tipo - DESACTIVADO */}
-                <div>
-                  <label htmlFor="tipo" className="block text-sm font-medium text-gray-700 mb-2">
-                    Tipo *
-                  </label>
-                  <input
-                    type="text"
-                    id="tipo"
-                    value={formData.proveedor.tipo}
-                    disabled
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed"
-                    placeholder="Tipo de proveedor"
-                  />
-                  <p className="mt-1 text-xs text-gray-500">Este campo no se puede modificar</p>
-                </div>
-
-                {/* Nombre */}
-                <div>
-                  <label htmlFor="nombre" className="block text-sm font-medium text-gray-700 mb-2">
-                    Nombre *
-                  </label>
-                  <input
-                    type="text"
-                    id="nombre"
-                    value={formData.proveedor.nombre}
-                    onChange={(e) => handleInputChange('proveedor', 'nombre', e.target.value)}
-                    className={`block w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors['proveedor.nombre'] ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                    placeholder="Nombre del proveedor"
-                  />
-                  {errors['proveedor.nombre'] && (
-                    <p className="mt-1 text-sm text-red-600">{errors['proveedor.nombre']}</p>
-                  )}
-                </div>
-
-                {/* Descripción */}
-                <div className="md:col-span-2">
-                  <label htmlFor="descripcion" className="block text-sm font-medium text-gray-700 mb-2">
-                    Descripción
-                  </label>
-                  <textarea
-                    id="descripcion"
-                    value={formData.proveedor.descripcion}
-                    onChange={(e) => handleInputChange('proveedor', 'descripcion', e.target.value)}
-                    rows={3}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Descripción del proveedor"
-                  />
-                </div>
-
-                {/* Email - DESACTIVADO */}
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                    <Mail className="h-4 w-4 inline mr-1" />
-                    Email *
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    value={formData.proveedor.email}
-                    disabled
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed"
-                    placeholder="Email del proveedor"
-                  />
-                  <p className="mt-1 text-xs text-gray-500">Este campo no se puede modificar</p>
-                </div>
-
-                {/* Teléfono */}
-                <div>
-                  <label htmlFor="telefono" className="block text-sm font-medium text-gray-700 mb-2">
-                    <Phone className="h-4 w-4 inline mr-1" />
-                    Teléfono *
-                  </label>
-                  <input
-                    type="tel"
-                    id="telefono"
-                    value={formData.proveedor.telefono}
-                    onChange={(e) => handleInputChange('proveedor', 'telefono', e.target.value)}
-                    className={`block w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors['proveedor.telefono'] ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                    placeholder="Teléfono del proveedor"
-                  />
-                  {errors['proveedor.telefono'] && (
-                    <p className="mt-1 text-sm text-red-600">{errors['proveedor.telefono']}</p>
-                  )}
-                </div>
-
-                {/* Dirección */}
-                <div>
-                  <label htmlFor="direccion" className="block text-sm font-medium text-gray-700 mb-2">
-                    <MapPin className="h-4 w-4 inline mr-1" />
-                    Dirección *
-                  </label>
-                  <input
-                    type="text"
-                    id="direccion"
-                    value={formData.proveedor.direccion}
-                    onChange={(e) => handleInputChange('proveedor', 'direccion', e.target.value)}
-                    className={`block w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors['proveedor.direccion'] ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                    placeholder="Dirección del proveedor"
-                  />
-                  {errors['proveedor.direccion'] && (
-                    <p className="mt-1 text-sm text-red-600">{errors['proveedor.direccion']}</p>
-                  )}
-                </div>
-
-                {/* Ciudad */}
-                <div>
-                  <label htmlFor="ciudad" className="block text-sm font-medium text-gray-700 mb-2">
-                    Ciudad *
-                  </label>
-                  <input
-                    type="text"
-                    id="ciudad"
-                    value={formData.proveedor.ciudad}
-                    onChange={(e) => handleInputChange('proveedor', 'ciudad', e.target.value)}
-                    className={`block w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors['proveedor.ciudad'] ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                    placeholder="Ciudad del proveedor"
-                  />
-                  {errors['proveedor.ciudad'] && (
-                    <p className="mt-1 text-sm text-red-600">{errors['proveedor.ciudad']}</p>
-                  )}
-                </div>
-
-                {/* País */}
-                <div>
-                  <label htmlFor="pais" className="block text-sm font-medium text-gray-700 mb-2">
-                    <Globe className="h-4 w-4 inline mr-1" />
-                    País *
-                  </label>
-                  <input
-                    type="text"
-                    id="pais"
-                    value={formData.proveedor.pais}
-                    onChange={(e) => handleInputChange('proveedor', 'pais', e.target.value)}
-                    className={`block w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors['proveedor.pais'] ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                    placeholder="País del proveedor"
-                  />
-                  {errors['proveedor.pais'] && (
-                    <p className="mt-1 text-sm text-red-600">{errors['proveedor.pais']}</p>
-                  )}
-                </div>
-
-                {/* Sitio Web */}
-                <div>
-                  <label htmlFor="sitio_web" className="block text-sm font-medium text-gray-700 mb-2">
-                    <ExternalLink className="h-4 w-4 inline mr-1" />
-                    Sitio Web
-                  </label>
-                  <input
-                    type="url"
-                    id="sitio_web"
-                    value={formData.proveedor.sitio_web}
-                    onChange={(e) => handleInputChange('proveedor', 'sitio_web', e.target.value)}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="https://ejemplo.com"
-                  />
-                </div>
-
-                {/* Rating Promedio */}
-                <div>
-                  <label htmlFor="rating_promedio" className="block text-sm font-medium text-gray-700 mb-2">
-                    <Star className="h-4 w-4 inline mr-1" />
-                    Rating Promedio
-                  </label>
-                  <input
-                    type="number"
-                    id="rating_promedio"
-                    min="0"
-                    max="5"
-                    step="0.1"
-                    value={formData.proveedor.rating_promedio}
-                    onChange={(e) => handleInputChange('proveedor', 'rating_promedio', parseFloat(e.target.value))}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-
-                {/* Tipo de Documento - DESACTIVADO */}
-                <div>
-                  <label htmlFor="tipo_documento" className="block text-sm font-medium text-gray-700 mb-2">
-                    Tipo de Documento *
-                  </label>
-                  <input
-                    type="text"
-                    id="tipo_documento"
-                    value={formData.proveedor.tipo_documento}
-                    disabled
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed"
-                    placeholder="Tipo de documento"
-                  />
-                  <p className="mt-1 text-xs text-gray-500">Este campo no se puede modificar</p>
-                </div>
-
-                {/* Número de Documento - DESACTIVADO */}
-                <div>
-                  <label htmlFor="numero_documento" className="block text-sm font-medium text-gray-700 mb-2">
-                    Número de Documento *
-                  </label>
-                  <input
-                    type="text"
-                    id="numero_documento"
-                    value={formData.proveedor.numero_documento}
-                    disabled
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed"
-                    placeholder="Número de documento"
-                  />
-                  <p className="mt-1 text-xs text-gray-500">Este campo no se puede modificar</p>
-                </div>
-
-                {/* Verificado */}
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="verificado"
-                    checked={formData.proveedor.verificado}
-                    onChange={(e) => handleInputChange('proveedor', 'verificado', e.target.checked)}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
-                  <label htmlFor="verificado" className="ml-2 block text-sm text-gray-900">
-                    <Shield className="h-4 w-4 inline mr-1" />
-                    Verificado
-                  </label>
-                </div>
-
-                {/* Activo - DESACTIVADO */}
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="activo"
-                    checked={formData.proveedor.activo}
-                    disabled
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded bg-gray-100 cursor-not-allowed"
-                  />
-                  <label htmlFor="activo" className="ml-2 block text-sm text-gray-500">
-                    Activo
-                  </label>
-                  <p className="ml-2 text-xs text-gray-500">(No se puede modificar)</p>
-                </div>
+          {/* Footer */}
+          <div className="pt-6 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center group cursor-pointer">
+              <div className="relative flex items-center">
+                <input
+                  type="checkbox"
+                  checked={formData.proveedor.activo}
+                  onChange={(e) => updateFormValue('proveedor.activo', e.target.checked)}
+                  className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded-md transition-all cursor-pointer"
+                  id="active-edit-check"
+                />
+              </div>
+              <label htmlFor="active-edit-check" className="ml-3 text-sm font-medium text-gray-700 cursor-pointer">
+                Proveedor Activo
+              </label>
+              <div className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <Info className="h-4 w-4 text-gray-400" />
               </div>
             </div>
 
-            {/* Detalles de la Experiencia */}
-            <div className="bg-blue-50 rounded-xl p-6">
-              <h4 className="text-lg font-semibold text-gray-900 flex items-center mb-6">
-                <Calendar className="h-5 w-5 mr-2 text-blue-600" />
-                Detalles de la Experiencia
-              </h4>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Duración */}
-                <div>
-                  <label htmlFor="duracion" className="block text-sm font-medium text-gray-700 mb-2">
-                    <Clock className="h-4 w-4 inline mr-1" />
-                    Duración (horas) *
-                  </label>
-                  <input
-                    type="number"
-                    id="duracion"
-                    min="0"
-                    value={formData.experiencia.duracion}
-                    onChange={(e) => handleInputChange('experiencia', 'duracion', parseInt(e.target.value))}
-                    className={`block w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors['experiencia.duracion'] ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                    placeholder="Duración en horas"
-                  />
-                  {errors['experiencia.duracion'] && (
-                    <p className="mt-1 text-sm text-red-600">{errors['experiencia.duracion']}</p>
-                  )}
-                </div>
-
-                {/* Dificultad */}
-                <div>
-                  <label htmlFor="dificultad" className="block text-sm font-medium text-gray-700 mb-2">
-                    Dificultad *
-                  </label>
-                  <select
-                    id="dificultad"
-                    value={formData.experiencia.dificultad}
-                    onChange={(e) => handleInputChange('experiencia', 'dificultad', e.target.value)}
-                    className={`block w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors['experiencia.dificultad'] ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                  >
-                    <option value="">Seleccionar dificultad</option>
-                    <option value="Fácil">Fácil</option>
-                    <option value="Moderada">Moderada</option>
-                    <option value="Difícil">Difícil</option>
-                    <option value="Extrema">Extrema</option>
-                  </select>
-                  {errors['experiencia.dificultad'] && (
-                    <p className="mt-1 text-sm text-red-600">{errors['experiencia.dificultad']}</p>
-                  )}
-                </div>
-
-                {/* Idioma */}
-                <div>
-                  <label htmlFor="idioma" className="block text-sm font-medium text-gray-700 mb-2">
-                    <Globe className="h-4 w-4 inline mr-1" />
-                    Idioma *
-                  </label>
-                  <input
-                    type="text"
-                    id="idioma"
-                    value={formData.experiencia.idioma}
-                    onChange={(e) => handleInputChange('experiencia', 'idioma', e.target.value)}
-                    className={`block w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors['experiencia.idioma'] ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                    placeholder="Idioma de la experiencia"
-                  />
-                  {errors['experiencia.idioma'] && (
-                    <p className="mt-1 text-sm text-red-600">{errors['experiencia.idioma']}</p>
-                  )}
-                </div>
-
-                {/* Grupo Máximo */}
-                <div>
-                  <label htmlFor="grupo_maximo" className="block text-sm font-medium text-gray-700 mb-2">
-                    <Users className="h-4 w-4 inline mr-1" />
-                    Grupo Máximo *
-                  </label>
-                  <input
-                    type="number"
-                    id="grupo_maximo"
-                    min="1"
-                    value={formData.experiencia.grupo_maximo}
-                    onChange={(e) => handleInputChange('experiencia', 'grupo_maximo', parseInt(e.target.value))}
-                    className={`block w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors['experiencia.grupo_maximo'] ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                    placeholder="Número máximo de personas"
-                  />
-                  {errors['experiencia.grupo_maximo'] && (
-                    <p className="mt-1 text-sm text-red-600">{errors['experiencia.grupo_maximo']}</p>
-                  )}
-                </div>
-
-                {/* Equipamiento Requerido */}
-                <div className="md:col-span-2">
-                  <label htmlFor="equipamiento_requerido" className="block text-sm font-medium text-gray-700 mb-2">
-                    Equipamiento Requerido
-                  </label>
-                  <textarea
-                    id="equipamiento_requerido"
-                    value={formData.experiencia.equipamiento_requerido}
-                    onChange={(e) => handleInputChange('experiencia', 'equipamiento_requerido', e.target.value)}
-                    rows={2}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Equipamiento necesario para la experiencia"
-                  />
-                </div>
-
-                {/* Punto de Encuentro */}
-                <div className="md:col-span-2">
-                  <label htmlFor="punto_de_encuentro" className="block text-sm font-medium text-gray-700 mb-2">
-                    <MapPin className="h-4 w-4 inline mr-1" />
-                    Punto de Encuentro *
-                  </label>
-                  <input
-                    type="text"
-                    id="punto_de_encuentro"
-                    value={formData.experiencia.punto_de_encuentro}
-                    onChange={(e) => handleInputChange('experiencia', 'punto_de_encuentro', e.target.value)}
-                    className={`block w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors['experiencia.punto_de_encuentro'] ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                    placeholder="Lugar de encuentro para la experiencia"
-                  />
-                  {errors['experiencia.punto_de_encuentro'] && (
-                    <p className="mt-1 text-sm text-red-600">{errors['experiencia.punto_de_encuentro']}</p>
-                  )}
-                </div>
-
-                {/* Número RNT */}
-                <div>
-                  <label htmlFor="numero_rnt" className="block text-sm font-medium text-gray-700 mb-2">
-                    <Shield className="h-4 w-4 inline mr-1" />
-                    Número RNT *
-                  </label>
-                  <input
-                    type="text"
-                    id="numero_rnt"
-                    value={formData.experiencia.numero_rnt}
-                    onChange={(e) => handleInputChange('experiencia', 'numero_rnt', e.target.value)}
-                    className={`block w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors['experiencia.numero_rnt'] ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                    placeholder="Número de registro RNT"
-                  />
-                  {errors['experiencia.numero_rnt'] && (
-                    <p className="mt-1 text-sm text-red-600">{errors['experiencia.numero_rnt']}</p>
-                  )}
-                </div>
-
-                {/* Incluye Transporte */}
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="incluye_transporte"
-                    checked={formData.experiencia.incluye_transporte}
-                    onChange={(e) => handleInputChange('experiencia', 'incluye_transporte', e.target.checked)}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
-                  <label htmlFor="incluye_transporte" className="ml-2 block text-sm text-gray-900">
-                    Incluye Transporte
-                  </label>
-                </div>
-
-                {/* Guía Incluido */}
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="guia_incluido"
-                    checked={formData.experiencia.guia_incluido}
-                    onChange={(e) => handleInputChange('experiencia', 'guia_incluido', e.target.checked)}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
-                  <label htmlFor="guia_incluido" className="ml-2 block text-sm text-gray-900">
-                    Guía Incluido
-                  </label>
-                </div>
-              </div>
-            </div>
-
-            {/* Botones de Acción */}
-            <div className="flex items-center justify-end space-x-3 pt-4">
-              <button
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              <Button
                 type="button"
-                onClick={handleClose}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                variant="outline"
+                onClick={onClose}
+                disabled={isSaving}
+                className="flex-1 sm:flex-none"
               >
                 Cancelar
-              </button>
-              <button
+              </Button>
+              <Button
                 type="submit"
-                disabled={saveLoading}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
+                variant="primary"
+                isLoading={isSaving}
+                className="flex-1 sm:flex-none gap-2"
               >
-                {saveLoading ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    <span>Guardando...</span>
-                  </>
-                ) : (
-                  <>
-                    <Save className="h-4 w-4" />
-                    <span>Guardar Cambios</span>
-                  </>
-                )}
-              </button>
+                {!isSaving && <Save className="h-4 w-4" />}
+                Guardar Cambios
+              </Button>
             </div>
-          </form>
-        )}
-      </div>
-    </div>
+          </div>
+        </form>
+      )}
+    </Modal>
   );
-
-  return ReactDOM.createPortal(modalContent, document.body);
 };

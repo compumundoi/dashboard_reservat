@@ -1,11 +1,16 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useCallback } from 'react';
 import { ExperienceStats } from './ExperienceStats';
 import { CreateExperienceModal } from './CreateExperienceModal';
 import { ExperienceTable } from './ExperienceTable';
 import { ExperienceCharts } from './ExperienceCharts';
+import { EditExperienceModal } from './EditExperienceModal';
+import { ExperienceDetailModal } from './ExperienceDetailModal';
 import { ExperienciaCompleta } from '../../types/experience';
 import { experienceService } from '../../services/experienceService';
-import { AlertCircle, CheckCircle, Plus, Download, Star } from 'lucide-react';
+import { Plus, Download, Compass } from 'lucide-react';
+import { Button } from '../ui/Button';
+import Swal from 'sweetalert2';
 import * as XLSX from 'xlsx';
 
 export const ExperiencesSection: React.FC = () => {
@@ -17,14 +22,14 @@ export const ExperiencesSection: React.FC = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearching, setIsSearching] = useState(false);
-  const [notification, setNotification] = useState<{
-    type: 'success' | 'error';
-    message: string;
-  } | null>(null);
 
-  // modal creación
+  // Modals state
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedExperience, setSelectedExperience] = useState<ExperienciaCompleta | null>(null);
   const [creating, setCreating] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   // Estados para estadísticas
   const [stats, setStats] = useState({
@@ -49,10 +54,6 @@ export const ExperiencesSection: React.FC = () => {
         setExperiences(experiencesData.experiencias || []);
         setTotalExperiences(experiencesData.total || 0);
         setTotalPages(Math.ceil((experiencesData.total || 0) / pageSize));
-      } else if (Array.isArray(experiencesData)) {
-        setExperiences(experiencesData);
-        setTotalExperiences(experiencesData.length);
-        setTotalPages(1);
       } else {
         setExperiences([]);
         setTotalExperiences(0);
@@ -63,47 +64,28 @@ export const ExperiencesSection: React.FC = () => {
       setExperiences([]);
       setTotalExperiences(0);
       setTotalPages(0);
-      showNotification('error', 'Error al cargar las experiencias');
+      Swal.fire({
+        title: 'Error',
+        text: 'Error al cargar las experiencias',
+        icon: 'error',
+        confirmButtonColor: '#dc2626',
+        confirmButtonText: 'Entendido',
+        customClass: {
+          popup: 'rounded-xl shadow-2xl',
+          title: 'text-xl font-bold text-gray-900',
+          confirmButton: 'px-6 py-3 rounded-lg font-medium transition-all duration-200 hover:shadow-lg',
+        },
+        buttonsStyling: false
+      });
     } finally {
       setLoading(false);
     }
   }, [currentPage, pageSize]);
 
-  // --- Efecto: paginación o cambio de tamaño (solo cuando NO estamos buscando) ---
-  useEffect(() => {
-    if (!isSearching) {
-      loadExperiences();
-    }
-  }, [currentPage, pageSize, isSearching, loadExperiences]);
-
-  // --- Efecto: búsqueda global ---
-  useEffect(() => {
-    if (searchTerm.trim()) {
-      handleSearch(searchTerm);
-    }
-  }, [searchTerm]);
-
-  // --- Efecto: estadísticas y gráficas (una sola vez al montar) ---
-  useEffect(() => {
-    loadStats();
-    loadChartsData();
-  
-  }, []);
-
-  // --- helpers notificación ---
-  const showNotification = (type: 'success' | 'error', message: string) => {
-    setNotification({ type, message });
-    setTimeout(() => setNotification(null), 4000);
-  };
-
-
-
-  const loadStats = async () => {
+  const loadStats = useCallback(async () => {
     try {
       setStatsLoading(true);
-      console.log('📊 Cargando estadísticas de experiencias...');
       const statsData = await experienceService.getExperienceStats();
-      console.log('📊 Estadísticas recibidas:', statsData);
       setStats(statsData);
     } catch (error) {
       console.error('Error cargando estadísticas:', error);
@@ -116,68 +98,10 @@ export const ExperiencesSection: React.FC = () => {
     } finally {
       setStatsLoading(false);
     }
-  };
+  }, []);
 
-  const loadChartsData = async () => {
-    try {
-      setChartsLoading(true);
-      console.log('📊 Cargando datos para gráficas de experiencias...');
-      
-      const allExperiencesData = await experienceService.getExperiences(1, 300);
-      const allExperiences = allExperiencesData.experiencias || [];
-      
-      console.log('📊 Total de experiencias para gráficas:', allExperiences.length);
-      
-      // Procesar distribución por dificultad
-      const difficultyData = processDifficultyDistribution(allExperiences);
-      setDifficultyDistribution(difficultyData);
-      
-      // Procesar distribución por idioma
-      const languageData = processLanguageDistribution(allExperiences);
-      setLanguageDistribution(languageData);
-      
-      console.log('📊 Datos de dificultad procesados:', difficultyData);
-      console.log('📊 Datos de idioma procesados:', languageData);
-    } catch (error) {
-      console.error('Error cargando datos para gráficas:', error);
-      setDifficultyDistribution([]);
-      setLanguageDistribution([]);
-    } finally {
-      setChartsLoading(false);
-    }
-  };
-
-  const processDifficultyDistribution = (experiences: ExperienciaCompleta[]): { difficulty: string; count: number }[] => {
-    const difficultyCount: { [key: string]: number } = {};
-    
-    experiences.forEach(exp => {
-      const difficulty = exp.dificultad.toLowerCase();
-      difficultyCount[difficulty] = (difficultyCount[difficulty] || 0) + 1;
-    });
-    
-    return Object.entries(difficultyCount).map(([difficulty, count]) => ({
-      difficulty,
-      count
-    })).sort((a, b) => b.count - a.count);
-  };
-
-  const processLanguageDistribution = (experiences: ExperienciaCompleta[]): { language: string; count: number }[] => {
-    const languageCount: { [key: string]: number } = {};
-    
-    experiences.forEach(exp => {
-      const language = exp.idioma.toLowerCase();
-      languageCount[language] = (languageCount[language] || 0) + 1;
-    });
-    
-    return Object.entries(languageCount).map(([language, count]) => ({
-      language,
-      count
-    })).sort((a, b) => b.count - a.count);
-  };
-
-  const handleSearch = async (term: string) => {
+  const handleSearch = useCallback(async (term: string) => {
     if (!term.trim()) {
-      // Si no hay término de búsqueda, cargar experiencias normalmente
       setIsSearching(false);
       setSearchTerm('');
       loadExperiences();
@@ -187,15 +111,15 @@ export const ExperiencesSection: React.FC = () => {
     try {
       setIsSearching(true);
       setLoading(true);
-      
-      console.log('🔍 Iniciando búsqueda global de experiencias:', term);
-      
-      // Obtener todas las experiencias para búsqueda local (siguiendo patrón de usuarios)
+
+      // Obtener todas las experiencias para búsqueda local
       const allExperiencesData = await experienceService.getExperiences(1, 300);
-      const allExperiences = Array.isArray(allExperiencesData) ? allExperiencesData : allExperiencesData.experiencias || [];
-      
+      const allExperiences = Array.isArray(allExperiencesData)
+        ? allExperiencesData
+        : (allExperiencesData as any).experiencias || [];
+
       // Filtrar localmente
-      const filteredExperiences = allExperiences.filter(exp =>
+      const filteredExperiences = allExperiences.filter((exp: ExperienciaCompleta) =>
         exp.proveedor_nombre.toLowerCase().includes(term.toLowerCase()) ||
         exp.proveedor_ciudad.toLowerCase().includes(term.toLowerCase()) ||
         exp.proveedor_pais.toLowerCase().includes(term.toLowerCase()) ||
@@ -203,36 +127,115 @@ export const ExperiencesSection: React.FC = () => {
         exp.dificultad.toLowerCase().includes(term.toLowerCase()) ||
         exp.punto_de_encuentro.toLowerCase().includes(term.toLowerCase())
       );
-      
+
       // Aplicar paginación manual
       const startIndex = (currentPage - 1) * pageSize;
       const endIndex = startIndex + pageSize;
       const paginatedResults = filteredExperiences.slice(startIndex, endIndex);
-      
+
       setExperiences(paginatedResults);
       setTotalExperiences(filteredExperiences.length);
       setTotalPages(Math.ceil(filteredExperiences.length / pageSize));
-      
-      console.log(`✅ Búsqueda local completada: ${filteredExperiences.length} resultados encontrados`);
-      
+
       if (filteredExperiences.length === 0) {
-        showNotification('error', `No se encontraron experiencias que coincidan con "${term}"`);
+        Swal.fire({
+          title: 'Sin resultados',
+          text: `No se encontraron experiencias que coincidan con "${term}"`,
+          icon: 'info',
+          confirmButtonColor: '#3b82f6',
+          confirmButtonText: 'Entendido',
+          customClass: {
+            popup: 'rounded-xl shadow-2xl',
+            title: 'text-xl font-bold text-gray-900',
+            confirmButton: 'px-6 py-3 rounded-lg font-medium transition-all duration-200 hover:shadow-lg',
+          },
+          buttonsStyling: false,
+          timer: 3000,
+          timerProgressBar: true
+        });
       }
     } catch (error) {
       console.error('Error en búsqueda local:', error);
       setExperiences([]);
       setTotalExperiences(0);
       setTotalPages(0);
-      showNotification('error', 'Error al buscar experiencias');
+      Swal.fire({
+        title: 'Error',
+        text: 'Error al buscar experiencias',
+        icon: 'error',
+        confirmButtonColor: '#dc2626',
+        confirmButtonText: 'Entendido',
+        customClass: {
+          popup: 'rounded-xl shadow-2xl',
+          title: 'text-xl font-bold text-gray-900',
+          confirmButton: 'px-6 py-3 rounded-lg font-medium transition-all duration-200 hover:shadow-lg',
+        },
+        buttonsStyling: false
+      });
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, pageSize, loadExperiences]);
+
+  const loadChartsData = useCallback(async () => {
+    try {
+      setChartsLoading(true);
+      const allExperiencesData = await experienceService.getExperiences(1, 300);
+      const allExperiences = allExperiencesData.experiencias || [];
+
+      // Procesar distribución por dificultad
+      const difficultyCount: { [key: string]: number } = {};
+      allExperiences.forEach((exp: ExperienciaCompleta) => {
+        const difficulty = exp.dificultad.toLowerCase();
+        difficultyCount[difficulty] = (difficultyCount[difficulty] || 0) + 1;
+      });
+      setDifficultyDistribution(Object.entries(difficultyCount).map(([difficulty, count]) => ({
+        difficulty,
+        count
+      })).sort((a, b) => b.count - a.count));
+
+      // Procesar distribución por idioma
+      const languageCount: { [key: string]: number } = {};
+      allExperiences.forEach((exp: ExperienciaCompleta) => {
+        const language = exp.idioma.toLowerCase();
+        languageCount[language] = (languageCount[language] || 0) + 1;
+      });
+      setLanguageDistribution(Object.entries(languageCount).map(([language, count]) => ({
+        language,
+        count
+      })).sort((a, b) => b.count - a.count));
+
+    } catch (error) {
+      console.error('Error cargando datos para gráficas:', error);
+      setDifficultyDistribution([]);
+      setLanguageDistribution([]);
+    } finally {
+      setChartsLoading(false);
+    }
+  }, []);
+
+  // --- Effects ---
+  useEffect(() => {
+    if (!isSearching) {
+      loadExperiences();
+    }
+  }, [isSearching, loadExperiences]);
+
+  useEffect(() => {
+    if (searchTerm.trim()) {
+      handleSearch(searchTerm);
+    }
+  }, [searchTerm, handleSearch]);
+
+  useEffect(() => {
+    loadStats();
+    loadChartsData();
+  }, [loadStats, loadChartsData]);
 
   const handleSearchChange = (term: string) => {
     setSearchTerm(term);
-    setCurrentPage(1); // Reset to first page when searching
-    
+    setCurrentPage(1);
+
     if (!term.trim()) {
       setIsSearching(false);
       loadExperiences();
@@ -249,45 +252,177 @@ export const ExperiencesSection: React.FC = () => {
   };
 
   const handlePageChange = (page: number) => {
-    console.log('📄 Cambiando a página:', page);
     setCurrentPage(page);
   };
 
   const handlePageSizeChange = (size: number) => {
-    console.log('📏 Cambiando tamaño de página:', size);
     setPageSize(size);
-    setCurrentPage(1); // Reset to first page when changing page size
+    setCurrentPage(1);
   };
 
   const handleDataChange = () => {
-    console.log('📊 Datos actualizados, recargando tabla...');
-    // Recargar solo los datos necesarios
     loadExperiences();
     loadStats();
+    loadChartsData();
   };
 
+  // Actions Handlers
+  const handleView = (experience: ExperienciaCompleta) => {
+    setSelectedExperience(experience);
+    setShowDetailModal(true);
+  };
 
+  const handleEdit = (experience: ExperienciaCompleta) => {
+    setSelectedExperience(experience);
+    setShowEditModal(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    const experience = experiences.find(e => e.id_experiencia === id);
+    const providerName = experience?.proveedor_nombre || 'esta experiencia';
+
+    const result = await Swal.fire({
+      title: "¿Estás seguro?",
+      html: `
+        <div class="text-center">
+          <div class="mb-4">
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+              <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3m-4 0h14" />
+              </svg>
+            </div>
+          </div>
+          <p class="text-gray-600 mb-2">Vas a eliminar la experiencia de:</p>
+          <p class="font-semibold text-gray-900 text-lg">${providerName}</p>
+          <p class="text-sm text-gray-500 mt-2">Esta acción no se puede deshacer</p>
+        </div>
+      `,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#dc2626",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
+      reverseButtons: true,
+      customClass: {
+        popup: 'rounded-xl shadow-2xl',
+        title: 'text-xl font-bold text-gray-900',
+        confirmButton: 'px-6 py-3 rounded-lg font-medium transition-all duration-200 hover:shadow-lg',
+        cancelButton: 'px-6 py-3 rounded-lg font-medium transition-all duration-200 hover:shadow-lg',
+      },
+      buttonsStyling: false,
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await experienceService.deleteExperience(id);
+
+        await Swal.fire({
+          icon: "success",
+          title: "¡Eliminado!",
+          text: "La experiencia ha sido eliminada correctamente",
+          timer: 2000,
+          showConfirmButton: false,
+          customClass: {
+            popup: 'rounded-xl shadow-2xl',
+            title: 'text-xl font-bold text-gray-900',
+          }
+        });
+
+        handleDataChange();
+      } catch (error) {
+        console.error(error);
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "No se pudo eliminar la experiencia",
+          customClass: {
+            popup: 'rounded-xl shadow-2xl',
+            title: 'text-xl font-bold text-gray-900',
+          }
+        });
+      }
+    }
+  };
+
+  const handleSaveEdit = async (data: any) => {
+    if (!selectedExperience) return;
+    try {
+      setSaving(true);
+      await experienceService.updateExperience(selectedExperience.id_experiencia, data);
+
+      await Swal.fire({
+        icon: "success",
+        title: "¡Actualizado!",
+        text: "La experiencia ha sido actualizada correctamente",
+        timer: 2000,
+        showConfirmButton: false,
+        customClass: {
+          popup: 'rounded-xl shadow-2xl',
+          title: 'text-xl font-bold text-gray-900',
+        }
+      });
+
+      setShowEditModal(false);
+      setSelectedExperience(null);
+      handleDataChange();
+    } catch (error) {
+      console.error(error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Hubo un problema al actualizar la experiencia",
+        customClass: {
+          popup: 'rounded-xl shadow-2xl',
+          title: 'text-xl font-bold text-gray-900',
+        }
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   // Exportar experiencias a Excel
   const handleExportExperiences = async () => {
     try {
-      showNotification('success', 'Generando archivo, por favor espera...');
+      await Swal.fire({
+        title: 'Generando archivo...',
+        text: 'Por favor espera mientras se genera el archivo Excel',
+        icon: 'info',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        showConfirmButton: false,
+        timer: 1500,
+        timerProgressBar: true
+      });
+
       const data = await experienceService.getExperiences(1, 1000);
       const experiencias: ExperienciaCompleta[] = Array.isArray(data)
         ? data
         : data.experiencias || [];
 
       if (!experiencias.length) {
-        showNotification('error', 'No hay datos para exportar');
+        await Swal.fire({
+          title: 'Sin datos',
+          text: 'No hay experiencias para exportar',
+          icon: 'warning',
+          confirmButtonColor: '#f59e0b',
+          confirmButtonText: 'Entendido',
+          customClass: {
+            popup: 'rounded-xl shadow-2xl',
+            title: 'text-xl font-bold text-gray-900',
+            confirmButton: 'px-6 py-3 rounded-lg font-medium transition-all duration-200 hover:shadow-lg',
+          },
+          buttonsStyling: false
+        });
         return;
       }
 
       // Convertir a formato plano para la hoja
-      const rows = (experiencias as any[]).map(exp => ({
+      const rows = (experiencias as Record<string, any>[]).map(exp => ({
         Proveedor: exp.proveedor_nombre,
-        Ciudad: exp.proveedor?.ciudad || '',
-        Pais: exp.proveedor?.pais || '',
-        Descripcion: exp.proveedor?.descripcion || '',
+        Ciudad: exp.proveedor_ciudad || '',
+        Pais: exp.proveedor_pais || '',
         Idioma: exp.idioma,
         Dificultad: exp.dificultad,
         Duracion_horas: exp.duracion,
@@ -303,72 +438,96 @@ export const ExperiencesSection: React.FC = () => {
       XLSX.utils.book_append_sheet(workbook, worksheet, 'Experiencias');
 
       const fecha = new Date().toISOString().split('T')[0];
-      // Generar ArrayBuffer y descargar manualmente para asegurar extensión
+      const timestamp = new Date().getTime();
+      const fileName = `experiencias_${fecha}_${timestamp}.xlsx`;
+
       const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
       const blob = new Blob([wbout], {
-        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8',
       });
+
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `experiencias_${fecha}.xlsx`;
+      link.download = fileName;
+      link.style.display = 'none';
+      link.target = '_blank';
+
       document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-      showNotification('success', 'Archivo exportado');
+      setTimeout(() => {
+        link.click();
+        setTimeout(() => {
+          if (document.body.contains(link)) {
+            document.body.removeChild(link);
+          }
+          URL.revokeObjectURL(url);
+        }, 200);
+      }, 50);
+
+      await Swal.fire({
+        title: '¡Archivo Exportado!',
+        text: `Se han exportado ${experiencias.length} experiencias exitosamente.`,
+        icon: 'success',
+        confirmButtonColor: '#10b981',
+        confirmButtonText: 'Entendido',
+        customClass: {
+          popup: 'rounded-xl shadow-2xl',
+          title: 'text-xl font-bold text-gray-900',
+          confirmButton: 'px-6 py-3 rounded-lg font-medium transition-all duration-200 hover:shadow-lg',
+        },
+        buttonsStyling: false,
+        timer: 3000,
+        timerProgressBar: true
+      });
+
     } catch (error) {
       console.error('Error exportando experiencias:', error);
-      showNotification('error', 'Error al exportar');
+      await Swal.fire({
+        title: 'Error',
+        text: 'No se pudo exportar el archivo. Por favor intenta nuevamente.',
+        icon: 'error',
+        confirmButtonColor: '#dc2626',
+        confirmButtonText: 'Entendido',
+        customClass: {
+          popup: 'rounded-xl shadow-2xl',
+          title: 'text-xl font-bold text-gray-900',
+          confirmButton: 'px-6 py-3 rounded-lg font-medium transition-all duration-200 hover:shadow-lg',
+        },
+        buttonsStyling: false
+      });
     }
   };
 
-
-
   return (
     <div className="space-y-8">
-      {/* Notification */}
-      {notification && (
-        <div className={`fixed top-4 right-4 z-50 flex items-center space-x-2 px-4 py-3 rounded-lg shadow-lg ${
-          notification.type === 'success' 
-            ? 'bg-green-50 text-green-800 border border-green-200' 
-            : 'bg-red-50 text-red-800 border border-red-200'
-        }`}>
-          {notification.type === 'success' ? (
-            <CheckCircle className="h-5 w-5" />
-          ) : (
-            <AlertCircle className="h-5 w-5" />
-          )}
-          <span className="font-medium">{notification.message}</span>
-        </div>
-      )}
-
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center space-x-3">
-            <Star className="h-8 w-8 text-blue-600" />
+            <Compass className="h-8 w-8 text-blue-600" />
             <h1 className="text-3xl font-bold text-gray-900">Gestión de Experiencias</h1>
           </div>
           <p className="text-gray-600 mt-2">
-            Administra todas las experiencias y tours del sistema
+            Administra los servicios, tours y experiencias del sistema
           </p>
         </div>
-        <div className="flex items-center space-x-3">
-          <button
+        <div className="flex items-center gap-3">
+          <Button
             onClick={handleExportExperiences}
-            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+            variant="outline"
+            className="flex items-center gap-2"
           >
-            <Download className="h-5 w-5" />
+            <Download className="h-4 w-4" />
             <span>Exportar Experiencias</span>
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => setShowCreateModal(true)}
-            className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
+            variant="primary"
+            className="flex items-center gap-2"
           >
-            <Plus className="h-5 w-5" />
+            <Plus className="h-4 w-4" />
             <span>Crear Experiencia</span>
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -381,11 +540,10 @@ export const ExperiencesSection: React.FC = () => {
         loading={statsLoading}
       />
 
-      {/* Experiences Table */}
+      {/* Table */}
       <ExperienceTable
         experiences={experiences}
         searchTerm={searchTerm}
-        isSearching={isSearching}
         onSearchChange={handleSearchChange}
         onClearSearch={clearSearch}
         loading={loading}
@@ -395,10 +553,21 @@ export const ExperiencesSection: React.FC = () => {
         pageSize={pageSize}
         onPageChange={handlePageChange}
         onPageSizeChange={handlePageSizeChange}
+        onView={handleView}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+        isSearching={isSearching}
         onDataChange={handleDataChange}
       />
 
-      {/* Modal Crear Experiencia */}
+      {/* Charts */}
+      <ExperienceCharts
+        difficultyDistribution={difficultyDistribution}
+        languageDistribution={languageDistribution}
+        chartsLoading={chartsLoading}
+      />
+
+      {/* Modals */}
       <CreateExperienceModal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
@@ -407,26 +576,64 @@ export const ExperiencesSection: React.FC = () => {
           try {
             setCreating(true);
             await experienceService.createExperience(payload);
-            showNotification('success', 'Experiencia creada correctamente');
+
+            await Swal.fire({
+              title: '¡Experiencia Creada!',
+              text: 'La experiencia ha sido creada exitosamente.',
+              icon: 'success',
+              confirmButtonColor: '#10b981',
+              confirmButtonText: 'Entendido',
+              customClass: {
+                popup: 'rounded-xl shadow-2xl',
+                title: 'text-xl font-bold text-gray-900',
+                confirmButton: 'px-6 py-3 rounded-lg font-medium transition-all duration-200 hover:shadow-lg',
+              },
+              buttonsStyling: false,
+              timer: 2000,
+              timerProgressBar: true
+            });
+
             setShowCreateModal(false);
-            // Recargar lista desde el servidor y mostrar página 1
             setCurrentPage(1);
             await loadExperiences();
             loadStats();
             loadChartsData();
           } catch (e: any) {
-            showNotification('error', e.message || 'Error creando experiencia');
+            Swal.fire({
+              title: 'Error',
+              text: e.message || 'Error creando experiencia',
+              icon: 'error',
+              confirmButtonColor: '#dc2626',
+              confirmButtonText: 'Entendido',
+              customClass: {
+                popup: 'rounded-xl shadow-2xl',
+                title: 'text-xl font-bold text-gray-900',
+                confirmButton: 'px-6 py-3 rounded-lg font-medium transition-all duration-200 hover:shadow-lg',
+              },
+              buttonsStyling: false
+            });
           } finally {
             setCreating(false);
           }
         }}
       />
 
-      {/* Charts */}
-      <ExperienceCharts
-        difficultyDistribution={difficultyDistribution}
-        languageDistribution={languageDistribution}
-        chartsLoading={chartsLoading}
+      <EditExperienceModal
+        isOpen={showEditModal}
+        onClose={() => {
+          setShowEditModal(false);
+          setSelectedExperience(null);
+        }}
+        experience={selectedExperience}
+        onSave={handleSaveEdit}
+        loading={false}
+        isSaving={saving}
+      />
+
+      <ExperienceDetailModal
+        isOpen={showDetailModal}
+        onClose={() => setShowDetailModal(false)}
+        experience={selectedExperience}
       />
     </div>
   );

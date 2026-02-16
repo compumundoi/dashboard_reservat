@@ -1,15 +1,13 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from 'react';
-import ReactDOM from 'react-dom';
-import { X, Save, PlusCircle } from 'lucide-react';
+import { User, Compass, MapPin, Save, Info, Mail, Phone, Shield, Clock, Users, Globe2, Briefcase } from 'lucide-react';
+import { Modal } from '../ui/Modal';
+import { Input } from '../ui/Input';
+import { Button } from '../ui/Button';
+import { Textarea } from '../ui/Textarea';
+import { Select } from '../ui/Select';
+import { CreateExperienceModalProps } from '../../types/experience';
 
-interface CreateExperienceModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSave: (payload: any) => void;
-  loading: boolean;
-}
-
-// Campos mínimos para no saturar al usuario
 const initialForm = {
   proveedor: {
     tipo: 'tour',
@@ -21,7 +19,7 @@ const initialForm = {
     ciudad: '',
     pais: '',
     sitio_web: '',
-    rating_promedio: 4,
+    rating_promedio: 5,
     verificado: false,
     fecha_registro: new Date().toISOString(),
     ubicacion: '',
@@ -34,8 +32,8 @@ const initialForm = {
   },
   experiencia: {
     duracion: 1,
-    dificultad: 'FACIL',
-    idioma: 'ES',
+    dificultad: 'Fácil',
+    idioma: 'Español',
     incluye_transporte: false,
     grupo_maximo: 5,
     guia_incluido: true,
@@ -54,203 +52,303 @@ export const CreateExperienceModal: React.FC<CreateExperienceModalProps> = ({
   const [formData, setFormData] = useState<typeof initialForm>(initialForm);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  if (!isOpen) return null;
-
   const validate = () => {
     const newErrors: Record<string, string> = {};
-    if (!formData.proveedor.nombre.trim()) newErrors['proveedor.nombre'] = 'Nombre proveedor requerido';
-    if (!formData.proveedor.email.trim()) newErrors['proveedor.email'] = 'Email requerido';
+    if (!formData.proveedor.nombre.trim()) newErrors['proveedor.nombre'] = 'Nombre comercial requerido';
+    if (!formData.proveedor.email.trim()) newErrors['proveedor.email'] = 'Email de contacto requerido';
+    if (!formData.proveedor.numero_documento.trim()) newErrors['proveedor.numero_documento'] = 'NIT/Documento requerido';
     if (!formData.experiencia.punto_de_encuentro.trim()) newErrors['experiencia.punto_de_encuentro'] = 'Punto de encuentro requerido';
+    if (!formData.experiencia.numero_rnt.trim()) newErrors['experiencia.numero_rnt'] = 'RNT requerido';
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const updateFormValue = (path: string, value: any) => {
     setFormData(prev => {
-      const copy: any = { ...prev };
+      const copy = JSON.parse(JSON.stringify(prev));
       const parts = path.split('.');
       let ref = copy;
-      for (let i = 0; i < parts.length - 1; i++) ref = ref[parts[i]];
+      for (let i = 0; i < parts.length - 1; i++) {
+        ref = ref[parts[i]];
+      }
       ref[parts[parts.length - 1]] = value;
       return copy;
     });
-    if (errors[path]) setErrors(prev => ({ ...prev, [path]: '' }));
+    if (errors[path]) {
+      setErrors(prev => {
+        const newErrs = { ...prev };
+        delete newErrs[path];
+        return newErrs;
+      });
+    }
   };
 
-  const handleInput = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
-    path: string,
-  ) => {
-    const target = e.target as HTMLInputElement;
-    const value = target.type === 'checkbox' ? target.checked : target.value;
-    updateFormValue(path, value);
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validate()) return;
-    onSave(formData);
+    if (validate()) {
+      await onSave(formData);
+    }
   };
 
-  const labelCls = 'block text-sm font-medium text-gray-700 mb-1';
-  const inputCls = 'block w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent';
+  const handleClose = () => {
+    setFormData(initialForm);
+    setErrors({});
+    onClose();
+  };
 
-  const modalContent = (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <PlusCircle className="h-5 w-5 text-blue-600" />
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={handleClose}
+      title="Nueva Experiencia"
+      description="Registra un nuevo proveedor y los detalles de su actividad"
+      size="2xl"
+    >
+      <form onSubmit={handleSubmit} className="space-y-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+          {/* Columna Izquierda: Información del Proveedor */}
+          <div className="space-y-6">
+            <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
+              <div className="p-1.5 bg-blue-100 text-blue-700 rounded-lg">
+                <User className="h-5 w-5" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">Perfil del Proveedor</h3>
             </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">Crear Experiencia</h3>
-              <p className="text-sm text-gray-600">Completa la información requerida</p>
+
+            <div className="space-y-4">
+              <Input
+                label="Nombre del Negocio *"
+                value={formData.proveedor.nombre}
+                onChange={(e) => updateFormValue('proveedor.nombre', e.target.value)}
+                placeholder="Ej: Amazonia Tours"
+                className={errors['proveedor.nombre'] ? "border-red-500" : ""}
+                error={errors['proveedor.nombre']}
+              />
+
+              <div className="grid grid-cols-2 gap-4">
+                <Input
+                  label="NIT / Documento *"
+                  value={formData.proveedor.numero_documento}
+                  onChange={(e) => updateFormValue('proveedor.numero_documento', e.target.value)}
+                  placeholder="900.123..."
+                  leftIcon={<Shield className="h-3 w-3 text-gray-400" />}
+                  className={errors['proveedor.numero_documento'] ? "border-red-500" : ""}
+                />
+                <Input
+                  label="Teléfono"
+                  value={formData.proveedor.telefono}
+                  onChange={(e) => updateFormValue('proveedor.telefono', e.target.value)}
+                  placeholder="+57..."
+                  leftIcon={<Phone className="h-3 w-3 text-gray-400" />}
+                />
+              </div>
+
+              <Input
+                label="Email de Contacto *"
+                type="email"
+                value={formData.proveedor.email}
+                onChange={(e) => updateFormValue('proveedor.email', e.target.value)}
+                placeholder="contacto@ejemplo.com"
+                leftIcon={<Mail className="h-3 w-3 text-gray-400" />}
+                className={errors['proveedor.email'] ? "border-red-500" : ""}
+                error={errors['proveedor.email']}
+              />
+
+              <div className="grid grid-cols-2 gap-4">
+                <Input
+                  label="Ciudad"
+                  value={formData.proveedor.ciudad}
+                  onChange={(e) => updateFormValue('proveedor.ciudad', e.target.value)}
+                />
+                <Input
+                  label="País"
+                  value={formData.proveedor.pais}
+                  onChange={(e) => updateFormValue('proveedor.pais', e.target.value)}
+                />
+              </div>
+
+              <Input
+                label="Dirección Física"
+                value={formData.proveedor.direccion}
+                onChange={(e) => updateFormValue('proveedor.direccion', e.target.value)}
+                leftIcon={<MapPin className="h-3 w-3 text-gray-400" />}
+              />
+
+              <Textarea
+                label="Descripción del Proveedor"
+                value={formData.proveedor.descripcion}
+                onChange={(e) => updateFormValue('proveedor.descripcion', e.target.value)}
+                placeholder="Breve reseña sobre la empresa..."
+                rows={3}
+              />
+
+              <div className="flex items-center gap-2 pt-2">
+                <label className="flex items-center gap-2 cursor-pointer select-none p-2 hover:bg-gray-50 rounded-lg border border-transparent hover:border-gray-100 w-full">
+                  <input
+                    type="checkbox"
+                    checked={formData.proveedor.verificado}
+                    onChange={(e) => updateFormValue('proveedor.verificado', e.target.checked)}
+                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span className="text-sm text-gray-700">Proveedor Verificado</span>
+                  <Shield className="h-3 w-3 text-blue-500 ml-auto" />
+                </label>
+              </div>
             </div>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100">
-            <X className="h-5 w-5" />
-          </button>
+
+          {/* Columna Derecha: Detalles de la Experiencia */}
+          <div className="space-y-6">
+            <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
+              <div className="p-1.5 bg-green-100 text-green-700 rounded-lg">
+                <Compass className="h-5 w-5" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">Detalles de la Actividad</h3>
+            </div>
+
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <Input
+                  label="Duración (hs)"
+                  type="number"
+                  min={1}
+                  value={formData.experiencia.duracion}
+                  onChange={(e) => updateFormValue('experiencia.duracion', parseInt(e.target.value))}
+                  leftIcon={<Clock className="h-3 w-3 text-gray-400" />}
+                />
+                <Input
+                  label="Max. Personas"
+                  type="number"
+                  min={1}
+                  value={formData.experiencia.grupo_maximo}
+                  onChange={(e) => updateFormValue('experiencia.grupo_maximo', parseInt(e.target.value))}
+                  leftIcon={<Users className="h-3 w-3 text-gray-400" />}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <Select
+                  label="Dificultad"
+                  value={formData.experiencia.dificultad}
+                  onChange={(e) => updateFormValue('experiencia.dificultad', e.target.value)}
+                  options={[
+                    { value: 'Fácil', label: 'Fácil' },
+                    { value: 'Moderado', label: 'Moderado' },
+                    { value: 'Difícil', label: 'Difícil' },
+                    { value: 'Extremo', label: 'Extremo' },
+                  ]}
+                />
+                <Input
+                  label="Idioma"
+                  value={formData.experiencia.idioma}
+                  onChange={(e) => updateFormValue('experiencia.idioma', e.target.value)}
+                  leftIcon={<Globe2 className="h-3 w-3 text-gray-400" />}
+                />
+              </div>
+
+              <Input
+                label="Punto de Encuentro *"
+                value={formData.experiencia.punto_de_encuentro}
+                onChange={(e) => updateFormValue('experiencia.punto_de_encuentro', e.target.value)}
+                placeholder="Ej: Lobby del hotel..."
+                leftIcon={<MapPin className="h-3 w-3 text-gray-400" />}
+                className={errors['experiencia.punto_de_encuentro'] ? "border-red-500" : ""}
+                error={errors['experiencia.punto_de_encuentro']}
+              />
+
+              <Input
+                label="Registro RNT *"
+                value={formData.experiencia.numero_rnt}
+                onChange={(e) => updateFormValue('experiencia.numero_rnt', e.target.value)}
+                placeholder="12345"
+                leftIcon={<Briefcase className="h-3 w-3 text-gray-400" />}
+                className={errors['experiencia.numero_rnt'] ? "border-red-500" : ""}
+                error={errors['experiencia.numero_rnt']}
+              />
+
+              <Textarea
+                label="Equipamiento Recomendado"
+                value={formData.experiencia.equipamiento_requerido}
+                onChange={(e) => updateFormValue('experiencia.equipamiento_requerido', e.target.value)}
+                placeholder="Ej: Ropa cómoda, bloqueador..."
+                rows={3}
+              />
+
+              <div className="grid grid-cols-2 gap-3 pt-2">
+                <label className="flex items-center gap-2 cursor-pointer select-none p-2 hover:bg-gray-50 rounded-lg border border-transparent hover:border-gray-100">
+                  <input
+                    type="checkbox"
+                    checked={formData.experiencia.incluye_transporte}
+                    onChange={(e) => updateFormValue('experiencia.incluye_transporte', e.target.checked)}
+                    className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                  />
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium text-gray-900">Transporte</span>
+                    <span className="text-[10px] text-gray-500">Incluido</span>
+                  </div>
+                </label>
+
+                <label className="flex items-center gap-2 cursor-pointer select-none p-2 hover:bg-gray-50 rounded-lg border border-transparent hover:border-gray-100">
+                  <input
+                    type="checkbox"
+                    checked={formData.experiencia.guia_incluido}
+                    onChange={(e) => updateFormValue('experiencia.guia_incluido', e.target.checked)}
+                    className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                  />
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium text-gray-900">Guía</span>
+                    <span className="text-[10px] text-gray-500">Profesional</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
-          <h4 className="text-md font-semibold text-gray-800">Datos del Proveedor</h4>
-          {/* Proveedor nombre */}
-          <div>
-            <label className={labelCls}>Nombre *</label>
-            <input type="text" className={`${inputCls} ${errors['proveedor.nombre'] ? 'border-red-300' : 'border-gray-300'}`} value={formData.proveedor.nombre} onChange={e => handleInput(e, 'proveedor.nombre')} />
-            {errors['proveedor.nombre'] && <p className="text-sm text-red-600">{errors['proveedor.nombre']}</p>}
-          </div>
-          {/* Proveedor email */}
-          <div>
-            <label className={labelCls}>Email *</label>
-            <input type="email" className={`${inputCls} ${errors['proveedor.email'] ? 'border-red-300' : 'border-gray-300'}`} value={formData.proveedor.email} onChange={e => handleInput(e, 'proveedor.email')} />
-            {errors['proveedor.email'] && <p className="text-sm text-red-600">{errors['proveedor.email']}</p>}
-          </div>
-          {/* Descripción */}
-          <div>
-            <label className={labelCls}>Descripción *</label>
-            <textarea rows={2} className={`${inputCls} ${errors['proveedor.descripcion'] ? 'border-red-300' : 'border-gray-300'}`} value={formData.proveedor.descripcion} onChange={e => handleInput(e, 'proveedor.descripcion')} />
-            {errors['proveedor.descripcion'] && <p className="text-sm text-red-600">{errors['proveedor.descripcion']}</p>}
-          </div>
-          {/* Verificado */}
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="proveedor_verificado"
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 rounded border-gray-300"
-              checked={formData.proveedor.verificado}
-              onChange={e => handleInput(e as any, 'proveedor.verificado')}
-            />
-            <label htmlFor="proveedor_verificado" className="text-sm text-gray-700">Proveedor Verificado</label>
-          </div>
-          {/* Teléfono */}
-          <div>
-            <label className={labelCls}>Teléfono</label>
-            <input type="text" className={inputCls} value={formData.proveedor.telefono} onChange={e => handleInput(e, 'proveedor.telefono')} />
-          </div>
-          {/* Dirección */}
-          <div>
-            <label className={labelCls}>Dirección</label>
-            <input type="text" className={inputCls} value={formData.proveedor.direccion} onChange={e => handleInput(e, 'proveedor.direccion')} />
-          </div>
-          {/* Ciudad */}
-          <div>
-            <label className={labelCls}>Ciudad</label>
-            <input type="text" className={inputCls} value={formData.proveedor.ciudad} onChange={e => handleInput(e, 'proveedor.ciudad')} />
-          </div>
-          {/* País */}
-          <div>
-            <label className={labelCls}>País</label>
-            <input type="text" className={inputCls} value={formData.proveedor.pais} onChange={e => handleInput(e, 'proveedor.pais')} />
-          </div>
-          {/* Sitio Web */}
-          <div>
-            <label className={labelCls}>Sitio Web</label>
-            <input type="url" className={inputCls} value={formData.proveedor.sitio_web} onChange={e => handleInput(e, 'proveedor.sitio_web')} />
+        {/* Footer */}
+        <div className="pt-6 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center group cursor-pointer">
+            <div className="relative flex items-center">
+              <input
+                type="checkbox"
+                checked={formData.proveedor.activo}
+                onChange={(e) => updateFormValue('proveedor.activo', e.target.checked)}
+                className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded-md transition-all cursor-pointer"
+                id="active-check"
+              />
+            </div>
+            <label htmlFor="active-check" className="ml-3 text-sm font-medium text-gray-700 cursor-pointer">
+              Marcar como activo
+            </label>
+            <div className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <Info className="h-4 w-4 text-gray-400" />
+            </div>
           </div>
 
-          <h4 className="text-md font-semibold text-gray-800 pt-4">Datos de la Experiencia</h4>
-          {/* Duración */}
-          <div>
-            <label className={labelCls}>Duración (horas)</label>
-            <input type="number" min={1} className={inputCls} value={formData.experiencia.duracion} onChange={e => handleInput(e, 'experiencia.duracion')} />
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleClose}
+              disabled={loading}
+              className="flex-1 sm:flex-none"
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              isLoading={loading}
+              className="flex-1 sm:flex-none gap-2"
+            >
+              {!loading && <Save className="h-4 w-4" />}
+              Crear Experiencia
+            </Button>
           </div>
-          {/* Dificultad */}
-          <div>
-            <label className={labelCls}>Dificultad</label>
-            <select className={inputCls} value={formData.experiencia.dificultad} onChange={e => handleInput(e, 'experiencia.dificultad')}>
-              <option value="FACIL">FÁCIL</option>
-              <option value="MODERADO">MODERADO</option>
-              <option value="DIFICIL">DIFÍCIL</option>
-            </select>
-          </div>
-          {/* Idioma */}
-          <div>
-            <label className={labelCls}>Idioma</label>
-            <select className={inputCls} value={formData.experiencia.idioma} onChange={e => handleInput(e, 'experiencia.idioma')}>
-              <option value="ES">Español</option>
-              <option value="EN">Inglés</option>
-            </select>
-          </div>
-          {/* Incluye Transporte */}
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="incluye_transporte"
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 rounded border-gray-300"
-              checked={formData.experiencia.incluye_transporte}
-              onChange={e => handleInput(e as any, 'experiencia.incluye_transporte')}
-            />
-            <label htmlFor="incluye_transporte" className="text-sm text-gray-700">Incluye Transporte</label>
-          </div>
-          {/* Grupo máximo */}
-          <div>
-            <label className={labelCls}>Grupo Máximo</label>
-            <input type="number" min={1} className={inputCls} value={formData.experiencia.grupo_maximo} onChange={e => handleInput(e, 'experiencia.grupo_maximo')} />
-          </div>
-          {/* Guía incluido */}
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="guia_incluido"
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 rounded border-gray-300"
-              checked={formData.experiencia.guia_incluido}
-              onChange={e => handleInput(e as any, 'experiencia.guia_incluido')}
-            />
-            <label htmlFor="guia_incluido" className="text-sm text-gray-700">Guía Incluido</label>
-          </div>
-          {/* Equipamiento requerido */}
-          <div>
-            <label className={labelCls}>Equipamiento Requerido</label>
-            <textarea rows={3} className={inputCls} value={formData.experiencia.equipamiento_requerido} onChange={e => handleInput(e, 'experiencia.equipamiento_requerido')} />
-          </div>
-          {/* Punto de encuentro */}
-          <div>
-            <label className={labelCls}>Punto de Encuentro *</label>
-            <input type="text" className={`${inputCls} ${errors['experiencia.punto_de_encuentro'] ? 'border-red-300' : 'border-gray-300'}`} value={formData.experiencia.punto_de_encuentro} onChange={e => handleInput(e, 'experiencia.punto_de_encuentro')} />
-            {errors['experiencia.punto_de_encuentro'] && <p className="text-sm text-red-600">{errors['experiencia.punto_de_encuentro']}</p>}
-          </div>
-          {/* Número RNT */}
-          <div>
-            <label className={labelCls}>Número RNT</label>
-            <input type="text" className={inputCls} value={formData.experiencia.numero_rnt} onChange={e => handleInput(e, 'experiencia.numero_rnt')} />
-          </div>
-
-          {/* Actions */}
-          <div className="flex items-center justify-end space-x-3 pt-4">
-            <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border text-gray-600 hover:bg-gray-50">Cancelar</button>
-            <button type="submit" disabled={loading} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2 disabled:opacity-60">
-              <Save className="h-5 w-5" />
-              <span>{loading ? 'Guardando...' : 'Guardar'}</span>
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        </div>
+      </form>
+    </Modal>
   );
-
-  return ReactDOM.createPortal(modalContent, document.body);
 };
