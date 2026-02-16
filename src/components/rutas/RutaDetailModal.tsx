@@ -1,156 +1,150 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
-import { X, Route, MapPin, Clock, DollarSign, Users, CheckCircle, Star, ArrowRight } from 'lucide-react';
+import { Route, MapPin, Clock, DollarSign, Users, CheckCircle, Star, ArrowRight } from 'lucide-react';
 import { RutaModalProps } from '../../types/ruta';
+import { Modal } from '../ui/Modal';
+import { Button } from '../ui/Button';
+import { Badge } from '../ui/Badge';
 
 const RutaDetailModal: React.FC<RutaModalProps> = ({ isOpen, onClose, ruta }) => {
-  if (!isOpen || !ruta) return null;
+  if (!ruta) return null;
 
-  const modalContent = (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
-      <div className="relative mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-gray-200">
-          <div className="flex items-center">
-            <div className="flex-shrink-0 h-10 w-10 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full flex items-center justify-center">
-              <Route className="h-5 w-5 text-white" />
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Detalles de la Ruta"
+      description={`Información detallada sobre ${ruta.nombre}`}
+      size="xl"
+    >
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {/* Columna Izquierda */}
+        <div className="space-y-6">
+          {/* Información Básica */}
+          <div>
+            <div className="flex items-center gap-2 pb-2 border-b border-gray-100 mb-4">
+              <div className="p-1.5 bg-blue-100 text-blue-700 rounded-lg">
+                <Route className="h-5 w-5" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">Información General</h3>
             </div>
-            <div className="ml-3">
-              <h3 className="text-lg font-medium text-gray-900">Detalles de la Ruta</h3>
-              <p className="text-sm text-gray-500">{ruta.nombre}</p>
+
+            <div className="space-y-4">
+              <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">Nombre</label>
+                <p className="text-gray-900 font-medium">{ruta.nombre}</p>
+              </div>
+
+              <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">Descripción</label>
+                <p className="text-gray-900 text-sm leading-relaxed">{ruta.descripcion}</p>
+              </div>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            <X className="h-6 w-6" />
-          </button>
-        </div>
 
-        {/* Content */}
-        <div className="py-4 max-h-96 overflow-y-auto">
-          <div className="space-y-6">
-            {/* Información Básica */}
-            <div>
-              <h4 className="text-sm font-medium text-gray-900 mb-3 flex items-center">
-                <Route className="h-4 w-4 mr-2 text-purple-600" />
-                Información Básica
-              </h4>
-              <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-                <div>
-                  <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Nombre</label>
-                  <p className="mt-1 text-sm text-gray-900">{ruta.nombre}</p>
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Descripción</label>
-                  <p className="mt-1 text-sm text-gray-900">{ruta.descripcion}</p>
-                </div>
+          {/* Estado y Características */}
+          <div>
+            <div className="flex items-center gap-2 pb-2 border-b border-gray-100 mb-4">
+              <div className="p-1.5 bg-purple-100 text-purple-700 rounded-lg">
+                <CheckCircle className="h-5 w-5" />
               </div>
+              <h3 className="text-lg font-semibold text-gray-900">Estado y Etiquetas</h3>
             </div>
 
-            {/* Ruta y Ubicación */}
-            <div>
-              <h4 className="text-sm font-medium text-gray-900 mb-3 flex items-center">
-                <MapPin className="h-4 w-4 mr-2 text-blue-600" />
-                Ruta y Ubicación
-              </h4>
-              <div className="bg-gray-50 rounded-lg p-4">
-                <div className="flex items-center justify-center space-x-4">
-                  <div className="text-center">
-                    <div className="w-3 h-3 bg-green-500 rounded-full mx-auto mb-2"></div>
-                    <p className="text-sm font-medium text-gray-900">{ruta.origen}</p>
-                    <p className="text-xs text-gray-500">Origen</p>
-                  </div>
-                  <ArrowRight className="h-6 w-6 text-gray-400" />
-                  <div className="text-center">
-                    <div className="w-3 h-3 bg-red-500 rounded-full mx-auto mb-2"></div>
-                    <p className="text-sm font-medium text-gray-900">{ruta.destino}</p>
-                    <p className="text-xs text-gray-500">Destino</p>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+              <div className="flex flex-wrap gap-3">
+                <Badge variant={ruta.activo ? 'success' : 'error'} className="px-3 py-1">
+                  {ruta.activo ? 'Activa' : 'Inactiva'}
+                </Badge>
 
-            {/* Detalles de la Ruta */}
-            <div>
-              <h4 className="text-sm font-medium text-gray-900 mb-3 flex items-center">
-                <Clock className="h-4 w-4 mr-2 text-orange-600" />
-                Detalles de la Ruta
-              </h4>
-              <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <Clock className="h-4 w-4 text-gray-400 mr-2" />
-                    <span className="text-sm text-gray-600">Duración Estimada</span>
-                  </div>
-                  <span className="text-sm font-medium text-gray-900">{ruta.duracion_estimada} minutos</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <DollarSign className="h-4 w-4 text-gray-400 mr-2" />
-                    <span className="text-sm text-gray-600">Precio</span>
-                  </div>
-                  <span className="text-sm font-medium text-gray-900">${ruta.precio}</span>
-                </div>
-              </div>
-            </div>
+                {ruta.recomendada && (
+                  <Badge variant="info" className="px-3 py-1 gap-1">
+                    <Star className="h-3 w-3 fill-current" />
+                    Recomendada
+                  </Badge>
+                )}
 
-            {/* Puntos de Interés */}
-            <div>
-              <h4 className="text-sm font-medium text-gray-900 mb-3 flex items-center">
-                <Users className="h-4 w-4 mr-2 text-green-600" />
-                Puntos de Interés
-              </h4>
-              <div className="bg-gray-50 rounded-lg p-4">
-                <p className="text-sm text-gray-900">{ruta.puntos_interes}</p>
-              </div>
-            </div>
-
-            {/* Estado y Características */}
-            <div>
-              <h4 className="text-sm font-medium text-gray-900 mb-3 flex items-center">
-                <CheckCircle className="h-4 w-4 mr-2 text-indigo-600" />
-                Estado y Características
-              </h4>
-              <div className="bg-gray-50 rounded-lg p-4">
-                <div className="flex flex-wrap gap-2">
-                  <span
-                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      ruta.activo
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}
-                  >
-                    <CheckCircle className="h-3 w-3 mr-1" />
-                    {ruta.activo ? 'Activa' : 'Inactiva'}
-                  </span>
-                  {ruta.recomendada && (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                      <Star className="h-3 w-3 mr-1" />
-                      Recomendada
-                    </span>
-                  )}
-                </div>
+                <Badge variant="secondary" className="px-3 py-1 gap-1">
+                  <DollarSign className="h-3 w-3" />
+                  {ruta.precio}
+                </Badge>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="flex justify-end pt-4 border-t border-gray-200">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
-          >
-            Cerrar
-          </button>
+        {/* Columna Derecha */}
+        <div className="space-y-6">
+          {/* Ruta y Trayecto */}
+          <div>
+            <div className="flex items-center gap-2 pb-2 border-b border-gray-100 mb-4">
+              <div className="p-1.5 bg-rose-100 text-rose-700 rounded-lg">
+                <MapPin className="h-5 w-5" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">Trayecto</h3>
+            </div>
+
+            <div className="bg-gray-50 rounded-xl p-6 border border-gray-100">
+              <div className="relative flex items-center justify-between">
+                {/* Linea conectora */}
+                <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-gray-200 -z-10 transform -translate-y-1/2 mx-8"></div>
+
+                <div className="flex flex-col items-center bg-gray-50 px-2 z-10">
+                  <div className="w-8 h-8 rounded-full bg-green-100 border-2 border-green-500 flex items-center justify-center mb-2">
+                    <div className="w-2.5 h-2.5 rounded-full bg-green-600"></div>
+                  </div>
+                  <span className="text-sm font-bold text-gray-900">{ruta.origen}</span>
+                  <span className="text-xs text-gray-500">Origen</span>
+                </div>
+
+                <div className="bg-gray-50 px-2 z-10">
+                  <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+                    <ArrowRight className="h-4 w-4 text-gray-400" />
+                  </div>
+                </div>
+
+                <div className="flex flex-col items-center bg-gray-50 px-2 z-10">
+                  <div className="w-8 h-8 rounded-full bg-red-100 border-2 border-red-500 flex items-center justify-center mb-2">
+                    <MapPin className="h-4 w-4 text-red-600" />
+                  </div>
+                  <span className="text-sm font-bold text-gray-900">{ruta.destino}</span>
+                  <span className="text-xs text-gray-500">Destino</span>
+                </div>
+              </div>
+
+              <div className="mt-6 pt-4 border-t border-gray-200 flex justify-center">
+                <div className="flex items-center gap-2 text-gray-600 bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100">
+                  <Clock className="h-4 w-4 text-orange-500" />
+                  <span className="text-sm font-medium">Duración est: {ruta.duracion_estimada} min</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Puntos de Interés */}
+          <div>
+            <div className="flex items-center gap-2 pb-2 border-b border-gray-100 mb-4">
+              <div className="p-1.5 bg-green-100 text-green-700 rounded-lg">
+                <Users className="h-5 w-5" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">Puntos de Interés</h3>
+            </div>
+
+            <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+              <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-line">
+                {ruta.puntos_interes}
+              </p>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-  );
 
-  return ReactDOM.createPortal(modalContent, document.body);
+      <div className="mt-8 flex justify-end pt-6 border-t border-gray-100">
+        <Button variant="secondary" onClick={onClose}>
+          Cerrar
+        </Button>
+      </div>
+    </Modal>
+  );
 };
 
 export default RutaDetailModal;

@@ -1,6 +1,28 @@
-import React from 'react';
-import { Search, X, Eye, Edit, Trash2, MapPin, Clock, ArrowRight, Users, ChevronLeft, ChevronRight } from 'lucide-react';
-import { RutaTableProps } from '../../types/ruta';
+import React, { useState, useEffect } from 'react';
+import { Search, X, Eye, Edit, Trash2, MapPin, Clock, ArrowRight, Users, ChevronLeft, ChevronRight, Route } from 'lucide-react';
+import { RutaData } from '../../types/ruta';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/Table';
+import { Badge } from '../ui/Badge';
+import { Button } from '../ui/Button';
+import { Input } from '../ui/Input';
+import { Select } from '../ui/Select';
+import { cn } from '../../lib/utils';
+
+interface RutaTableProps {
+  rutas: RutaData[];
+  loading: boolean;
+  currentPage: number;
+  pageSize: number;
+  totalPages: number;
+  totalItems: number;
+  searchTerm: string;
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (size: number) => void;
+  onSearch: (term: string) => void;
+  onViewDetails: (id: string) => void;
+  onEdit: (id: string) => void;
+  onDelete: (id: string) => void;
+}
 
 const RutaTable: React.FC<RutaTableProps> = ({
   rutas,
@@ -17,11 +39,31 @@ const RutaTable: React.FC<RutaTableProps> = ({
   onEdit,
   onDelete
 }) => {
-  // Generar números de página para la paginación
+  const [localSearchTerm, setLocalSearchTerm] = useState(searchTerm);
+
+  useEffect(() => {
+    setLocalSearchTerm(searchTerm);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (localSearchTerm !== searchTerm) {
+        onSearch(localSearchTerm);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [localSearchTerm, onSearch, searchTerm]);
+
+  const handleClearSearch = () => {
+    setLocalSearchTerm('');
+    onSearch('');
+  };
+
   const getPageNumbers = () => {
     const pages = [];
     const maxVisiblePages = 5;
-    
+
     if (totalPages <= maxVisiblePages) {
       for (let i = 1; i <= totalPages; i++) {
         pages.push(i);
@@ -49,21 +91,28 @@ const RutaTable: React.FC<RutaTableProps> = ({
         pages.push(totalPages);
       }
     }
-    
+
     return pages;
   };
 
   if (loading) {
     return (
-      <div className="bg-white shadow rounded-lg">
-        <div className="px-4 py-5 sm:p-6">
-          <div className="animate-pulse space-y-4">
-            <div className="h-10 bg-gray-200 rounded"></div>
-            <div className="space-y-3">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="h-16 bg-gray-200 rounded"></div>
-              ))}
-            </div>
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <div className="h-10 w-64 bg-gray-100 rounded-xl animate-pulse" />
+          <div className="h-10 w-32 bg-gray-100 rounded-xl animate-pulse" />
+        </div>
+        <div className="rounded-xl border border-secondary-200 bg-white shadow-soft-sm overflow-hidden">
+          <div className="space-y-4 p-6">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="flex space-x-4">
+                <div className="h-12 w-12 rounded-full bg-gray-100 animate-pulse" />
+                <div className="flex-1 space-y-2 py-1">
+                  <div className="h-4 bg-gray-100 rounded w-3/4 animate-pulse" />
+                  <div className="h-4 bg-gray-100 rounded w-1/2 animate-pulse" />
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -71,246 +120,215 @@ const RutaTable: React.FC<RutaTableProps> = ({
   }
 
   return (
-    <div className="bg-white shadow rounded-lg">
-      <div className="px-4 py-5 sm:p-6">
-        {/* Header con título y controles */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-medium text-gray-900">
-              Lista de Rutas ({totalItems} total)
-            </h3>
-            <div className="flex items-center space-x-2">
-              <span className="text-sm text-gray-700">Mostrar</span>
-              <select
-                value={pageSize}
-                onChange={(e) => onPageSizeChange(Number(e.target.value))}
-                className="border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-              >
-                <option value={5}>5</option>
-                <option value={10}>10</option>
-                <option value={20}>20</option>
-                <option value={50}>50</option>
-              </select>
-              <span className="text-sm text-gray-700">
-                de {totalItems} rutas
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Barra de búsqueda */}
-        <div className="mb-4">
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-gray-400" />
-            </div>
-            <input
-              type="text"
-              className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-              placeholder="Buscar rutas por nombre, origen, destino..."
-              value={searchTerm}
-              onChange={(e) => onSearch(e.target.value)}
-            />
-            {searchTerm && (
-              <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-                <button
-                  onClick={() => onSearch('')}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <X className="h-5 w-5" />
+    <div className="space-y-4">
+      {/* Search Header */}
+      <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center bg-white p-4 rounded-xl border border-secondary-200 shadow-soft-sm">
+        <div className="w-full sm:w-72 md:w-96">
+          <Input
+            placeholder="Buscar rutas por nombre, origen..."
+            value={localSearchTerm}
+            onChange={(e) => setLocalSearchTerm(e.target.value)}
+            leftIcon={<Search className="h-4 w-4" />}
+            rightIcon={
+              localSearchTerm ? (
+                <button onClick={handleClearSearch} className="hover:bg-secondary-100 p-1 rounded-full text-secondary-500">
+                  <X className="h-3 w-3" />
                 </button>
-              </div>
-            )}
+              ) : undefined
+            }
+            className={searchTerm ? 'border-primary-300 bg-primary-50/30' : ''}
+          />
+        </div>
+
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="flex items-center gap-2 text-sm text-secondary-600 whitespace-nowrap">
+            <span>Mostrar:</span>
+            <Select
+              value={pageSize}
+              onChange={(e) => onPageSizeChange(Number(e.target.value))}
+              className="w-20 h-9"
+              options={[
+                { value: 5, label: '5' },
+                { value: 10, label: '10' },
+                { value: 20, label: '20' },
+                { value: 50, label: '50' },
+              ]}
+            />
           </div>
         </div>
+      </div>
 
-        {/* Tabla */}
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Ruta
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Origen → Destino
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Detalles
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Estado
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Precio
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Características
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Acciones
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {rutas.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
-                    {searchTerm ? `No se encontraron resultados para "${searchTerm}"` : 'No hay rutas registradas'}
-                  </td>
-                </tr>
-              ) : (
-                rutas.map((ruta) => (
-                  <tr key={ruta.id} className="hover:bg-gray-50">
-                    {/* Columna 1: Ruta (nombre + descripción) */}
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0 h-10 w-10">
-                          <div className="h-10 w-10 rounded-full bg-gradient-to-r from-purple-500 to-purple-600 flex items-center justify-center">
-                            <span className="text-sm font-medium text-white">
-                              {ruta.nombre.charAt(0).toUpperCase()}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
-                            {ruta.nombre}
-                          </div>
-                          <div className="text-sm text-gray-500 truncate max-w-xs">
-                            {ruta.descripcion}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    
-                    {/* Columna 2: Origen → Destino */}
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center text-sm text-gray-900">
-                        <MapPin className="h-4 w-4 text-gray-400 mr-1" />
-                        <div className="flex items-center">
-                          <span>{ruta.origen}</span>
-                          <ArrowRight className="h-3 w-3 mx-2 text-gray-400" />
-                          <span>{ruta.destino}</span>
-                        </div>
-                      </div>
-                    </td>
-                    
-                    {/* Columna 3: Detalles (duración + puntos de interés) */}
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      <div className="space-y-1">
-                        <div className="flex items-center">
-                          <Clock className="h-3 w-3 mr-1" />
-                          {ruta.duracion_estimada} min
-                        </div>
-                        <div className="flex items-center">
-                          <Users className="h-3 w-3 mr-1" />
-                          <span className="truncate max-w-xs">{ruta.puntos_interes}</span>
-                        </div>
-                      </div>
-                    </td>
-                    
-                    {/* Columna 4: Estado */}
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          ruta.activo
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-red-100 text-red-800'
-                        }`}
-                      >
-                        {ruta.activo ? 'Activa' : 'Inactiva'}
-                      </span>
-                    </td>
-                    
-                    {/* Columna 5: Precio */}
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      ${ruta.precio}
-                    </td>
-                    
-                    {/* Columna 6: Características (recomendada) */}
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {ruta.recomendada && (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          Recomendada
-                        </span>
-                      )}
-                    </td>
-                    
-                    {/* Columna 7: Acciones */}
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => onViewDetails(ruta.id)}
-                          className="text-indigo-600 hover:text-indigo-900 p-1 rounded-full hover:bg-indigo-100"
-                          title="Ver detalles"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => onEdit(ruta.id)}
-                          className="text-yellow-600 hover:text-yellow-900 p-1 rounded-full hover:bg-yellow-100"
-                          title="Editar"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => onDelete(ruta.id)}
-                          className="text-red-600 hover:text-red-900 p-1 rounded-full hover:bg-red-100"
-                          title="Eliminar"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+      {searchTerm && (
+        <div className="bg-primary-50 text-primary-700 px-4 py-2 rounded-lg text-sm flex items-center animate-fade-in border border-primary-100">
+          <Search className="w-4 h-4 mr-2 animate-pulse" />
+          Resultados de búsqueda: <span className="font-semibold mx-1">{totalItems}</span> rutas encontradas
+          {searchTerm && <span> para "{searchTerm}"</span>}
         </div>
+      )}
 
-        {/* Navegación de páginas */}
-        {totalPages > 1 && (
-          <div className="mt-6 flex items-center justify-center">
-            <div className="flex items-center space-x-1">
-              <button
-                onClick={() => onPageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="p-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </button>
+      {/* Table */}
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Ruta</TableHead>
+            <TableHead>Trayecto</TableHead>
+            <TableHead>Detalles</TableHead>
+            <TableHead>Estado</TableHead>
+            <TableHead>Precio</TableHead>
+            <TableHead>Características</TableHead>
+            <TableHead className="text-right">Acciones</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {rutas.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={7} className="h-64 text-center">
+                <div className="flex flex-col items-center justify-center text-secondary-400">
+                  <Route className="h-12 w-12 mb-4 opacity-20" />
+                  <p className="text-lg font-medium text-secondary-900">No se encontraron rutas</p>
+                  <p className="text-sm">Intenta ajustar los filtros de búsqueda</p>
+                  {searchTerm && (
+                    <Button variant="ghost" onClick={handleClearSearch} className="mt-4 text-primary-600">
+                      Limpiar búsqueda
+                    </Button>
+                  )}
+                </div>
+              </TableCell>
+            </TableRow>
+          ) : (
+            rutas.map((ruta) => (
+              <TableRow key={ruta.id}>
+                <TableCell>
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-purple-100 to-purple-200 flex items-center justify-center text-purple-700 font-bold border border-purple-200 shadow-sm shrink-0">
+                      {ruta.nombre.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="font-medium text-secondary-900 truncate max-w-[180px]" title={ruta.nombre}>
+                        {ruta.nombre}
+                      </div>
+                      <div className="text-xs text-secondary-500 truncate max-w-[150px]">
+                        {ruta.descripcion}
+                      </div>
+                    </div>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2 text-sm text-secondary-900">
+                    <MapPin className="h-4 w-4 text-secondary-400 shrink-0" />
+                    <div className="flex flex-col">
+                      <span className="font-medium text-xs text-secondary-700">{ruta.origen}</span>
+                      <div className="flex items-center gap-1">
+                        <ArrowRight className="h-3 w-3 text-secondary-400" />
+                        <span className="font-medium text-xs text-secondary-700">{ruta.destino}</span>
+                      </div>
+                    </div>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="space-y-1">
+                    <div className="flex items-center text-xs text-secondary-600">
+                      <Clock className="h-3 w-3 mr-1.5 text-secondary-400" />
+                      {ruta.duracion_estimada} min
+                    </div>
+                    <div className="flex items-center text-xs text-secondary-600">
+                      <Users className="h-3 w-3 mr-1.5 text-secondary-400" />
+                      <span className="truncate max-w-[150px]" title={ruta.puntos_interes}>{ruta.puntos_interes}</span>
+                    </div>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <Badge variant={ruta.activo ? 'success' : 'error'}>
+                    {ruta.activo ? 'Activa' : 'Inactiva'}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <div className="font-medium text-secondary-900">
+                    ${ruta.precio}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  {ruta.recomendada && (
+                    <Badge variant="info">
+                      Recomendada
+                    </Badge>
+                  )}
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex items-center justify-end gap-1">
+                    <Button variant="ghost" size="sm" onClick={() => onViewDetails(ruta.id)} className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50" title="Ver detalles">
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => onEdit(ruta.id)} className="h-8 w-8 p-0 text-amber-600 hover:text-amber-700 hover:bg-amber-50" title="Editar">
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="sm"
+                      onClick={() => onDelete(ruta.id)}
+                      className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50" title="Eliminar">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
 
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-4 px-2">
+          <div className="text-sm text-secondary-500">
+            Mostrando <span className="font-medium text-secondary-900">{((currentPage - 1) * pageSize) + 1}</span> a <span className="font-medium text-secondary-900">{Math.min(currentPage * pageSize, totalItems)}</span> de <span className="font-medium text-secondary-900">{totalItems}</span> rutas
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onPageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="h-9"
+              leftIcon={<ChevronLeft className="h-4 w-4" />}
+            >
+              Anterior
+            </Button>
+
+            <div className="flex items-center gap-1">
               {getPageNumbers().map((page, index) => (
                 <React.Fragment key={index}>
                   {page === '...' ? (
-                    <span className="px-3 py-2 text-gray-500">...</span>
+                    <span className="px-2 text-secondary-400">...</span>
                   ) : (
                     <button
                       onClick={() => onPageChange(page as number)}
-                      className={`px-3 py-2 rounded-md text-sm font-medium ${
+                      className={cn(
+                        "h-9 w-9 flex items-center justify-center rounded-lg text-sm font-medium transition-colors",
                         currentPage === page
-                          ? 'bg-indigo-600 text-white'
-                          : 'bg-white text-gray-500 hover:bg-gray-50 border border-gray-300'
-                      }`}
+                          ? "bg-primary-600 text-white shadow-primary-500/30 shadow-md"
+                          : "text-secondary-600 hover:bg-secondary-100 hover:text-secondary-900"
+                      )}
                     >
                       {page}
                     </button>
                   )}
                 </React.Fragment>
               ))}
-
-              <button
-                onClick={() => onPageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className="p-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
             </div>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onPageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="h-9"
+              rightIcon={<ChevronRight className="h-4 w-4" />}
+            >
+              Siguiente
+            </Button>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

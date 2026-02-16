@@ -9,6 +9,7 @@ import RutaDetailModal from './RutaDetailModal';
 import EditRutaModal from './EditRutaModal';
 import CreateRutaModal from './CreateRutaModal';
 import Swal from 'sweetalert2';
+import { Button } from '../ui/Button';
 
 const RutasSection: React.FC = () => {
   // Estados principales
@@ -46,16 +47,16 @@ const RutasSection: React.FC = () => {
     try {
       setLoading(true);
       const response = await rutaService.getRutas(page - 1, size); // API usa paginación 0-based
-      
+
       setRutas(response.rutas);
       setTotalItems(response.total);
       setTotalPages(Math.ceil(response.total / size));
-      
+
       // Si no hay búsqueda activa, usar los datos paginados de la API
       if (!searchTerm) {
         setFilteredRutas(response.rutas);
       }
-      
+
     } catch (error) {
       console.error('Error loading rutas:', error);
       Swal.fire({
@@ -80,7 +81,7 @@ const RutasSection: React.FC = () => {
       const totalRutas = todasLasRutas.length;
       const rutasActivas = todasLasRutas.filter(r => r.activo).length;
       const rutasRecomendadas = todasLasRutas.filter(r => r.recomendada).length;
-      const duracionPromedio = totalRutas > 0 
+      const duracionPromedio = totalRutas > 0
         ? Math.round(todasLasRutas.reduce((sum, r) => sum + r.duracion_estimada, 0) / totalRutas)
         : 0;
 
@@ -212,27 +213,38 @@ const RutasSection: React.FC = () => {
       cancelButtonColor: '#6b7280',
       confirmButtonText: 'Sí, eliminar',
       cancelButtonText: 'Cancelar',
-      reverseButtons: true
+      reverseButtons: true,
+      customClass: {
+        popup: 'rounded-xl shadow-2xl',
+        title: 'text-xl font-bold text-gray-900',
+        confirmButton: 'px-6 py-3 rounded-lg font-medium transition-all duration-200 hover:shadow-lg',
+        cancelButton: 'px-6 py-3 rounded-lg font-medium transition-all duration-200 hover:shadow-lg',
+      }
     });
 
     if (result.isConfirmed) {
       try {
         await rutaService.deleteRuta(id);
-        
+
         await Swal.fire({
           title: '¡Eliminada!',
           text: 'Ruta eliminada correctamente',
           icon: 'success',
           confirmButtonColor: '#059669',
           timer: 3000,
-          timerProgressBar: true
+          timerProgressBar: true,
+          customClass: {
+            popup: 'rounded-xl shadow-2xl',
+            title: 'text-xl font-bold text-gray-900',
+            confirmButton: 'px-6 py-3 rounded-lg font-medium transition-all duration-200 hover:shadow-lg',
+          }
         });
 
         // Recargar datos
         loadRutas();
         loadStats();
         loadChartData();
-        
+
       } catch (error) {
         console.error('Error deleting ruta:', error);
         Swal.fire({
@@ -248,16 +260,21 @@ const RutasSection: React.FC = () => {
   const handleExport = async () => {
     try {
       await rutaService.exportRutasToExcel();
-      
+
       await Swal.fire({
         title: '¡Exportado!',
         text: 'Las rutas se han exportado correctamente',
         icon: 'success',
         confirmButtonColor: '#059669',
         timer: 3000,
-        timerProgressBar: true
+        timerProgressBar: true,
+        customClass: {
+          popup: 'rounded-xl shadow-2xl',
+          title: 'text-xl font-bold text-gray-900',
+          confirmButton: 'px-6 py-3 rounded-lg font-medium transition-all duration-200 hover:shadow-lg',
+        }
       });
-      
+
     } catch (error) {
       console.error('Error exporting rutas:', error);
       Swal.fire({
@@ -280,7 +297,7 @@ const RutasSection: React.FC = () => {
     if (!searchTerm) {
       return filteredRutas; // Datos ya paginados por la API
     }
-    
+
     // Paginación local para búsqueda
     const startIndex = (currentPage - 1) * pageSize;
     const endIndex = startIndex + pageSize;
@@ -288,31 +305,31 @@ const RutasSection: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header con botones de acción */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center space-x-3">
             <Route className="h-8 w-8 text-blue-600" />
-            <h1 className="text-2xl font-bold text-gray-900">Gestión de Rutas</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Gestión de Rutas</h1>
           </div>
-          <p className="text-gray-600">Administra las rutas de transporte y turismo</p>
+          <p className="text-gray-600 mt-2">Administra las rutas de transporte y turismo</p>
         </div>
-        <div className="flex space-x-3">
-          <button
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
             onClick={handleExport}
-            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            leftIcon={<Download className="h-4 w-4" />}
           >
-            <Download className="h-4 w-4 mr-2" />
             Exportar Rutas
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="primary"
             onClick={() => setCreateModalOpen(true)}
-            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+            leftIcon={<Plus className="h-4 w-4" />}
           >
-            <Plus className="h-4 w-4 mr-2" />
             Crear Ruta
-          </button>
+          </Button>
         </div>
       </div>
 
