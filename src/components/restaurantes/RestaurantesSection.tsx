@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Download, Plus, UtensilsCrossed } from 'lucide-react';
 import { RestauranteData } from '../../types/restaurante';
 import { restauranteService } from '../../services/restauranteService';
@@ -8,6 +8,7 @@ import RestauranteCharts from './RestauranteCharts';
 import RestauranteDetailModal from './RestauranteDetailModal';
 import EditRestauranteModal from './EditRestauranteModal';
 import CreateRestauranteModal from './CreateRestauranteModal';
+import { Button } from '../ui/Button';
 import Swal from 'sweetalert2';
 import * as XLSX from 'xlsx';
 
@@ -36,11 +37,11 @@ const RestaurantesSection: React.FC = () => {
   const [selectedRestauranteId, setSelectedRestauranteId] = useState<string | null>(null);
 
   // Cargar restaurantes
-  const loadRestaurantes = async (page: number = currentPage, size: number = pageSize) => {
+  const loadRestaurantes = useCallback(async (page: number = currentPage, size: number = pageSize) => {
     try {
       setLoading(true);
       const response = await restauranteService.getRestaurantes(page - 1, size);
-      
+
       setRestaurantes(response.restaurantes);
       setFilteredRestaurantes(response.restaurantes);
       setTotalPages(response.totalPages);
@@ -56,7 +57,7 @@ const RestaurantesSection: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, pageSize]);
 
   // Efecto para cargar datos iniciales
   useEffect(() => {
@@ -64,20 +65,20 @@ const RestaurantesSection: React.FC = () => {
     // Simular carga de stats y charts
     setTimeout(() => setStatsLoading(false), 1000);
     setTimeout(() => setChartsLoading(false), 1200);
-  }, []);
+  }, [loadRestaurantes]);
 
   // Efecto para recargar cuando cambia la página o el tamaño
   useEffect(() => {
     if (currentPage > 0) {
       loadRestaurantes(currentPage, pageSize);
     }
-  }, [currentPage, pageSize]);
+  }, [currentPage, pageSize, loadRestaurantes]);
 
   // Manejar búsqueda
   const handleSearch = (term: string) => {
     setSearchTerm(term);
     setIsSearching(true);
-    
+
     if (term.trim() === '') {
       setFilteredRestaurantes(restaurantes);
     } else {
@@ -89,7 +90,7 @@ const RestaurantesSection: React.FC = () => {
       );
       setFilteredRestaurantes(filtered);
     }
-    
+
     setTimeout(() => setIsSearching(false), 300);
   };
 
@@ -141,6 +142,7 @@ const RestaurantesSection: React.FC = () => {
         });
         loadRestaurantes();
       } catch (error) {
+        console.log(error);
         Swal.fire({
           icon: 'error',
           title: 'Error',
@@ -181,7 +183,7 @@ const RestaurantesSection: React.FC = () => {
   const handleExport = async () => {
     try {
       const { restaurantes: allRestaurantes } = await restauranteService.getRestaurantes(0, 1000);
-      
+
       const exportData = allRestaurantes.map(restaurante => ({
         'Nombre': restaurante.nombre,
         'Email': restaurante.email,
@@ -214,7 +216,7 @@ const RestaurantesSection: React.FC = () => {
 
       const worksheet = XLSX.utils.json_to_sheet(exportData);
       const workbook = XLSX.utils.book_new();
-      
+
       // Configurar anchos de columna
       const colWidths = [
         { wch: 25 }, { wch: 30 }, { wch: 15 }, { wch: 15 }, { wch: 15 },
@@ -225,7 +227,7 @@ const RestaurantesSection: React.FC = () => {
         { wch: 10 }, { wch: 15 }
       ];
       worksheet['!cols'] = colWidths;
-      
+
       XLSX.utils.book_append_sheet(workbook, worksheet, 'Restaurantes');
       XLSX.writeFile(workbook, 'restaurantes.xlsx');
 
@@ -236,8 +238,8 @@ const RestaurantesSection: React.FC = () => {
         timer: 2000,
         showConfirmButton: false
       });
-    } catch (error) {
-      console.error('Error exporting data:', error);
+    } catch {
+      console.error('Error exporting to Excel');
       Swal.fire({
         icon: 'error',
         title: 'Error',
@@ -247,33 +249,33 @@ const RestaurantesSection: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header con botones de acción */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center space-x-3">
             <UtensilsCrossed className="h-8 w-8 text-blue-600" />
-            <h1 className="text-2xl font-bold text-gray-900">Restaurantes</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Gestión de Restaurantes</h1>
           </div>
-          <p className="mt-1 text-sm text-gray-600">
-            Gestiona los restaurantes y su información
-          </p>
+          <p className="text-gray-600 mt-2">Administra los restaurantes y su información detallada</p>
         </div>
-        <div className="mt-4 sm:mt-0 flex space-x-3">
-          <button
+        <div className="flex items-center gap-3">
+          <Button
             onClick={handleExport}
-            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            variant="outline"
+            className="flex items-center gap-2"
           >
-            <Download className="h-4 w-4 mr-2" />
-            Exportar Restaurantes
-          </button>
-          <button
+            <Download className="h-4 w-4" />
+            <span>Exportar Restaurantes</span>
+          </Button>
+          <Button
             onClick={() => setCreateModalOpen(true)}
-            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+            variant="primary"
+            className="flex items-center gap-2"
           >
-            <Plus className="h-4 w-4 mr-2" />
-            Crear Restaurante
-          </button>
+            <Plus className="h-4 w-4" />
+            <span>Crear Restaurante</span>
+          </Button>
         </div>
       </div>
 

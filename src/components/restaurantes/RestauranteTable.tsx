@@ -1,6 +1,11 @@
 import React from 'react';
-import { Search, X, Eye, Edit, Trash2, MapPin, Clock, Star, Users, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, X, Eye, Edit, Trash2, MapPin, Clock, Star, Users, Calendar, ChevronLeft, ChevronRight, Utensils } from 'lucide-react';
 import { RestauranteData } from '../../types/restaurante';
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '../ui/Table';
+import { Badge } from '../ui/Badge';
+import { Button } from '../ui/Button';
+import { Input } from '../ui/Input';
+import { cn } from '../../lib/utils';
 
 interface RestauranteTableProps {
   restaurantes: RestauranteData[];
@@ -35,55 +40,19 @@ const RestauranteTable: React.FC<RestauranteTableProps> = ({
   onEdit,
   onDelete
 }) => {
-  // Generar números de página para la paginación
-  const getPageNumbers = () => {
-    const pages = [];
-    const maxVisiblePages = 5;
-    
-    if (totalPages <= maxVisiblePages) {
-      for (let i = 1; i <= totalPages; i++) {
-        pages.push(i);
-      }
-    } else {
-      if (currentPage <= 3) {
-        for (let i = 1; i <= 4; i++) {
-          pages.push(i);
-        }
-        pages.push('...');
-        pages.push(totalPages);
-      } else if (currentPage >= totalPages - 2) {
-        pages.push(1);
-        pages.push('...');
-        for (let i = totalPages - 3; i <= totalPages; i++) {
-          pages.push(i);
-        }
-      } else {
-        pages.push(1);
-        pages.push('...');
-        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
-          pages.push(i);
-        }
-        pages.push('...');
-        pages.push(totalPages);
-      }
-    }
-    
-    return pages;
-  };
-
-
+  // Calcular rango de elementos mostrados
+  const startItem = (currentPage - 1) * pageSize + 1;
+  const endItem = Math.min(currentPage * pageSize, totalItems);
 
   if (loading) {
     return (
-      <div className="bg-white shadow rounded-lg">
-        <div className="px-4 py-5 sm:p-6">
-          <div className="animate-pulse space-y-4">
-            <div className="h-10 bg-gray-200 rounded"></div>
-            <div className="space-y-3">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="h-16 bg-gray-200 rounded"></div>
-              ))}
-            </div>
+      <div className="bg-white rounded-xl border border-gray-200 shadow-soft-sm p-8">
+        <div className="animate-pulse space-y-6">
+          <div className="h-10 bg-gray-100 rounded-lg w-full"></div>
+          <div className="space-y-4">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="h-16 bg-gray-50 rounded-lg w-full"></div>
+            ))}
           </div>
         </div>
       </div>
@@ -91,262 +60,267 @@ const RestauranteTable: React.FC<RestauranteTableProps> = ({
   }
 
   return (
-    <div className="bg-white shadow rounded-lg">
-      <div className="px-4 py-5 sm:p-6">
-        {/* Header con título y controles */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-medium text-gray-900">
-              Lista de Restaurantes ({totalItems} total)
-            </h3>
-            <div className="flex items-center space-x-2">
-              <span className="text-sm text-gray-700">Mostrar</span>
-              <select
-                value={pageSize}
-                onChange={(e) => onPageSizeChange(Number(e.target.value))}
-                className="border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-              >
-                <option value={5}>5</option>
-                <option value={10}>10</option>
-                <option value={20}>20</option>
-                <option value={50}>50</option>
-              </select>
-              <span className="text-sm text-gray-700">
-                de {totalItems} restaurantes
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Barra de búsqueda */}
-        <div className="mb-4">
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-gray-400" />
-            </div>
-            <input
-              type="text"
-              className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-              placeholder="Buscar restaurantes..."
-              value={searchTerm}
-              onChange={(e) => onSearch(e.target.value)}
-            />
-            {searchTerm && (
-              <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-                <button
-                  onClick={() => onSearch('')}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Tabla */}
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Proveedor
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Ubicación
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Restaurante
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Detalles
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Estado
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Registro
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Acciones
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {isSearching ? (
-                <tr>
-                  <td colSpan={7} className="px-6 py-4 text-center">
-                    <div className="animate-pulse">Buscando...</div>
-                  </td>
-                </tr>
-              ) : restaurantes.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
-                    {searchTerm ? `No se encontraron resultados para "${searchTerm}"` : 'No hay restaurantes registrados'}
-                  </td>
-                </tr>
-              ) : (
-                restaurantes.map((restaurante) => (
-                  <tr key={restaurante.id_restaurante} className="hover:bg-gray-50">
-                    {/* Columna 1: Proveedor (como en Experiencias) */}
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0 h-10 w-10">
-                          <div className="h-10 w-10 rounded-full bg-gradient-to-r from-orange-400 to-red-500 flex items-center justify-center">
-                            <span className="text-sm font-medium text-white">
-                              {restaurante.nombre.charAt(0).toUpperCase()}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
-                            {restaurante.nombre}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {restaurante.email}
-                          </div>
-                          <div className="flex items-center mt-1">
-                            <Star className="h-3 w-3 text-yellow-400 mr-1" />
-                            <span className="text-xs text-gray-600">
-                              {restaurante.rating_promedio.toFixed(1)}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    {/* Columna 2: Ubicación */}
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center text-sm text-gray-900">
-                        <MapPin className="h-4 w-4 text-gray-400 mr-1" />
-                        <div>
-                          <div>{restaurante.ciudad}</div>
-                          <div className="text-xs text-gray-500">{restaurante.pais}</div>
-                        </div>
-                      </div>
-                    </td>
-                    {/* Columna 3: Restaurante (tipo cocina + tipo comida) */}
-                    <td className="px-6 py-4">
-                      <div className="space-y-1">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                          {restaurante.tipo_cocina}
-                        </span>
-                        {restaurante.tipo_comida && (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                            {restaurante.tipo_comida}
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    {/* Columna 4: Detalles (horario + capacidad) */}
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      <div className="space-y-1">
-                        <div className="flex items-center">
-                          <Clock className="h-3 w-3 mr-1" />
-                          {restaurante.horario_apertura} - {restaurante.horario_cierre}
-                        </div>
-                        <div className="flex items-center">
-                          <Users className="h-3 w-3 mr-1" />
-                          {restaurante.capacidad} personas
-                        </div>
-                      </div>
-                    </td>
-                    {/* Columna 5: Estado */}
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          restaurante.verificado
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-red-100 text-red-800'
-                        }`}
-                      >
-                        {restaurante.verificado ? 'Verificado' : 'No verificado'}
-                      </span>
-                    </td>
-                    {/* Columna 6: Registro (fecha) */}
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      <div className="flex items-center">
-                        <Calendar className="h-3 w-3 mr-1" />
-                        {restaurante.fecha_registro 
-                          ? new Date(restaurante.fecha_registro).toLocaleDateString('es-ES')
-                          : 'N/A'
-                        }
-                      </div>
-                    </td>
-                    {/* Columna 7: Acciones */}
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => onViewDetails(restaurante.id_restaurante)}
-                          className="text-indigo-600 hover:text-indigo-900 p-1 rounded-full hover:bg-indigo-100"
-                          title="Ver detalles"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => onEdit(restaurante.id_restaurante)}
-                          className="text-yellow-600 hover:text-yellow-900 p-1 rounded-full hover:bg-yellow-100"
-                          title="Editar"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => onDelete(restaurante.id_restaurante)}
-                          className="text-red-600 hover:text-red-900 p-1 rounded-full hover:bg-red-100"
-                          title="Eliminar"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Navegación de páginas */}
-        {totalPages > 1 && (
-          <div className="mt-6 flex items-center justify-end">
-            <div className="flex items-center space-x-1">
-              <button
-                onClick={() => onPageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="p-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <ChevronLeft className="h-4 w-4" />
+    <div className="space-y-4">
+      {/* Filters & Search - Separate Card */}
+      <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
+        <div className="relative w-full md:w-96">
+          <Input
+            placeholder="Buscar restaurantes..."
+            value={searchTerm}
+            onChange={(e) => onSearch(e.target.value)}
+            leftIcon={<Search className="h-4 w-4" />}
+            rightIcon={searchTerm ? (
+              <button onClick={() => onSearch('')} className="hover:text-gray-600 transition-colors">
+                <X className="h-4 w-4" />
               </button>
+            ) : null}
+          />
+        </div>
 
-              {getPageNumbers().map((page, index) => (
-                <React.Fragment key={index}>
-                  {page === '...' ? (
-                    <span className="px-3 py-2 text-gray-500">...</span>
-                  ) : (
-                    <button
-                      onClick={() => onPageChange(page as number)}
-                      className={`px-3 py-2 rounded-md text-sm font-medium ${
-                        currentPage === page
-                          ? 'bg-indigo-600 text-white'
-                          : 'bg-white text-gray-500 hover:bg-gray-50 border border-gray-300'
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  )}
-                </React.Fragment>
-              ))}
-
-              <button
-                onClick={() => onPageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className="p-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-        )}
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <span className="text-sm text-gray-500 whitespace-nowrap">Mostrar:</span>
+          <select
+            value={pageSize}
+            onChange={(e) => onPageSizeChange(Number(e.target.value))}
+            className="h-10 border border-gray-200 rounded-xl px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+          >
+            <option value={5}>5</option>
+            <option value={10}>10</option>
+            <option value={20}>20</option>
+            <option value={50}>50</option>
+          </select>
+        </div>
       </div>
+
+      {/* Table */}
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Proveedor</TableHead>
+            <TableHead>Ubicación</TableHead>
+            <TableHead>Categoría</TableHead>
+            <TableHead>Horario & Capacidad</TableHead>
+            <TableHead>Estado</TableHead>
+            <TableHead>Registro</TableHead>
+            <TableHead className="text-right">Acciones</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {isSearching ? (
+            <TableRow>
+              <TableCell colSpan={7} className="h-64 text-center">
+                <div className="flex flex-col items-center justify-center space-y-2">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  <p className="text-gray-500 font-medium">Buscando...</p>
+                </div>
+              </TableCell>
+            </TableRow>
+          ) : restaurantes.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={7} className="h-64 text-center">
+                <div className="flex flex-col items-center justify-center text-gray-400">
+                  <Utensils className="h-12 w-12 mb-4 opacity-20" />
+                  <p className="text-lg font-medium text-gray-900">No se encontraron restaurantes</p>
+                  <p className="text-sm">Prueba ajustando los filtros de búsqueda</p>
+                  {searchTerm && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onSearch('')}
+                      className="mt-4"
+                    >
+                      Limpiar búsqueda
+                    </Button>
+                  )}
+                </div>
+              </TableCell>
+            </TableRow>
+          ) : (
+            restaurantes.map((restaurante) => (
+              <TableRow key={restaurante.id_restaurante}>
+                {/* Proveedor */}
+                <TableCell>
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-orange-400 to-red-500 text-white flex items-center justify-center font-bold border border-orange-200 shadow-sm shrink-0">
+                      {restaurante.nombre.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                      <span className="font-medium text-gray-900 truncate">{restaurante.nombre}</span>
+                      <span className="text-xs text-gray-500 truncate">{restaurante.email}</span>
+                      <div className="flex items-center mt-1">
+                        <Star className="h-3 w-3 text-yellow-400 mr-1" />
+                        <span className="text-[10px] text-gray-600">
+                          {restaurante.rating_promedio.toFixed(1)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </TableCell>
+
+                {/* Ubicación */}
+                <TableCell>
+                  <div className="flex flex-col">
+                    <div className="flex items-center gap-1.5 text-gray-900 font-medium text-sm">
+                      <MapPin className="h-3.5 w-3.5 text-gray-400" />
+                      <span>{restaurante.ciudad}</span>
+                    </div>
+                    <span className="text-xs text-gray-500 ml-5">{restaurante.pais}</span>
+                  </div>
+                </TableCell>
+
+                {/* Categoría */}
+                <TableCell>
+                  <div className="flex flex-col gap-1">
+                    <Badge variant="secondary" className="rounded-md w-fit font-normal">
+                      {restaurante.tipo_cocina}
+                    </Badge>
+                    {restaurante.tipo_comida && (
+                      <Badge variant="outline" className="rounded-md w-fit bg-blue-50 text-blue-700 border-blue-100 font-normal">
+                        {restaurante.tipo_comida}
+                      </Badge>
+                    )}
+                  </div>
+                </TableCell>
+
+                {/* Detalles */}
+                <TableCell>
+                  <div className="flex flex-col gap-1 text-sm text-gray-600">
+                    <div className="flex items-center gap-1.5">
+                      <Clock className="h-3.5 w-3.5 text-gray-400" />
+                      <span>{restaurante.horario_apertura} - {restaurante.horario_cierre}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <Users className="h-3.5 w-3.5 text-gray-400" />
+                      <span>{restaurante.capacidad} personas</span>
+                    </div>
+                  </div>
+                </TableCell>
+
+                {/* Estado */}
+                <TableCell>
+                  <Badge
+                    variant={restaurante.verificado ? 'success' : 'error'}
+                    className="rounded-full"
+                  >
+                    {restaurante.verificado ? 'Verificado' : 'No verificado'}
+                  </Badge>
+                </TableCell>
+
+                {/* Registro */}
+                <TableCell>
+                  <div className="flex items-center gap-1.5 text-sm text-gray-500">
+                    <Calendar className="h-3.5 w-3.5 text-gray-400" />
+                    <span>
+                      {restaurante.fecha_registro
+                        ? new Date(restaurante.fecha_registro).toLocaleDateString('es-ES')
+                        : 'N/A'
+                      }
+                    </span>
+                  </div>
+                </TableCell>
+
+                {/* Acciones */}
+                <TableCell className="text-right">
+                  <div className="flex items-center justify-end gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onViewDetails(restaurante.id_restaurante)}
+                      className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                      title="Ver detalles"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onEdit(restaurante.id_restaurante)}
+                      className="text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+                      title="Editar"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onDelete(restaurante.id_restaurante)}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      title="Eliminar"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="bg-white px-6 py-4 rounded-xl border border-gray-200 shadow-soft-sm flex items-center justify-between">
+          <p className="text-sm text-gray-500">
+            Mostrando <span className="font-medium text-gray-900">{startItem}</span> a{' '}
+            <span className="font-medium text-gray-900">{endItem}</span> de{' '}
+            <span className="font-medium text-gray-900">{totalItems}</span> resultados
+          </p>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={currentPage === 1}
+              onClick={() => onPageChange(currentPage - 1)}
+              className="gap-1 px-3"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              <span className="hidden sm:inline">Anterior</span>
+            </Button>
+
+            <div className="flex items-center gap-1">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => {
+                if (
+                  totalPages > 7 &&
+                  pageNum !== 1 &&
+                  pageNum !== totalPages &&
+                  (pageNum < currentPage - 1 || pageNum > currentPage + 1)
+                ) {
+                  if (pageNum === currentPage - 2 || pageNum === currentPage + 2) {
+                    return <span key={pageNum} className="px-2 text-gray-400">...</span>;
+                  }
+                  return null;
+                }
+
+                return (
+                  <Button
+                    key={pageNum}
+                    size="sm"
+                    variant={currentPage === pageNum ? 'primary' : 'ghost'}
+                    onClick={() => onPageChange(pageNum)}
+                    className={cn(
+                      "min-w-[32px] w-8 h-8 p-0 rounded-lg",
+                      currentPage !== pageNum && "text-gray-600 hover:bg-gray-100"
+                    )}
+                  >
+                    {pageNum}
+                  </Button>
+                );
+              })}
+            </div>
+
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={currentPage === totalPages}
+              onClick={() => onPageChange(currentPage + 1)}
+              className="gap-1 px-3"
+            >
+              <span className="hidden sm:inline">Siguiente</span>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

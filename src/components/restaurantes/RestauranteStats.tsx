@@ -30,56 +30,17 @@ const RestauranteStats: React.FC<RestauranteStatsProps> = ({ loading }) => {
     }
   }, [loading]);
 
-  const statsConfig = [
-    {
-      title: 'Total Restaurantes',
-      value: stats.total,
-      icon: Utensils,
-      color: 'blue',
-      bgColor: 'bg-blue-50',
-      iconColor: 'bg-blue-500'
-    },
-    {
-      title: 'Restaurantes Verificados',
-      value: stats.verificados,
-      icon: CheckCircle,
-      color: 'green',
-      bgColor: 'bg-green-50',
-      iconColor: 'bg-green-500'
-    },
-    {
-      title: 'Con Entrega a Domicilio',
-      value: stats.con_entrega,
-      icon: Truck,
-      color: 'orange',
-      bgColor: 'bg-orange-50',
-      iconColor: 'bg-orange-500'
-    },
-    {
-      title: 'Pet Friendly',
-      value: stats.pet_friendly,
-      icon: Heart,
-      color: 'purple',
-      bgColor: 'bg-purple-50',
-      iconColor: 'bg-purple-500'
-    }
-  ];
-
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[...Array(4)].map((_, index) => (
-          <div key={index} className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-gray-200 rounded-md animate-pulse"></div>
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <div className="h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
-                  <div className="h-8 bg-gray-200 rounded animate-pulse"></div>
-                </div>
+          <div key={index} className="bg-white rounded-xl p-6 border border-gray-100 animate-pulse">
+            <div className="flex items-center justify-between">
+              <div className="space-y-2">
+                <div className="h-4 bg-gray-200 rounded w-24"></div>
+                <div className="h-8 bg-gray-200 rounded w-16"></div>
               </div>
+              <div className="h-8 w-8 bg-gray-200 rounded-lg"></div>
             </div>
           </div>
         ))}
@@ -88,35 +49,50 @@ const RestauranteStats: React.FC<RestauranteStatsProps> = ({ loading }) => {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      {statsConfig.map((stat, index) => {
-        const Icon = stat.icon;
-        return (
-          <div key={index} className={`${stat.bgColor} overflow-hidden shadow rounded-lg`}>
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className={`${stat.iconColor} rounded-md p-2`}>
-                    <Icon className="h-5 w-5 text-white" />
-                  </div>
-                </div>
-                <div className="ml-5 w-0 flex-1">
-                  <dl>
-                    <dt className={`text-sm font-medium text-${stat.color}-600 truncate`}>
-                      {stat.title}
-                    </dt>
-                    <dd>
-                      <div className={`text-3xl font-bold text-${stat.color}-900`}>
-                        {stat.value.toLocaleString()}
-                      </div>
-                    </dd>
-                  </dl>
-                </div>
-              </div>
-            </div>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Total */}
+      <div className="bg-blue-50 rounded-xl p-6 border border-gray-100">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm text-gray-500">Total Restaurantes</p>
+            <p className="text-3xl font-bold text-blue-600">{stats.total.toLocaleString('es-ES')}</p>
           </div>
-        );
-      })}
+          <Utensils className="h-8 w-8 text-blue-500" />
+        </div>
+      </div>
+
+      {/* Verificados */}
+      <div className="bg-green-50 rounded-xl p-6 border border-gray-100">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm text-gray-500">Restaurantes Verificados</p>
+            <p className="text-3xl font-bold text-green-600">{stats.verificados.toLocaleString('es-ES')}</p>
+          </div>
+          <CheckCircle className="h-8 w-8 text-green-500" />
+        </div>
+      </div>
+
+      {/* Entrega */}
+      <div className="bg-orange-50 rounded-xl p-6 border border-gray-100">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm text-gray-500">Con Entrega a Domicilio</p>
+            <p className="text-3xl font-bold text-orange-600">{stats.con_entrega.toLocaleString('es-ES')}</p>
+          </div>
+          <Truck className="h-8 w-8 text-orange-500" />
+        </div>
+      </div>
+
+      {/* Pet Friendly */}
+      <div className="bg-purple-50 rounded-xl p-6 border border-gray-100">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm text-gray-500">Pet Friendly</p>
+            <p className="text-3xl font-bold text-purple-600">{stats.pet_friendly.toLocaleString('es-ES')}</p>
+          </div>
+          <Heart className="h-8 w-8 text-purple-500" />
+        </div>
+      </div>
     </div>
   );
 };

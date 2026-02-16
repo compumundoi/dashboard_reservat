@@ -1,9 +1,14 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from 'react';
-import ReactDOM from 'react-dom';
-import { X, Save, Loader } from 'lucide-react';
+import { Save, Info, Utensils, Building, MapPin, Clock, Users, Star } from 'lucide-react';
 import { CreateRestauranteData } from '../../types/restaurante';
 import { restauranteService } from '../../services/restauranteService';
 import Swal from 'sweetalert2';
+import { Modal } from '../ui/Modal';
+import { Input } from '../ui/Input';
+import { Select } from '../ui/Select';
+import { Textarea } from '../ui/Textarea';
+import { Button } from '../ui/Button';
 
 interface CreateRestauranteModalProps {
   isOpen: boolean;
@@ -17,6 +22,7 @@ const CreateRestauranteModal: React.FC<CreateRestauranteModalProps> = ({
   onSuccess
 }) => {
   const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState<CreateRestauranteData>({
     // Datos del proveedor
     tipo: 'restaurante',
@@ -38,7 +44,7 @@ const CreateRestauranteModal: React.FC<CreateRestauranteModalProps> = ({
     tipo_documento: '',
     numero_documento: '',
     activo: true,
-    
+
     // Datos específicos del restaurante
     tipo_cocina: '',
     horario_apertura: '08:00',
@@ -69,16 +75,41 @@ const CreateRestauranteModal: React.FC<CreateRestauranteModalProps> = ({
     precio_ascendente: 0
   });
 
-  const handleInputChange = (field: keyof CreateRestauranteData, value: any) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target;
+    const checked = (e.target as HTMLInputElement).checked;
+
     setFormData(prev => ({
       ...prev,
-      [field]: value
+      [name]: type === 'checkbox' ? checked :
+        type === 'number' ? parseFloat(value) : value
     }));
+
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }));
+    }
+  };
+
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+    if (!formData.nombre.trim()) newErrors.nombre = 'El nombre es requerido';
+    if (!formData.email.trim()) newErrors.email = 'El email es requerido';
+    if (!formData.telefono.trim()) newErrors.telefono = 'El teléfono es requerido';
+    if (!formData.direccion.trim()) newErrors.direccion = 'La dirección es requerida';
+    if (!formData.ciudad.trim()) newErrors.ciudad = 'La ciudad es requerida';
+    if (!formData.tipo_cocina.trim()) newErrors.tipo_cocina = 'El tipo de cocina es requerido';
+    if (!formData.tipo_comida.trim()) newErrors.tipo_comida = 'El tipo de comida es requerido';
+    if (!formData.tipo_documento) newErrors.tipo_documento = 'Seleccione un tipo de documento';
+    if (!formData.numero_documento.trim()) newErrors.numero_documento = 'El número de documento es requerido';
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+    if (!validateForm()) return;
+
     try {
       setSaving(true);
       await restauranteService.createRestaurante(formData);
@@ -88,443 +119,322 @@ const CreateRestauranteModal: React.FC<CreateRestauranteModalProps> = ({
       Swal.fire({
         icon: 'error',
         title: 'Error',
-        text: 'Error al crear el restaurante'
+        text: 'Error al crear el restaurante',
+        customClass: {
+          popup: 'rounded-xl shadow-2xl',
+          title: 'text-xl font-bold text-gray-900',
+          confirmButton: 'px-6 py-3 rounded-lg font-medium transition-all duration-200 hover:shadow-lg',
+        }
       });
     } finally {
       setSaving(false);
     }
   };
 
-  if (!isOpen) return null;
-
-  const modalContent = (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div className="fixed inset-0 transition-opacity" aria-hidden="true">
-          <div className="absolute inset-0 bg-gray-500 opacity-75" onClick={onClose}></div>
-        </div>
-
-        <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full sm:p-6">
-          <div className="max-h-[90vh] overflow-y-auto">
-            {/* Header */}
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-2xl font-bold text-gray-900">Crear Nuevo Restaurante</h3>
-              <button
-                onClick={onClose}
-                className="text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-100 rounded-full"
-                disabled={saving}
-              >
-                <X className="h-6 w-6" />
-              </button>
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Crear Nuevo Restaurante"
+      description="Completa la información para registrar un nuevo establecimiento gastronómico"
+      size="xl"
+    >
+      <form onSubmit={handleSubmit} className="space-y-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Columna 1: Información del Proveedor / General */}
+          <div className="space-y-6">
+            <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
+              <div className="p-1.5 bg-blue-100 text-blue-700 rounded-lg">
+                <Building className="h-5 w-5" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">Información del Proveedor</h3>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Información del Proveedor */}
-                <div className="space-y-4">
-                  <h4 className="text-lg font-semibold text-gray-900 border-b pb-2">Información del Proveedor</h4>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Nombre *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.nombre}
-                      onChange={(e) => handleInputChange('nombre', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder="Nombre del restaurante"
-                    />
-                  </div>
+            <div className="space-y-4">
+              <Input
+                label="Nombre del Restaurante *"
+                name="nombre"
+                value={formData.nombre}
+                onChange={handleInputChange}
+                error={errors.nombre}
+                placeholder="Ej: El Sabor del Chef"
+                leftIcon={<Utensils className="h-4 w-4" />}
+              />
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Email *
-                    </label>
-                    <input
-                      type="email"
-                      required
-                      value={formData.email}
-                      onChange={(e) => handleInputChange('email', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder="correo@restaurante.com"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Teléfono *
-                    </label>
-                    <input
-                      type="tel"
-                      required
-                      value={formData.telefono}
-                      onChange={(e) => handleInputChange('telefono', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder="+57 300 123 4567"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Dirección *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.direccion}
-                      onChange={(e) => handleInputChange('direccion', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder="Calle 123 #45-67"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Ciudad *
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={formData.ciudad}
-                        onChange={(e) => handleInputChange('ciudad', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                        placeholder="Bogotá"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        País *
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={formData.pais}
-                        onChange={(e) => handleInputChange('pais', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Sitio Web
-                    </label>
-                    <input
-                      type="url"
-                      value={formData.sitio_web}
-                      onChange={(e) => handleInputChange('sitio_web', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder="https://www.restaurante.com"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Tipo Documento *
-                      </label>
-                      <select
-                        required
-                        value={formData.tipo_documento}
-                        onChange={(e) => handleInputChange('tipo_documento', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                      >
-                        <option value="">Seleccionar</option>
-                        <option value="NIT">NIT</option>
-                        <option value="CC">Cédula de Ciudadanía</option>
-                        <option value="CE">Cédula de Extranjería</option>
-                        <option value="RUT">RUT</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Número Documento *
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={formData.numero_documento}
-                        onChange={(e) => handleInputChange('numero_documento', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                        placeholder="900123456-7"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Rating Promedio *
-                    </label>
-                    <input
-                      type="number"
-                      min="1"
-                      max="5"
-                      step="0.1"
-                      required
-                      value={formData.rating_promedio}
-                      onChange={(e) => handleInputChange('rating_promedio', parseFloat(e.target.value))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                    />
-                  </div>
-
-                  <div className="flex items-center space-x-4">
-                    <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={formData.verificado}
-                        onChange={(e) => handleInputChange('verificado', e.target.checked)}
-                        className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                      />
-                      <span className="ml-2 text-sm text-gray-700">Verificado</span>
-                    </label>
-                    <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={formData.activo}
-                        onChange={(e) => handleInputChange('activo', e.target.checked)}
-                        className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                      />
-                      <span className="ml-2 text-sm text-gray-700">Activo</span>
-                    </label>
-                  </div>
-                </div>
-
-                {/* Información del Restaurante */}
-                <div className="space-y-4">
-                  <h4 className="text-lg font-semibold text-gray-900 border-b pb-2">Información del Restaurante</h4>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Tipo de Cocina *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.tipo_cocina}
-                      onChange={(e) => handleInputChange('tipo_cocina', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder="Italiana, Mexicana, Colombiana..."
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Tipo de Comida *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.tipo_comida}
-                      onChange={(e) => handleInputChange('tipo_comida', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder="Casual, Gourmet, Rápida..."
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Horario Apertura *
-                      </label>
-                      <input
-                        type="time"
-                        required
-                        value={formData.horario_apertura}
-                        onChange={(e) => handleInputChange('horario_apertura', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Horario Cierre *
-                      </label>
-                      <input
-                        type="time"
-                        required
-                        value={formData.horario_cierre}
-                        onChange={(e) => handleInputChange('horario_cierre', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Capacidad *
-                      </label>
-                      <input
-                        type="number"
-                        min="1"
-                        required
-                        value={formData.capacidad}
-                        onChange={(e) => handleInputChange('capacidad', parseInt(e.target.value))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Aforo Máximo *
-                      </label>
-                      <input
-                        type="number"
-                        min="1"
-                        required
-                        value={formData.aforo_maximo}
-                        onChange={(e) => handleInputChange('aforo_maximo', parseInt(e.target.value))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      URL del Menú
-                    </label>
-                    <input
-                      type="url"
-                      value={formData.menu_url}
-                      onChange={(e) => handleInputChange('menu_url', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder="https://www.restaurante.com/menu"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Precio Ascendente *
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      required
-                      value={formData.precio_ascendente}
-                      onChange={(e) => handleInputChange('precio_ascendente', parseInt(e.target.value))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder="Precio promedio en pesos"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Ubicación *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.ubicacion}
-                      onChange={(e) => handleInputChange('ubicacion', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder="Centro, Zona Rosa, Norte..."
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Redes Sociales
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.redes_sociales}
-                      onChange={(e) => handleInputChange('redes_sociales', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder="@restaurante"
-                    />
-                  </div>
-                </div>
+              <div className="grid grid-cols-2 gap-4">
+                <Input
+                  label="Email *"
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  error={errors.email}
+                  placeholder="ejemplo@correo.com"
+                />
+                <Input
+                  label="Teléfono *"
+                  name="telefono"
+                  value={formData.telefono}
+                  onChange={handleInputChange}
+                  error={errors.telefono}
+                  placeholder="+57 300 123 4567"
+                />
               </div>
 
-              {/* Servicios y Características */}
-              <div className="space-y-4">
-                <h4 className="text-lg font-semibold text-gray-900 border-b pb-2">Servicios y Características</h4>
-                
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <Input
+                label="Dirección *"
+                name="direccion"
+                value={formData.direccion}
+                onChange={handleInputChange}
+                error={errors.direccion}
+                placeholder="Calle 123 #45-67"
+                leftIcon={<MapPin className="h-4 w-4" />}
+              />
+
+              <div className="grid grid-cols-2 gap-4">
+                <Input
+                  label="Ciudad *"
+                  name="ciudad"
+                  value={formData.ciudad}
+                  onChange={handleInputChange}
+                  error={errors.ciudad}
+                  placeholder="Bogotá"
+                />
+                <Input
+                  label="País *"
+                  name="pais"
+                  value={formData.pais}
+                  onChange={handleInputChange}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <Select
+                  label="Tipo Documento *"
+                  name="tipo_documento"
+                  value={formData.tipo_documento}
+                  onChange={handleInputChange}
+                  error={errors.tipo_documento}
+                  options={[
+                    { value: '', label: 'Seleccionar' },
+                    { value: 'NIT', label: 'NIT' },
+                    { value: 'CC', label: 'Cédula de Ciudadanía' },
+                    { value: 'CE', label: 'Cédula de Extranjería' },
+                    { value: 'RUT', label: 'RUT' }
+                  ]}
+                />
+                <Input
+                  label="Número Documento *"
+                  name="numero_documento"
+                  value={formData.numero_documento}
+                  onChange={handleInputChange}
+                  error={errors.numero_documento}
+                  placeholder="900123456-7"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <Input
+                  label="Rating Promedio *"
+                  name="rating_promedio"
+                  type="number"
+                  min="1"
+                  max="5"
+                  step="0.1"
+                  value={formData.rating_promedio}
+                  onChange={handleInputChange}
+                  leftIcon={<Star className="h-4 w-4 text-yellow-400" />}
+                />
+                <Select
+                  label="Relevancia"
+                  name="relevancia"
+                  value={formData.relevancia}
+                  onChange={handleInputChange}
+                  options={[
+                    { value: 'baja', label: 'Baja' },
+                    { value: 'media', label: 'Media' },
+                    { value: 'alta', label: 'Alta' }
+                  ]}
+                />
+              </div>
+
+              <Input
+                label="Sitio Web"
+                name="sitio_web"
+                type="url"
+                value={formData.sitio_web}
+                onChange={handleInputChange}
+                placeholder="https://www.ejemplo.com"
+              />
+            </div>
+          </div>
+
+          {/* Columna 2: Detalles del Restaurante y Servicios */}
+          <div className="space-y-6">
+            <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
+              <div className="p-1.5 bg-amber-100 text-amber-700 rounded-lg">
+                <Utensils className="h-5 w-5" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">Detalles del Establecimiento</h3>
+            </div>
+
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <Input
+                  label="Tipo de Cocina *"
+                  name="tipo_cocina"
+                  value={formData.tipo_cocina}
+                  onChange={handleInputChange}
+                  error={errors.tipo_cocina}
+                  placeholder="Italiana, Mexicana..."
+                />
+                <Input
+                  label="Tipo de Comida *"
+                  name="tipo_comida"
+                  value={formData.tipo_comida}
+                  onChange={handleInputChange}
+                  error={errors.tipo_comida}
+                  placeholder="Casual, Gourmet..."
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <Input
+                  label="Horario Apertura *"
+                  name="horario_apertura"
+                  type="time"
+                  value={formData.horario_apertura}
+                  onChange={handleInputChange}
+                  leftIcon={<Clock className="h-4 w-4" />}
+                />
+                <Input
+                  label="Horario Cierre *"
+                  name="horario_cierre"
+                  type="time"
+                  value={formData.horario_cierre}
+                  onChange={handleInputChange}
+                  leftIcon={<Clock className="h-4 w-4" />}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <Input
+                  label="Capacidad *"
+                  name="capacidad"
+                  type="number"
+                  min="1"
+                  value={formData.capacidad}
+                  onChange={handleInputChange}
+                  leftIcon={<Users className="h-4 w-4" />}
+                />
+                <Input
+                  label="Aforo Máximo *"
+                  name="aforo_maximo"
+                  type="number"
+                  min="1"
+                  value={formData.aforo_maximo}
+                  onChange={handleInputChange}
+                  leftIcon={<Users className="h-4 w-4" />}
+                />
+              </div>
+
+              <Input
+                label="Precio Promedio (desde) *"
+                name="precio_ascendente"
+                type="number"
+                min="0"
+                value={formData.precio_ascendente}
+                onChange={handleInputChange}
+                placeholder="0"
+              />
+
+              <div className="space-y-4 pt-2">
+                <label className="text-sm font-medium text-gray-700 block">Servicios Adicionales</label>
+                <div className="grid grid-cols-2 gap-3">
                   {[
-                    { key: 'wifi', label: 'WiFi' },
+                    { key: 'wifi', label: 'WiFi Gratis' },
                     { key: 'parqueadero', label: 'Parqueadero' },
                     { key: 'pet_friendly', label: 'Pet Friendly' },
-                    { key: 'entrega_a_domicilio', label: 'Entrega a Domicilio' },
+                    { key: 'entrega_a_domicilio', label: 'Domicilios' },
                     { key: 'terraza', label: 'Terraza' },
                     { key: 'eventos', label: 'Eventos' },
-                    { key: 'catering', label: 'Catering' },
-                    { key: 'bufete', label: 'Bufete' },
-                    { key: 'zonas_comunes', label: 'Zonas Comunes' },
-                    { key: 'auditorio', label: 'Auditorio' },
-                    { key: 'sillas_bebe', label: 'Sillas de Bebé' },
-                    { key: 'rampa_discapacitados', label: 'Rampa Discapacitados' },
-                    { key: 'apto_celiacos', label: 'Apto Celíacos' },
-                    { key: 'apto_vegetarianos', label: 'Apto Vegetarianos' },
                     { key: 'menu_vegana', label: 'Menú Vegano' },
-                    { key: 'menu_infantil', label: 'Menú Infantil' },
-                    { key: 'reservas_requeridas', label: 'Reservas Requeridas' },
-                    { key: 'decoraciones_fechas_especiales', label: 'Decoraciones Fechas Especiales' }
+                    { key: 'apto_celiacos', label: 'Apto Celíacos' }
                   ].map((service) => (
-                    <label key={service.key} className="flex items-center">
+                    <label key={service.key} className="flex items-center group cursor-pointer">
                       <input
                         type="checkbox"
-                        checked={(formData as any)[service.key]}
-                        onChange={(e) => handleInputChange(service.key as keyof CreateRestauranteData, e.target.checked)}
-                        className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                        name={service.key}
+                        checked={(formData as Record<string, any>)[service.key] || false}
+                        onChange={handleInputChange}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded transition-all cursor-pointer"
                       />
-                      <span className="ml-2 text-sm text-gray-700">{service.label}</span>
+                      <span className="ml-2 text-sm text-gray-600 group-hover:text-gray-900 transition-colors">
+                        {service.label}
+                      </span>
                     </label>
                   ))}
                 </div>
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Descripción *
-                </label>
-                <textarea
-                  required
-                  rows={4}
-                  value={formData.descripcion}
-                  onChange={(e) => handleInputChange('descripcion', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="Describe el restaurante, su ambiente, especialidades..."
-                />
-              </div>
-
-              {/* Botones */}
-              <div className="flex justify-end space-x-3 pt-6 border-t">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  disabled={saving}
-                  className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
-                >
-                  {saving ? (
-                    <>
-                      <Loader className="h-4 w-4 mr-2 animate-spin" />
-                      Creando...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="h-4 w-4 mr-2" />
-                      Crear Restaurante
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
-  );
 
-  return ReactDOM.createPortal(modalContent, document.body);
+        <div className="space-y-4">
+          <Textarea
+            label="Descripción *"
+            name="descripcion"
+            value={formData.descripcion}
+            onChange={handleInputChange}
+            error={errors.descripcion}
+            placeholder="Describe el ambiente, especialidades y lo que hace único a este restaurante..."
+            rows={4}
+          />
+        </div>
+
+        <div className="pt-6 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center group">
+            <input
+              type="checkbox"
+              name="activo"
+              id="activo-create"
+              checked={formData.activo}
+              onChange={handleInputChange}
+              className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
+            />
+            <label htmlFor="activo-create" className="ml-3 text-sm font-medium text-gray-700 cursor-pointer">
+              Establecimiento Activo
+            </label>
+            <div className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <Info className="h-4 w-4 text-gray-400" />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              disabled={saving}
+              className="flex-1 sm:flex-none"
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              disabled={saving}
+              isLoading={saving}
+              className="flex-1 sm:flex-none gap-2"
+            >
+              {!saving && <Save className="h-4 w-4" />}
+              Crear Restaurante
+            </Button>
+          </div>
+        </div>
+      </form>
+    </Modal>
+  );
 };
 
 export default CreateRestauranteModal;
