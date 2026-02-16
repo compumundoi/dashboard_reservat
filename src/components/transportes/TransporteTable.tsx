@@ -1,6 +1,12 @@
-import React from 'react';
-import { Search, X, Eye, Edit, Trash2, Car, Users, Shield, Wifi, ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, X, Eye, Edit, Trash2, Car, Users, Shield, Wifi, ChevronLeft, ChevronRight, Mail } from 'lucide-react';
 import { TransporteTableProps } from '../../types/transporte';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/Table';
+import { Badge } from '../ui/Badge';
+import { Button } from '../ui/Button';
+import { Input } from '../ui/Input';
+import { Select } from '../ui/Select';
+import { cn } from '../../lib/utils';
 
 const TransporteTable: React.FC<TransporteTableProps> = ({
   transportes,
@@ -17,6 +23,24 @@ const TransporteTable: React.FC<TransporteTableProps> = ({
   onEdit,
   onDelete
 }) => {
+  const [localSearchTerm, setLocalSearchTerm] = useState(searchTerm);
+
+  // Sync local search term with prop when it changes externally
+  useEffect(() => {
+    setLocalSearchTerm(searchTerm);
+  }, [searchTerm]);
+
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (localSearchTerm !== searchTerm) {
+        onSearch(localSearchTerm);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [localSearchTerm, onSearch, searchTerm]);
+
   // Generar números de página para la paginación
   const generatePageNumbers = () => {
     const pages = [];
@@ -54,24 +78,28 @@ const TransporteTable: React.FC<TransporteTableProps> = ({
   };
 
   const handleClearSearch = () => {
+    setLocalSearchTerm('');
     onSearch('');
   };
 
   if (loading) {
     return (
-      <div className="bg-white shadow rounded-lg">
-        <div className="px-4 py-5 sm:p-6">
-          <div className="animate-pulse">
-            <div className="flex justify-between items-center mb-4">
-              <div className="h-6 bg-gray-200 rounded w-1/4"></div>
-              <div className="h-6 bg-gray-200 rounded w-1/6"></div>
-            </div>
-            <div className="h-10 bg-gray-200 rounded mb-4"></div>
-            <div className="space-y-3">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="h-16 bg-gray-200 rounded"></div>
-              ))}
-            </div>
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <div className="h-10 w-64 bg-gray-100 rounded-xl animate-pulse" />
+          <div className="h-10 w-32 bg-gray-100 rounded-xl animate-pulse" />
+        </div>
+        <div className="rounded-xl border border-secondary-200 bg-white shadow-soft-sm overflow-hidden">
+          <div className="space-y-4 p-6">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="flex space-x-4">
+                <div className="h-12 w-12 rounded-full bg-gray-100 animate-pulse" />
+                <div className="flex-1 space-y-2 py-1">
+                  <div className="h-4 bg-gray-100 rounded w-3/4 animate-pulse" />
+                  <div className="h-4 bg-gray-100 rounded w-1/2 animate-pulse" />
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -79,271 +107,228 @@ const TransporteTable: React.FC<TransporteTableProps> = ({
   }
 
   return (
-    <div className="bg-white shadow rounded-lg">
-      <div className="px-4 py-5 sm:p-6">
-        {/* Header con título y controles */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-medium text-gray-900">
-              Lista de Transportes ({totalItems} total)
-            </h3>
-            <div className="flex items-center space-x-2">
-              <span className="text-sm text-gray-700">Mostrar</span>
-              <select
-                value={pageSize}
-                onChange={(e) => onPageSizeChange(Number(e.target.value))}
-                className="border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-              >
-                <option value={5}>5</option>
-                <option value={10}>10</option>
-                <option value={20}>20</option>
-                <option value={50}>50</option>
-              </select>
-              <span className="text-sm text-gray-700">
-                de {totalItems} transportes
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Barra de búsqueda */}
-        <div className="mb-6">
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-gray-400" />
-            </div>
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => onSearch(e.target.value)}
-              className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-              placeholder="Buscar por proveedor, tipo de vehículo, modelo, placa..."
-            />
-            {searchTerm && (
-              <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-                <button
-                  onClick={handleClearSearch}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <X className="h-5 w-5" />
+    <div className="space-y-4">
+      {/* Search Header */}
+      <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center bg-white p-4 rounded-xl border border-secondary-200 shadow-soft-sm">
+        <div className="w-full sm:w-72 md:w-96">
+          <Input
+            placeholder="Buscar por proveedor, modelo, placa..."
+            value={localSearchTerm}
+            onChange={(e) => setLocalSearchTerm(e.target.value)}
+            leftIcon={<Search className="h-4 w-4" />}
+            rightIcon={
+              localSearchTerm ? (
+                <button onClick={handleClearSearch} className="hover:bg-secondary-100 p-1 rounded-full text-secondary-500 transition-colors">
+                  <X className="h-3 w-3" />
                 </button>
-              </div>
-            )}
-          </div>
+              ) : undefined
+            }
+          />
         </div>
 
-        {/* Tabla */}
-        <div className="overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Proveedor
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Vehículo
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Detalles
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Estado
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Características
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Acciones
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {transportes.map((transporte) => (
-                  <tr key={transporte.transporte.id_transporte} className="hover:bg-gray-50">
-                    {/* Proveedor */}
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0 h-10 w-10">
-                          <div className="h-10 w-10 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center">
-                            <Car className="h-5 w-5 text-white" />
-                          </div>
-                        </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
-                            {transporte.proveedor.nombre}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {transporte.proveedor.email}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-
-                    {/* Vehículo */}
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
-                        {transporte.transporte.tipo_vehiculo}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {transporte.transporte.modelo} ({transporte.transporte.anio})
-                      </div>
-                    </td>
-
-                    {/* Detalles */}
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
-                        <div className="flex items-center mb-1">
-                          <span className="font-medium">Placa:</span>
-                          <span className="ml-1">{transporte.transporte.placa}</span>
-                        </div>
-                        <div className="flex items-center">
-                          <Users className="h-4 w-4 text-gray-400 mr-1" />
-                          <span>{transporte.transporte.capacidad} personas</span>
-                        </div>
-                      </div>
-                    </td>
-
-                    {/* Estado */}
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex flex-col space-y-1">
-                        <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${transporte.transporte.disponible
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-red-100 text-red-800'
-                            }`}
-                        >
-                          {transporte.transporte.disponible ? 'Disponible' : 'No Disponible'}
-                        </span>
-                        <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${transporte.transporte.seguro_vigente
-                              ? 'bg-blue-100 text-blue-800'
-                              : 'bg-yellow-100 text-yellow-800'
-                            }`}
-                        >
-                          <Shield className="h-3 w-3 mr-1" />
-                          {transporte.transporte.seguro_vigente ? 'Con Seguro' : 'Sin Seguro'}
-                        </span>
-                      </div>
-                    </td>
-
-                    {/* Características */}
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex flex-wrap gap-1">
-                        {transporte.transporte.aire_acondicionado && (
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                            A/C
-                          </span>
-                        )}
-                        {transporte.transporte.wifi && (
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                            <Wifi className="h-3 w-3 mr-1" />
-                            WiFi
-                          </span>
-                        )}
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                          {transporte.transporte.combustible}
-                        </span>
-                      </div>
-                    </td>
-
-                    {/* Acciones */}
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => onViewDetails(transporte)}
-                          className="text-indigo-600 hover:text-indigo-900 p-1 rounded-full hover:bg-indigo-100"
-                          title="Ver detalles"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => onEdit(transporte)}
-                          className="text-green-600 hover:text-green-900 p-1 rounded-full hover:bg-green-100"
-                          title="Editar"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => onDelete(transporte.transporte.id_transporte)}
-                          className="text-red-600 hover:text-red-900 p-1 rounded-full hover:bg-red-100"
-                          title="Eliminar"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="flex items-center gap-2 text-sm text-secondary-600 whitespace-nowrap">
+            <span>Mostrar:</span>
+            <Select
+              value={pageSize}
+              onChange={(e) => onPageSizeChange(Number(e.target.value))}
+              className="w-20 h-9"
+              options={[
+                { value: 5, label: '5' },
+                { value: 10, label: '10' },
+                { value: 20, label: '20' },
+                { value: 50, label: '50' },
+              ]}
+            />
           </div>
         </div>
+      </div>
 
-        {/* Estado vacío */}
-        {transportes.length === 0 && (
-          <div className="text-center py-12">
-            <Car className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900">No hay transportes</h3>
-            <p className="mt-1 text-sm text-gray-500">
-              {searchTerm ? (
-                <div>
-                  No se encontraron transportes que coincidan con "{searchTerm}"
-                  <button
-                    onClick={handleClearSearch}
-                    className="mt-4 text-blue-600 hover:text-blue-800 font-medium"
-                  >
-                    Limpiar búsqueda
-                  </button>
+      {/* Table */}
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Proveedor</TableHead>
+            <TableHead>Vehículo</TableHead>
+            <TableHead>Detalles</TableHead>
+            <TableHead>Estado</TableHead>
+            <TableHead>Características</TableHead>
+            <TableHead className="text-right">Acciones</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {transportes.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={6} className="h-64 text-center">
+                <div className="flex flex-col items-center justify-center text-secondary-400">
+                  <Car className="h-12 w-12 mb-4 opacity-20" />
+                  <p className="text-lg font-medium text-secondary-900">No se encontraron transportes</p>
+                  <p className="text-sm">Intenta ajustar los filtros de búsqueda</p>
+                  {localSearchTerm && (
+                    <Button variant="ghost" onClick={handleClearSearch} className="mt-4 text-primary-600">
+                      Limpiar búsqueda
+                    </Button>
+                  )}
                 </div>
-              ) : (
-                'No hay transportes registrados'
-              )}
-            </p>
+              </TableCell>
+            </TableRow>
+          ) : (
+            transportes.map((transporte) => (
+              <TableRow key={transporte.transporte.id_transporte}>
+                <TableCell>
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center text-blue-700 font-bold border border-blue-200 shadow-sm shrink-0">
+                      <Car className="h-5 w-5" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="font-medium text-secondary-900 truncate max-w-[180px]" title={transporte.proveedor.nombre}>
+                        {transporte.proveedor.nombre}
+                      </div>
+                      <div className="flex items-center text-xs text-secondary-500 mt-0.5">
+                        <Mail className="h-3 w-3 mr-1 shrink-0" />
+                        <span className="truncate max-w-[150px]">{transporte.proveedor.email}</span>
+                      </div>
+                    </div>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="min-w-0">
+                    <div className="font-medium text-secondary-900">{transporte.transporte.tipo_vehiculo}</div>
+                    <div className="text-xs text-secondary-500 mt-0.5">
+                      {transporte.transporte.modelo} ({transporte.transporte.anio})
+                    </div>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="space-y-1">
+                    <div className="flex items-center text-xs text-secondary-700 font-medium">
+                      <span className="bg-secondary-100 px-1.5 py-0.5 rounded mr-1.5">Placa</span>
+                      {transporte.transporte.placa}
+                    </div>
+                    <div className="flex items-center text-xs text-secondary-500">
+                      <Users className="h-3 w-3 mr-1.5" />
+                      {transporte.transporte.capacidad} personas
+                    </div>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="flex flex-col gap-1.5">
+                    <Badge variant={transporte.transporte.disponible ? 'success' : 'error'} className="w-fit">
+                      {transporte.transporte.disponible ? 'Disponible' : 'No Disponible'}
+                    </Badge>
+                    <Badge variant={transporte.transporte.seguro_vigente ? 'info' : 'warning'} className="w-fit gap-1">
+                      <Shield className="h-3 w-3" />
+                      {transporte.transporte.seguro_vigente ? 'Con Seguro' : 'Sin Seguro'}
+                    </Badge>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="flex flex-wrap gap-1.5">
+                    {transporte.transporte.aire_acondicionado && (
+                      <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-blue-100">A/C</Badge>
+                    )}
+                    {transporte.transporte.wifi && (
+                      <Badge variant="secondary" className="bg-purple-50 text-purple-700 border-purple-100 gap-1">
+                        <Wifi className="h-3 w-3" />
+                        WiFi
+                      </Badge>
+                    )}
+                    <Badge variant="secondary" className="bg-gray-50 text-gray-700 border-gray-200">
+                      {transporte.transporte.combustible}
+                    </Badge>
+                  </div>
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex items-center justify-end gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onViewDetails(transporte)}
+                      className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                      title="Ver detalles"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onEdit(transporte)}
+                      className="h-8 w-8 p-0 text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+                      title="Editar"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onDelete(transporte.transporte.id_transporte)}
+                      className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                      title="Eliminar"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-4 px-2">
+          <div className="text-sm text-secondary-500">
+            Mostrando <span className="font-medium text-secondary-900">{((currentPage - 1) * pageSize) + 1}</span> a <span className="font-medium text-secondary-900">{Math.min(currentPage * pageSize, totalItems)}</span> de <span className="font-medium text-secondary-900">{totalItems}</span> transportes
           </div>
-        )}
 
-        {/* Navegación de páginas */}
-        {totalPages > 1 && (
-          <div className="mt-6 flex items-center justify-end">
-            <div className="flex items-center space-x-1">
-              <button
-                onClick={() => onPageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="p-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onPageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="h-9"
+              leftIcon={<ChevronLeft className="h-4 w-4" />}
+            >
+              Anterior
+            </Button>
 
+            <div className="flex items-center gap-1">
               {generatePageNumbers().map((page, index) => (
                 <React.Fragment key={index}>
                   {page === '...' ? (
-                    <span className="px-3 py-2 text-gray-500">...</span>
+                    <span className="px-2 text-secondary-400">...</span>
                   ) : (
                     <button
                       onClick={() => onPageChange(page as number)}
-                      className={`px-3 py-2 rounded-md text-sm font-medium ${currentPage === page
-                          ? 'bg-indigo-600 text-white'
-                          : 'bg-white text-gray-500 hover:bg-gray-50 border border-gray-300'
-                        }`}
+                      className={cn(
+                        "h-9 w-9 flex items-center justify-center rounded-lg text-sm font-medium transition-colors",
+                        currentPage === page
+                          ? "bg-primary-600 text-white shadow-primary-500/30 shadow-md"
+                          : "text-secondary-600 hover:bg-secondary-100 hover:text-secondary-900"
+                      )}
                     >
                       {page}
                     </button>
                   )}
                 </React.Fragment>
               ))}
-
-              <button
-                onClick={() => onPageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className="p-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
             </div>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onPageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="h-9"
+              rightIcon={<ChevronRight className="h-4 w-4" />}
+            >
+              Siguiente
+            </Button>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

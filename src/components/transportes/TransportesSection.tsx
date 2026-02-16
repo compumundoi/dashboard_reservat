@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Plus, Download, Car } from 'lucide-react';
 import { TransporteData, TransporteStats as TransporteStatsType, TransporteChartData } from '../../types/transporte';
 import { transporteService } from '../../services/transporteService';
@@ -8,6 +8,7 @@ import TransporteCharts from './TransporteCharts';
 import TransporteDetailModal from './TransporteDetailModal';
 import EditTransporteModal from './EditTransporteModal';
 import CreateTransporteModal from './CreateTransporteModal';
+import { Button } from '../ui/Button';
 import Swal from 'sweetalert2';
 
 const TransportesSection: React.FC = () => {
@@ -42,7 +43,7 @@ const TransportesSection: React.FC = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   // Cargar transportes
-  const loadTransportes = React.useCallback(async (page: number = currentPage, size: number = pageSize) => {
+  const loadTransportes = useCallback(async (page: number = currentPage, size: number = pageSize) => {
     try {
       setLoading(true);
       const response = await transporteService.getTransportes(page, size);
@@ -257,28 +258,32 @@ const TransportesSection: React.FC = () => {
     : totalPages;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header con botones */}
-      <div className="flex justify-between items-center">
-        <div className="flex items-center space-x-3">
-          <Car className="h-8 w-8 text-blue-600" />
-          <h1 className="text-2xl font-semibold text-gray-900">Gestión de Transportes</h1>
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="flex items-center space-x-3">
+            <Car className="h-8 w-8 text-blue-600" />
+            <h1 className="text-3xl font-bold text-gray-900">Gestión de Transportes</h1>
+          </div>
+          <p className="text-gray-600 mt-2">Administra todos los transportes del sistema</p>
         </div>
-        <div className="flex space-x-3">
-          <button
+        <div className="flex items-center gap-3">
+          <Button
             onClick={handleExport}
-            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="flex items-center gap-2"
           >
-            <Download className="h-4 w-4 mr-2" />
-            Exportar Transportes
-          </button>
-          <button
+            <Download className="h-4 w-4" />
+            <span>Exportar Transportes</span>
+          </Button>
+          <Button
             onClick={() => setShowCreateModal(true)}
-            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+            variant="primary"
+            className="flex items-center gap-2"
           >
-            <Plus className="h-4 w-4 mr-2" />
-            Crear Transporte
-          </button>
+            <Plus className="h-4 w-4" />
+            <span>Crear Transporte</span>
+          </Button>
         </div>
       </div>
 
