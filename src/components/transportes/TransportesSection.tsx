@@ -42,20 +42,20 @@ const TransportesSection: React.FC = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   // Cargar transportes
-  const loadTransportes = async (page: number = currentPage, size: number = pageSize) => {
+  const loadTransportes = React.useCallback(async (page: number = currentPage, size: number = pageSize) => {
     try {
       setLoading(true);
       const response = await transporteService.getTransportes(page, size);
-      
+
       setTransportes(response.data);
       setTotalItems(response.total);
       setTotalPages(Math.ceil(response.total / size));
       setCurrentPage(response.page);
-      
+
       // Calcular estadísticas
       calculateStats(response.data);
       calculateChartData(response.data);
-      
+
     } catch (error) {
       console.error('Error loading transportes:', error);
       Swal.fire({
@@ -67,14 +67,14 @@ const TransportesSection: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, pageSize]);
 
   // Calcular estadísticas
   const calculateStats = (data: TransporteData[]) => {
     const totalTransportes = data.length;
     const transportesDisponibles = data.filter(t => t.transporte.disponible).length;
     const transportesConSeguro = data.filter(t => t.transporte.seguro_vigente).length;
-    const capacidadPromedio = totalTransportes > 0 
+    const capacidadPromedio = totalTransportes > 0
       ? Math.round(data.reduce((sum, t) => sum + t.transporte.capacidad, 0) / totalTransportes)
       : 0;
 
@@ -184,7 +184,7 @@ const TransportesSection: React.FC = () => {
     if (result.isConfirmed) {
       try {
         await transporteService.deleteTransporte(id);
-        
+
         Swal.fire({
           title: '¡Eliminado!',
           text: 'Transporte eliminado correctamente',
@@ -196,7 +196,8 @@ const TransportesSection: React.FC = () => {
 
         // Recargar datos
         loadTransportes();
-      } catch (error) {
+      } catch (err) {
+        console.error('Error deleting transporte:', err);
         Swal.fire({
           title: 'Error',
           text: 'Error al eliminar el transporte',
@@ -220,6 +221,7 @@ const TransportesSection: React.FC = () => {
         timerProgressBar: true
       });
     } catch (error) {
+      console.error(error);
       Swal.fire({
         title: 'Error',
         text: 'Error al exportar los datos',
@@ -245,12 +247,12 @@ const TransportesSection: React.FC = () => {
   // Cargar datos al montar el componente
   useEffect(() => {
     loadTransportes();
-  }, []);
+  }, [loadTransportes]);
 
   // Datos para mostrar (filtrados o normales)
   const displayTransportes = isSearching ? filteredTransportes : transportes;
   const displayTotalItems = isSearching ? filteredTransportes.length : totalItems;
-  const displayTotalPages = isSearching 
+  const displayTotalPages = isSearching
     ? Math.ceil(filteredTransportes.length / pageSize)
     : totalPages;
 
@@ -307,13 +309,13 @@ const TransportesSection: React.FC = () => {
       <TransporteDetailModal
         isOpen={showDetailModal}
         onClose={handleModalClose}
-        transporte={selectedTransporte}
+        transporte={selectedTransporte || undefined}
       />
 
       <EditTransporteModal
         isOpen={showEditModal}
         onClose={handleModalClose}
-        transporte={selectedTransporte}
+        transporte={selectedTransporte || undefined}
         onSave={handleModalSave}
       />
 
