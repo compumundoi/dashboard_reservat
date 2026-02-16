@@ -1,6 +1,6 @@
 import React from 'react';
 import { Search, X, Eye, Edit, Trash2, Calendar, Users, MapPin, Clock, DollarSign } from 'lucide-react';
-import { ViajeTableProps, ViajeData, ESTADOS_VIAJE } from '../../types/viaje';
+import { ViajeTableProps, ESTADOS_VIAJE } from '../../types/viaje';
 
 const ViajeTable: React.FC<ViajeTableProps> = ({
   viajes,
@@ -36,7 +36,7 @@ const ViajeTable: React.FC<ViajeTableProps> = ({
     };
 
     const className = badgeClasses[estado as keyof typeof badgeClasses] || 'bg-gray-100 text-gray-600';
-    
+
     return (
       <span className={`px-2 py-1 text-xs rounded-full ${className}`}>
         {estado.charAt(0).toUpperCase() + estado.slice(1).replace('_', ' ')}
@@ -79,7 +79,7 @@ const ViajeTable: React.FC<ViajeTableProps> = ({
     const buttons = [];
     const maxVisiblePages = 5;
     let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+    const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
 
     if (endPage - startPage + 1 < maxVisiblePages) {
       startPage = Math.max(1, endPage - maxVisiblePages + 1);
@@ -90,11 +90,10 @@ const ViajeTable: React.FC<ViajeTableProps> = ({
         <button
           key={i}
           onClick={() => onPageChange(i)}
-          className={`px-3 py-2 text-sm font-medium rounded-md ${
-            currentPage === i
-              ? 'bg-blue-600 text-white'
-              : 'text-gray-700 hover:bg-gray-100'
-          }`}
+          className={`px-3 py-2 text-sm font-medium rounded-md ${currentPage === i
+            ? 'bg-blue-600 text-white'
+            : 'text-gray-700 hover:bg-gray-100'
+            }`}
         >
           {i}
         </button>
@@ -329,9 +328,9 @@ const ViajeTable: React.FC<ViajeTableProps> = ({
               >
                 Anterior
               </button>
-              
+
               {renderPaginationButtons()}
-              
+
               <button
                 onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
                 disabled={currentPage === totalPages}

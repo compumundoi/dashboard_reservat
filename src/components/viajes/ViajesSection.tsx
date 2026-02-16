@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import React, { useState, useEffect, useCallback } from 'react';
 import { Plus, Download, MapPin } from 'lucide-react';
 import { ViajeData, ViajeStatsData, ViajeChartData } from '../../types/viaje';
 import { viajeService } from '../../services/viajeService';
@@ -14,7 +15,6 @@ const ViajesSection: React.FC = () => {
   // Estados principales
   const [viajes, setViajes] = useState<ViajeData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   // Estados de paginación y búsqueda
   const [currentPage, setCurrentPage] = useState(1);
@@ -46,15 +46,14 @@ const ViajesSection: React.FC = () => {
   const [selectedViaje, setSelectedViaje] = useState<ViajeData | null>(null);
 
   // Cargar viajes
-  const loadViajes = async (page: number = currentPage, size: number = pageSize) => {
+  const loadViajes = useCallback(async (page: number = currentPage, size: number = pageSize) => {
     try {
       setLoading(true);
-      setError(null);
 
       const response = await viajeService.getViajes(page - 1, size);
-      
+
       // Procesar datos para la UI
-      const processedViajes = response.viajes.map(viaje => 
+      const processedViajes = response.viajes.map(viaje =>
         viajeService.processViajeData(viaje)
       );
 
@@ -65,13 +64,12 @@ const ViajesSection: React.FC = () => {
       // Calcular estadísticas y gráficos
       const calculatedStats = viajeService.calculateStats(processedViajes);
       const generatedChartData = viajeService.generateChartData(processedViajes);
-      
+
       setStats(calculatedStats);
       setChartData(generatedChartData);
 
     } catch (error) {
       console.error('Error al cargar viajes:', error);
-      setError('Error al cargar los viajes');
       Swal.fire({
         icon: 'error',
         title: 'Error',
@@ -80,12 +78,12 @@ const ViajesSection: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, pageSize]);
 
   // Efecto para cargar datos iniciales
   useEffect(() => {
     loadViajes();
-  }, []);
+  }, [loadViajes]);
 
   // Efecto para búsqueda local
   useEffect(() => {
@@ -145,7 +143,7 @@ const ViajesSection: React.FC = () => {
 
       if (result.isConfirmed) {
         await viajeService.deleteViaje(id);
-        
+
         Swal.fire({
           icon: 'success',
           title: 'Eliminado',
@@ -171,7 +169,7 @@ const ViajesSection: React.FC = () => {
       if (!selectedViaje?.id) return;
 
       await viajeService.updateViaje(selectedViaje.id, data);
-      
+
       Swal.fire({
         icon: 'success',
         title: 'Actualizado',
@@ -196,7 +194,7 @@ const ViajesSection: React.FC = () => {
   const handleSaveCreate = async (data: any) => {
     try {
       await viajeService.createViaje(data);
-      
+
       Swal.fire({
         icon: 'success',
         title: 'Creado',
@@ -221,7 +219,7 @@ const ViajesSection: React.FC = () => {
     try {
       const allViajes = isSearching ? filteredViajes : viajes;
       await viajeService.exportToExcel(allViajes);
-      
+
       Swal.fire({
         icon: 'success',
         title: 'Exportado',

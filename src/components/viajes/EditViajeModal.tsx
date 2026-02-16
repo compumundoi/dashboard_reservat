@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
-import { X, Calendar, Users, DollarSign, User, MapPin, Route, Truck } from 'lucide-react';
+import { X, Calendar, Users, DollarSign, User, Route, Truck } from 'lucide-react';
 import { EditViajeModalProps, ActualizarViaje, ESTADOS_VIAJE } from '../../types/viaje';
 
 const EditViajeModal: React.FC<EditViajeModalProps> = ({ isOpen, onClose, viaje, onSave }) => {
@@ -47,12 +47,12 @@ const EditViajeModal: React.FC<EditViajeModalProps> = ({ isOpen, onClose, viaje,
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
-    
+
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'number' ? Number(value) : 
-               type === 'checkbox' ? (e.target as HTMLInputElement).checked : 
-               value
+      [name]: type === 'number' ? Number(value) :
+        type === 'checkbox' ? (e.target as HTMLInputElement).checked :
+          value
     }));
 
     // Limpiar error del campo
@@ -112,7 +112,7 @@ const EditViajeModal: React.FC<EditViajeModalProps> = ({ isOpen, onClose, viaje,
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
 
     setLoading(true);
@@ -174,9 +174,8 @@ const EditViajeModal: React.FC<EditViajeModalProps> = ({ isOpen, onClose, viaje,
                   name="fecha_inicio"
                   value={formData.fecha_inicio}
                   onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    errors.fecha_inicio ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.fecha_inicio ? 'border-red-500' : 'border-gray-300'
+                    }`}
                 />
                 {errors.fecha_inicio && (
                   <p className="text-red-500 text-xs mt-1">{errors.fecha_inicio}</p>
@@ -191,9 +190,8 @@ const EditViajeModal: React.FC<EditViajeModalProps> = ({ isOpen, onClose, viaje,
                   name="fecha_fin"
                   value={formData.fecha_fin}
                   onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    errors.fecha_fin ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.fecha_fin ? 'border-red-500' : 'border-gray-300'
+                    }`}
                 />
                 {errors.fecha_fin && (
                   <p className="text-red-500 text-xs mt-1">{errors.fecha_fin}</p>
@@ -219,9 +217,8 @@ const EditViajeModal: React.FC<EditViajeModalProps> = ({ isOpen, onClose, viaje,
                   value={formData.capacidad_total}
                   onChange={handleInputChange}
                   min="1"
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    errors.capacidad_total ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.capacidad_total ? 'border-red-500' : 'border-gray-300'
+                    }`}
                 />
                 {errors.capacidad_total && (
                   <p className="text-red-500 text-xs mt-1">{errors.capacidad_total}</p>
@@ -238,9 +235,8 @@ const EditViajeModal: React.FC<EditViajeModalProps> = ({ isOpen, onClose, viaje,
                   onChange={handleInputChange}
                   min="0"
                   max={formData.capacidad_total}
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    errors.capacidad_disponible ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.capacidad_disponible ? 'border-red-500' : 'border-gray-300'
+                    }`}
                 />
                 {errors.capacidad_disponible && (
                   <p className="text-red-500 text-xs mt-1">{errors.capacidad_disponible}</p>
@@ -258,9 +254,8 @@ const EditViajeModal: React.FC<EditViajeModalProps> = ({ isOpen, onClose, viaje,
                     value={formData.precio}
                     onChange={handleInputChange}
                     min="0"
-                    className={`w-full pl-10 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.precio ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full pl-10 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.precio ? 'border-red-500' : 'border-gray-300'
+                      }`}
                   />
                 </div>
                 {errors.precio && (
@@ -287,9 +282,8 @@ const EditViajeModal: React.FC<EditViajeModalProps> = ({ isOpen, onClose, viaje,
                   value={formData.guia_asignado}
                   onChange={handleInputChange}
                   placeholder="Nombre del guía"
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    errors.guia_asignado ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.guia_asignado ? 'border-red-500' : 'border-gray-300'
+                    }`}
                 />
                 {errors.guia_asignado && (
                   <p className="text-red-500 text-xs mt-1">{errors.guia_asignado}</p>
@@ -303,9 +297,8 @@ const EditViajeModal: React.FC<EditViajeModalProps> = ({ isOpen, onClose, viaje,
                   name="estado"
                   value={formData.estado}
                   onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    errors.estado ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.estado ? 'border-red-500' : 'border-gray-300'
+                    }`}
                 >
                   <option value="">Seleccionar estado</option>
                   <option value={ESTADOS_VIAJE.PROGRAMADO}>Programado</option>
