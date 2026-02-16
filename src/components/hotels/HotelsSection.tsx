@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useState } from 'react';
 import { hotelService } from '../../services/hotelService';
 import { HotelUnificado } from '../../types/hotel';
@@ -450,6 +451,7 @@ export const HotelsSection: React.FC = () => {
         <div className="flex items-center gap-3">
           <Button
             onClick={handleExportHotels}
+            variant="outline"
             className="flex items-center gap-2"
           >
             <Download className="h-4 w-4" />

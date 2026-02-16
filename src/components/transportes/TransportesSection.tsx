@@ -271,6 +271,7 @@ const TransportesSection: React.FC = () => {
         <div className="flex items-center gap-3">
           <Button
             onClick={handleExport}
+            variant="outline"
             className="flex items-center gap-2"
           >
             <Download className="h-4 w-4" />
