@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from 'react';
 import ReactDOM from 'react-dom';
 import { X, User, Phone, DollarSign } from 'lucide-react';
@@ -32,13 +33,15 @@ const CreateMayoristaModal: React.FC<CreateMayoristaModalProps> = ({
     limite_credito: 0,
     estado: 'activo',
     verificado: false,
-    observaciones: ''
+    observaciones: '',
+    recurente: false,
+    activo: true
   });
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState<Partial<CreateMayoristaData>>({});
+  const [errors, setErrors] = useState<Partial<Record<keyof CreateMayoristaData, string>>>({});
 
   const validateForm = (): boolean => {
-    const newErrors: Partial<CreateMayoristaData> = {};
+    const newErrors: Partial<Record<keyof CreateMayoristaData, string>> = {};
 
     if (!formData.nombre.trim()) newErrors.nombre = 'El nombre es requerido';
     if (!formData.email.trim()) newErrors.email = 'El email es requerido';
@@ -48,12 +51,12 @@ const CreateMayoristaModal: React.FC<CreateMayoristaModalProps> = ({
     if (!formData.ciudad.trim()) newErrors.ciudad = 'La ciudad es requerida';
     if (!formData.pais.trim()) newErrors.pais = 'El país es requerido';
     if (!formData.numero_documento.trim()) newErrors.numero_documento = 'El número de documento es requerido';
-    if (!formData.contacto_principal.trim()) newErrors.contacto_principal = 'El contacto principal es requerido';
-    if (!formData.telefono_contacto.trim()) newErrors.telefono_contacto = 'El teléfono de contacto es requerido';
-    if (!formData.email_contacto.trim()) newErrors.email_contacto = 'El email de contacto es requerido';
-    else if (!/\S+@\S+\.\S+/.test(formData.email_contacto)) newErrors.email_contacto = 'Email de contacto inválido';
-    if (formData.comision_porcentaje < 0 || formData.comision_porcentaje > 100) newErrors.comision_porcentaje = 'La comisión debe estar entre 0 y 100';
-    if (formData.limite_credito < 0) newErrors.limite_credito = 'El límite de crédito no puede ser negativo';
+    if (!(formData.contacto_principal || '').trim()) newErrors.contacto_principal = 'El contacto principal es requerido';
+    if (!(formData.telefono_contacto || '').trim()) newErrors.telefono_contacto = 'El teléfono de contacto es requerido';
+    if (!(formData.email_contacto || '').trim()) newErrors.email_contacto = 'El email de contacto es requerido';
+    else if (!/\S+@\S+\.\S+/.test(formData.email_contacto || '')) newErrors.email_contacto = 'Email de contacto inválido';
+    if (formData.comision_porcentaje !== undefined && (formData.comision_porcentaje < 0 || formData.comision_porcentaje > 100)) newErrors.comision_porcentaje = 'La comisión debe estar entre 0 y 100';
+    if (formData.limite_credito !== undefined && formData.limite_credito < 0) newErrors.limite_credito = 'El límite de crédito no puede ser negativo';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -61,13 +64,13 @@ const CreateMayoristaModal: React.FC<CreateMayoristaModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
 
     setLoading(true);
     try {
       await mayoristaService.createMayorista(formData);
-      
+
       await Swal.fire({
         title: '¡Éxito!',
         text: 'Mayorista creado exitosamente',
@@ -109,7 +112,9 @@ const CreateMayoristaModal: React.FC<CreateMayoristaModalProps> = ({
       limite_credito: 0,
       estado: 'activo',
       verificado: false,
-      observaciones: ''
+      observaciones: '',
+      recurente: false,
+      activo: true
     });
     setErrors({});
     onClose();
@@ -120,7 +125,7 @@ const CreateMayoristaModal: React.FC<CreateMayoristaModalProps> = ({
     let processedValue: any = value;
 
     if (type === 'number') {
-      processedValue = parseFloat(value) || 0;
+      processedValue = value === '' ? undefined : parseFloat(value);
     } else if (type === 'checkbox') {
       processedValue = (e.target as HTMLInputElement).checked;
     }
@@ -177,9 +182,8 @@ const CreateMayoristaModal: React.FC<CreateMayoristaModalProps> = ({
                     name="nombre"
                     value={formData.nombre}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors.nombre ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.nombre ? 'border-red-500' : 'border-gray-300'
+                      }`}
                     placeholder="Nombre del mayorista"
                   />
                   {errors.nombre && <p className="text-red-500 text-xs mt-1">{errors.nombre}</p>}
@@ -193,9 +197,8 @@ const CreateMayoristaModal: React.FC<CreateMayoristaModalProps> = ({
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors.email ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.email ? 'border-red-500' : 'border-gray-300'
+                      }`}
                     placeholder="email@ejemplo.com"
                   />
                   {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
@@ -209,9 +212,8 @@ const CreateMayoristaModal: React.FC<CreateMayoristaModalProps> = ({
                     name="telefono"
                     value={formData.telefono}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors.telefono ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.telefono ? 'border-red-500' : 'border-gray-300'
+                      }`}
                     placeholder="+57 300 123 4567"
                   />
                   {errors.telefono && <p className="text-red-500 text-xs mt-1">{errors.telefono}</p>}
@@ -241,9 +243,8 @@ const CreateMayoristaModal: React.FC<CreateMayoristaModalProps> = ({
                     name="numero_documento"
                     value={formData.numero_documento}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors.numero_documento ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.numero_documento ? 'border-red-500' : 'border-gray-300'
+                      }`}
                     placeholder="123456789"
                   />
                   {errors.numero_documento && <p className="text-red-500 text-xs mt-1">{errors.numero_documento}</p>}
@@ -257,9 +258,8 @@ const CreateMayoristaModal: React.FC<CreateMayoristaModalProps> = ({
                     name="direccion"
                     value={formData.direccion}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors.direccion ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.direccion ? 'border-red-500' : 'border-gray-300'
+                      }`}
                     placeholder="Calle 123 #45-67"
                   />
                   {errors.direccion && <p className="text-red-500 text-xs mt-1">{errors.direccion}</p>}
@@ -273,9 +273,8 @@ const CreateMayoristaModal: React.FC<CreateMayoristaModalProps> = ({
                     name="ciudad"
                     value={formData.ciudad}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors.ciudad ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.ciudad ? 'border-red-500' : 'border-gray-300'
+                      }`}
                     placeholder="Bogotá"
                   />
                   {errors.ciudad && <p className="text-red-500 text-xs mt-1">{errors.ciudad}</p>}
@@ -289,9 +288,8 @@ const CreateMayoristaModal: React.FC<CreateMayoristaModalProps> = ({
                     name="pais"
                     value={formData.pais}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors.pais ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.pais ? 'border-red-500' : 'border-gray-300'
+                      }`}
                     placeholder="Colombia"
                   />
                   {errors.pais && <p className="text-red-500 text-xs mt-1">{errors.pais}</p>}
@@ -313,11 +311,10 @@ const CreateMayoristaModal: React.FC<CreateMayoristaModalProps> = ({
                   <input
                     type="text"
                     name="contacto_principal"
-                    value={formData.contacto_principal}
+                    value={formData.contacto_principal || ''}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors.contacto_principal ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.contacto_principal ? 'border-red-500' : 'border-gray-300'
+                      }`}
                     placeholder="Juan Pérez"
                   />
                   {errors.contacto_principal && <p className="text-red-500 text-xs mt-1">{errors.contacto_principal}</p>}
@@ -329,11 +326,10 @@ const CreateMayoristaModal: React.FC<CreateMayoristaModalProps> = ({
                   <input
                     type="text"
                     name="telefono_contacto"
-                    value={formData.telefono_contacto}
+                    value={formData.telefono_contacto || ''}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors.telefono_contacto ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.telefono_contacto ? 'border-red-500' : 'border-gray-300'
+                      }`}
                     placeholder="+57 300 123 4567"
                   />
                   {errors.telefono_contacto && <p className="text-red-500 text-xs mt-1">{errors.telefono_contacto}</p>}
@@ -345,11 +341,10 @@ const CreateMayoristaModal: React.FC<CreateMayoristaModalProps> = ({
                   <input
                     type="email"
                     name="email_contacto"
-                    value={formData.email_contacto}
+                    value={formData.email_contacto || ''}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors.email_contacto ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.email_contacto ? 'border-red-500' : 'border-gray-300'
+                      }`}
                     placeholder="contacto@ejemplo.com"
                   />
                   {errors.email_contacto && <p className="text-red-500 text-xs mt-1">{errors.email_contacto}</p>}
@@ -371,14 +366,13 @@ const CreateMayoristaModal: React.FC<CreateMayoristaModalProps> = ({
                   <input
                     type="number"
                     name="comision_porcentaje"
-                    value={formData.comision_porcentaje}
+                    value={formData.comision_porcentaje ?? 0}
                     onChange={handleInputChange}
                     min="0"
                     max="100"
                     step="0.1"
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors.comision_porcentaje ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.comision_porcentaje ? 'border-red-500' : 'border-gray-300'
+                      }`}
                     placeholder="10.5"
                   />
                   {errors.comision_porcentaje && <p className="text-red-500 text-xs mt-1">{errors.comision_porcentaje}</p>}
@@ -390,13 +384,12 @@ const CreateMayoristaModal: React.FC<CreateMayoristaModalProps> = ({
                   <input
                     type="number"
                     name="limite_credito"
-                    value={formData.limite_credito}
+                    value={formData.limite_credito ?? 0}
                     onChange={handleInputChange}
                     min="0"
                     step="1000"
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors.limite_credito ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.limite_credito ? 'border-red-500' : 'border-gray-300'
+                      }`}
                     placeholder="1000000"
                   />
                   {errors.limite_credito && <p className="text-red-500 text-xs mt-1">{errors.limite_credito}</p>}
@@ -416,17 +409,43 @@ const CreateMayoristaModal: React.FC<CreateMayoristaModalProps> = ({
                     <option value="suspendido">Suspendido</option>
                   </select>
                 </div>
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="verificado"
-                    checked={formData.verificado}
-                    onChange={handleInputChange}
-                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                  />
-                  <label className="ml-2 text-sm font-medium text-gray-700">
-                    Mayorista Verificado
-                  </label>
+                <div className="flex items-center space-x-4">
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      name="verificado"
+                      checked={formData.verificado}
+                      onChange={handleInputChange}
+                      className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                    />
+                    <label className="ml-2 text-sm font-medium text-gray-700">
+                      Verificado
+                    </label>
+                  </div>
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      name="recurente"
+                      checked={formData.recurente}
+                      onChange={handleInputChange}
+                      className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                    />
+                    <label className="ml-2 text-sm font-medium text-gray-700">
+                      Recurrente
+                    </label>
+                  </div>
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      name="activo"
+                      checked={formData.activo}
+                      onChange={handleInputChange}
+                      className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                    />
+                    <label className="ml-2 text-sm font-medium text-gray-700">
+                      Activo
+                    </label>
+                  </div>
                 </div>
               </div>
             </div>
@@ -438,7 +457,7 @@ const CreateMayoristaModal: React.FC<CreateMayoristaModalProps> = ({
               </label>
               <textarea
                 name="observaciones"
-                value={formData.observaciones}
+                value={formData.observaciones || ''}
                 onChange={handleInputChange}
                 rows={3}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
