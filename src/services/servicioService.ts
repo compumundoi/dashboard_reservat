@@ -44,16 +44,18 @@ const formatearPrecio = (precio: number, moneda: string): string => {
   return `${precio.toLocaleString("es-ES")} ${moneda}`;
 };
 
-// Función para obtener nombre del proveedor (últimos 8 caracteres del UUID)
-const obtenerNombreProveedor = (proveedorId: string): string => {
-  return `Proveedor-${proveedorId.slice(-8)}`;
-};
+// El nombre real del proveedor viene de la API. El identificador derivado
+// del UUID queda solo como respaldo por si la respuesta no lo trae.
+const obtenerNombreProveedor = (servicio: RespuestaServicio): string =>
+  servicio.proveedor_nombre?.trim() ||
+  `Proveedor-${servicio.proveedor_id.slice(-8)}`;
 
 // Función para procesar datos de servicio para la UI
 const procesarServicioParaUI = (servicio: RespuestaServicio): ServicioData => ({
   id_servicio: servicio.id_servicio,
   proveedor_id: servicio.proveedor_id,
-  proveedorNombre: obtenerNombreProveedor(servicio.proveedor_id),
+  proveedorNombre: obtenerNombreProveedor(servicio),
+  proveedorEmail: servicio.proveedor_email?.trim() || '',
   nombre: servicio.nombre,
   descripcion: servicio.descripcion,
   tipo_servicio: servicio.tipo_servicio,
@@ -304,7 +306,8 @@ export const exportarServiciosExcel = async (): Promise<void> => {
     const datosExcel = response.servicios.map((servicio) => ({
       "ID Servicio": servicio.id_servicio,
       "Proveedor ID": servicio.proveedor_id,
-      Proveedor: obtenerNombreProveedor(servicio.proveedor_id),
+      Proveedor: obtenerNombreProveedor(servicio),
+      "Email Proveedor": servicio.proveedor_email?.trim() || "",
       Nombre: servicio.nombre,
       Descripción: servicio.descripcion,
       "Tipo de Servicio": servicio.tipo_servicio,

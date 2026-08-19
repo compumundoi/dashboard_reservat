@@ -80,7 +80,7 @@ const ServicioTable: React.FC<ServicioTableProps> = ({
           <TableRow>
             <TableHead>Servicio</TableHead>
             <TableHead>Tipo</TableHead>
-            <TableHead>Proveedor</TableHead>
+            <TableHead className="min-w-[220px]">Proveedor</TableHead>
             <TableHead>Precio</TableHead>
             <TableHead>Ubicación</TableHead>
             <TableHead>Relevancia</TableHead>
@@ -128,14 +128,14 @@ const ServicioTable: React.FC<ServicioTableProps> = ({
                     {servicio.tipo_servicio}
                   </Badge>
                 </TableCell>
-                <TableCell>
+                <TableCell className="min-w-[220px]">
                   <div className="flex flex-col">
-                    <div className="flex items-center gap-1.5 text-secondary-900 font-medium">
-                      <Building className="h-3.5 w-3.5 text-secondary-400" />
-                      <span className="truncate max-w-[150px]">{servicio.proveedorNombre}</span>
+                    <div className="flex items-start gap-1.5 text-secondary-900 font-medium">
+                      <Building className="h-3.5 w-3.5 text-secondary-400 shrink-0 mt-0.5" />
+                      <span className="break-words">{servicio.proveedorNombre}</span>
                     </div>
-                    <span className="text-[10px] text-secondary-400 ml-5 font-mono uppercase tracking-tighter">
-                      {servicio.proveedor_id.slice(-8)}
+                    <span className="text-xs text-secondary-500 ml-5 break-all">
+                      {servicio.proveedorEmail || '—'}
                     </span>
                   </div>
                 </TableCell>

@@ -19,6 +19,8 @@ export interface DatosServicio {
 export interface RespuestaServicio {
   id_servicio: string;
   proveedor_id: string;
+  proveedor_nombre?: string | null;
+  proveedor_email?: string | null;
   nombre: string;
   descripcion: string;
   tipo_servicio: string;
@@ -64,6 +66,7 @@ export interface ServicioData {
   id_servicio: string;
   proveedor_id: string;
   proveedorNombre: string;
+  proveedorEmail: string;
   nombre: string;
   descripcion: string;
   tipo_servicio: string;

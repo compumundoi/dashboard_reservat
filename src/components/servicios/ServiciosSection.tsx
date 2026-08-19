@@ -137,6 +137,9 @@ const ServiciosSection: React.FC = () => {
             .includes(searchTerm.toLowerCase()) ||
           servicio.proveedorNombre
             .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          servicio.proveedorEmail
+            .toLowerCase()
             .includes(searchTerm.toLowerCase()),
       );
       setFilteredServicios(filtered);
