@@ -12,6 +12,7 @@ export interface DatosFoto {
 export interface RespuestaFoto {
   id: string;
   servicio_id: string;
+  servicio_nombre?: string | null;
   url: string;
   descripcion: string;
   orden: number;

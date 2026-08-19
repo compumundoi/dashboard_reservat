@@ -39,16 +39,16 @@ const formatearFecha = (fechaISO: string): string => {
   });
 };
 
-// Función para obtener nombre del servicio (últimos 8 caracteres del UUID)
-const obtenerNombreServicio = (servicioId: string): string => {
-  return `Servicio-${servicioId.slice(-8)}`;
-};
+// El nombre real del servicio viene de la API. El identificador derivado del
+// UUID queda solo como respaldo por si la respuesta no lo trae.
+const obtenerNombreServicio = (foto: RespuestaFoto): string =>
+  foto.servicio_nombre?.trim() || `Servicio-${foto.servicio_id.slice(-8)}`;
 
 // Función para procesar datos de foto para la UI
 const procesarFotoParaUI = (foto: RespuestaFoto): FotoData => ({
   id: foto.id,
   servicio_id: foto.servicio_id,
-  servicioNombre: obtenerNombreServicio(foto.servicio_id),
+  servicioNombre: obtenerNombreServicio(foto),
   url: foto.url,
   descripcion: foto.descripcion,
   orden: foto.orden,
@@ -262,7 +262,7 @@ export const exportarFotosExcel = async (): Promise<void> => {
     const datosExcel = response.fotos.map((foto) => ({
       ID: foto.id,
       "Servicio ID": foto.servicio_id,
-      Servicio: obtenerNombreServicio(foto.servicio_id),
+      Servicio: obtenerNombreServicio(foto),
       URL: foto.url,
       Descripción: foto.descripcion,
       Orden: foto.orden,

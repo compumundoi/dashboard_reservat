@@ -13,6 +13,7 @@ export interface DatosFechaBloqueada {
 export interface RespuestaFechaBloqueada {
   id: string;
   servicio_id: string;
+  servicio_nombre?: string | null;
   fecha: string;
   motivo: string;
   bloqueado_por: string;

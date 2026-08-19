@@ -166,7 +166,10 @@ class RestriccionService {
           hour: "2-digit",
           minute: "2-digit",
         }),
-        servicio_nombre: `Servicio ${restriccion.servicio_id.slice(-8)}`, // Mostrar últimos 8 caracteres del UUID
+        // El nombre real viene de la API; el derivado del UUID es solo respaldo.
+        servicio_nombre:
+          restriccion.servicio_nombre?.trim() ||
+          `Servicio ${restriccion.servicio_id.slice(-8)}`,
         dias_hasta_fecha: diasHastaFecha,
         estado_badge: restriccion.bloqueo_activo ? "activo" : "inactivo",
       };
