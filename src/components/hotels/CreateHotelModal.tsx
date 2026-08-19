@@ -28,6 +28,7 @@ const initialForm = {
     usuario_creador: 'admin',
     tipo_documento: 'NIT',
     numero_documento: '',
+    rnt: '',
     activo: true,
   },
   hotel: {
@@ -142,6 +143,7 @@ export const CreateHotelModal: React.FC<CreateHotelModalProps> = ({
       title="Crear Nuevo Hotel"
       description="Completa la información del proveedor y hotel"
       size="3xl"
+      dismissible={false}
     >
       <form onSubmit={handleSubmit} className="space-y-8">
 
@@ -228,7 +230,6 @@ export const CreateHotelModal: React.FC<CreateHotelModalProps> = ({
                 { value: 'NIT', label: 'NIT' },
                 { value: 'CC', label: 'Cédula' },
                 { value: 'CE', label: 'Cédula Extranjería' },
-                { value: 'RUT', label: 'RUT' },
               ]}
             />
             <Input
@@ -236,6 +237,16 @@ export const CreateHotelModal: React.FC<CreateHotelModalProps> = ({
               placeholder="123456789"
               value={form.proveedor.numero_documento}
               onChange={(e) => updateProveedorField('numero_documento', e.target.value)}
+            />
+            <Input
+              label="RNT"
+              placeholder="12345678"
+              inputMode="numeric"
+              maxLength={8}
+              value={form.proveedor.rnt}
+              onChange={(e) =>
+                updateProveedorField('rnt', e.target.value.replace(/\D/g, '').slice(0, 8))
+              }
             />
 
             <div className="flex items-center h-full pt-6">
@@ -333,11 +344,11 @@ export const CreateHotelModal: React.FC<CreateHotelModalProps> = ({
                 { key: 'recepcion_24_horas', label: 'Recepción 24h' },
                 { key: 'piscina', label: 'Piscina' },
                 { key: 'admite_mascotas', label: 'Admite Mascotas' },
-                { key: 'pet_friendly', label: 'Pet Friendly' },
+                { key: 'pet_friendly', label: 'Servicios especializados' },
                 { key: 'tiene_estacionamiento', label: 'Estacionamiento' },
                 { key: 'servicio_restaurante', label: 'Restaurante' },
                 { key: 'bar', label: 'Bar' },
-                { key: 'room_service', label: 'Room Service' },
+                { key: 'room_service', label: 'Servicio al cuarto' },
                 { key: 'asensor', label: 'Ascensor' },
                 { key: 'rampa_discapacitado', label: 'Rampa Discapacitados' },
                 { key: 'auditorio', label: 'Auditorio' },

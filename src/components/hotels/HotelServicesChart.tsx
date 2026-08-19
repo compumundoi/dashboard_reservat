@@ -14,7 +14,7 @@ export const HotelServicesChart: React.FC<HotelServicesChartProps> = ({ hotels, 
     { key: 'recepcion_24_horas', label: 'Recepción 24h', color: 'from-green-500 to-green-600' },
     { key: 'servicio_restaurante', label: 'Restaurante', color: 'from-orange-500 to-orange-600' },
     { key: 'parqueadero', label: 'Parqueadero', color: 'from-purple-500 to-purple-600' },
-    { key: 'pet_friendly', label: 'Pet Friendly', color: 'from-pink-500 to-pink-600' },
+    { key: 'pet_friendly', label: 'Servicios especializados', color: 'from-pink-500 to-pink-600' },
     { key: 'rampa_discapacitado', label: 'Accesibilidad', color: 'from-emerald-500 to-emerald-600' },
   ];
 

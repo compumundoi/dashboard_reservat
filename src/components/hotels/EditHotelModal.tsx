@@ -5,7 +5,14 @@ import { ProveedorHotel, HotelInfo } from '../../types/hotel';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
+import { Select } from '../ui/Select';
 import { Textarea } from '../ui/Textarea';
+
+const TIPOS_DOCUMENTO = [
+  { value: 'NIT', label: 'NIT' },
+  { value: 'CC', label: 'Cédula' },
+  { value: 'CE', label: 'Cédula Extranjería' },
+];
 
 interface Props {
   isOpen: boolean;
@@ -24,6 +31,7 @@ export const EditHotelModal: React.FC<Props> = ({ isOpen, onClose, hotelId, onSu
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen && hotelId) {
@@ -36,8 +44,17 @@ export const EditHotelModal: React.FC<Props> = ({ isOpen, onClose, hotelId, onSu
     try {
       setLoading(true);
       setError(null);
+      setFormError(null);
       const response = await hotelService.getHotelById(hotelId);
-      setData(response);
+      const tipoDocumento = TIPOS_DOCUMENTO.some(
+        (t) => t.value === response.proveedor?.tipo_documento,
+      )
+        ? response.proveedor.tipo_documento
+        : '';
+      setData({
+        ...response,
+        proveedor: { ...response.proveedor, tipo_documento: tipoDocumento },
+      });
     } catch (err) {
       setError('Error al cargar los datos del hotel');
       console.error('Error loading hotel:', err);
@@ -49,14 +66,19 @@ export const EditHotelModal: React.FC<Props> = ({ isOpen, onClose, hotelId, onSu
   const handleSave = async () => {
     if (!data) return;
 
+    if (!data.proveedor.tipo_documento) {
+      setFormError('Selecciona un tipo de documento válido para continuar');
+      return;
+    }
+
     try {
       setSaving(true);
-      setError(null);
+      setFormError(null);
       await hotelService.updateHotel(hotelId, data);
       onSuccess();
       onClose();
     } catch (err) {
-      setError('Error al guardar los cambios');
+      setFormError('Error al guardar los cambios');
       console.error('Error saving hotel:', err);
     } finally {
       setSaving(false);
@@ -92,6 +114,7 @@ export const EditHotelModal: React.FC<Props> = ({ isOpen, onClose, hotelId, onSu
       title="Editar Hotel"
       description="Modifica la información del proveedor y hotel"
       size="3xl"
+      dismissible={false}
     >
       <div className="space-y-6">
         {loading ? (
@@ -108,6 +131,14 @@ export const EditHotelModal: React.FC<Props> = ({ isOpen, onClose, hotelId, onSu
           </div>
         ) : data ? (
           <div className="space-y-8">
+            {formError && (
+              <div className="bg-error-50 border border-error-200 rounded-lg p-4 flex items-center gap-3 text-error-800">
+                <div className="p-1 bg-error-100 rounded-full">
+                  <Info className="w-4 h-4" />
+                </div>
+                <p className="font-medium">{formError}</p>
+              </div>
+            )}
             {/* Información del Proveedor */}
             <div className="space-y-4">
               <div className="flex items-center gap-2 pb-2 border-b border-secondary-100">
@@ -170,19 +201,37 @@ export const EditHotelModal: React.FC<Props> = ({ isOpen, onClose, hotelId, onSu
                   value={data.proveedor.rating_promedio}
                   onChange={(e) => updateProveedorField('rating_promedio', parseFloat(e.target.value))}
                 />
-                <Input
+                <Select
                   label="Tipo Documento"
-                  value={data.proveedor.tipo_documento}
-                  readOnly
-                  disabled
-                  className="bg-secondary-50 cursor-not-allowed"
+                  value={data.proveedor.tipo_documento || ''}
+                  onChange={(e) => {
+                    if (e.target.value) setFormError(null);
+                    updateProveedorField('tipo_documento', e.target.value);
+                  }}
+                  options={
+                    TIPOS_DOCUMENTO.some((t) => t.value === data.proveedor.tipo_documento)
+                      ? TIPOS_DOCUMENTO
+                      : // El registro guarda un tipo descontinuado (ej. RUT). Se
+                        // muestra un placeholder vacío para forzar una elección
+                        // válida en lugar de reintroducir el valor obsoleto.
+                        [{ value: '', label: 'Seleccionar...' }, ...TIPOS_DOCUMENTO]
+                  }
                 />
                 <Input
                   label="Número Documento"
-                  value={data.proveedor.numero_documento}
-                  readOnly
-                  disabled
-                  className="bg-secondary-50 cursor-not-allowed"
+                  placeholder="123456789"
+                  value={data.proveedor.numero_documento || ''}
+                  onChange={(e) => updateProveedorField('numero_documento', e.target.value)}
+                />
+                <Input
+                  label="RNT"
+                  placeholder="12345678"
+                  inputMode="numeric"
+                  maxLength={8}
+                  value={data.proveedor.rnt || ''}
+                  onChange={(e) =>
+                    updateProveedorField('rnt', e.target.value.replace(/\D/g, '').slice(0, 8))
+                  }
                 />
 
                 <div className="flex items-center h-full pt-6">
@@ -273,11 +322,11 @@ export const EditHotelModal: React.FC<Props> = ({ isOpen, onClose, hotelId, onSu
                     { key: 'recepcion_24_horas', label: 'Recepción 24h' },
                     { key: 'piscina', label: 'Piscina' },
                     { key: 'admite_mascotas', label: 'Admite Mascotas' },
-                    { key: 'pet_friendly', label: 'Pet Friendly' },
+                    { key: 'pet_friendly', label: 'Servicios especializados' },
                     { key: 'tiene_estacionamiento', label: 'Estacionamiento' },
                     { key: 'servicio_restaurante', label: 'Restaurante' },
                     { key: 'bar', label: 'Bar' },
-                    { key: 'room_service', label: 'Room Service' },
+                    { key: 'room_service', label: 'Servicio al cuarto' },
                     { key: 'asensor', label: 'Ascensor' },
                     { key: 'rampa_discapacitado', label: 'Rampa Discapacitados' },
                     { key: 'auditorio', label: 'Auditorio' },

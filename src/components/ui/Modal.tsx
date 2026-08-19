@@ -10,9 +10,15 @@ interface ModalProps {
     description?: string;
     children: React.ReactNode;
     size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | 'full';
+    /**
+     * When false, the modal cannot be dismissed by clicking the overlay or
+     * pressing Escape. The header close button and any footer action still
+     * call onClose. Defaults to true.
+     */
+    dismissible?: boolean;
 }
 
-export function Modal({ isOpen, onClose, title, description, children, size = 'md', className }: ModalProps & { className?: string }) {
+export function Modal({ isOpen, onClose, title, description, children, size = 'md', dismissible = true, className }: ModalProps & { className?: string }) {
     const modalRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -22,14 +28,16 @@ export function Modal({ isOpen, onClose, title, description, children, size = 'm
 
         if (isOpen) {
             document.body.style.overflow = 'hidden';
-            document.addEventListener('keydown', handleEscape);
+            if (dismissible) {
+                document.addEventListener('keydown', handleEscape);
+            }
         }
 
         return () => {
             document.body.style.overflow = 'unset';
             document.removeEventListener('keydown', handleEscape);
         };
-    }, [isOpen, onClose]);
+    }, [isOpen, onClose, dismissible]);
 
     if (!isOpen) return null;
 
@@ -49,7 +57,7 @@ export function Modal({ isOpen, onClose, title, description, children, size = 'm
             {/* Backdrop */}
             <div
                 className="fixed inset-0 bg-secondary-900/40 backdrop-blur-sm transition-opacity animate-fade-in"
-                onClick={onClose}
+                onClick={dismissible ? onClose : undefined}
             />
 
             {/* Modal Content */}

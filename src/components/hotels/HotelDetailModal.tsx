@@ -56,8 +56,8 @@ export const HotelDetailModal: React.FC<Props> = ({ hotelId, isOpen, onClose }) 
         setLoading(true);
         const res = await hotelService.getHotelById(hotelId);
         setData(res);
-      } catch (e: any) {
-        setError(e.message || 'Error al cargar hotel');
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Error al cargar hotel');
       } finally {
         setLoading(false);
       }
@@ -178,6 +178,11 @@ export const HotelDetailModal: React.FC<Props> = ({ hotelId, isOpen, onClose }) 
                     <span>{data.proveedor?.tipo_documento}: {data.proveedor?.numero_documento}</span>
                   </div>
                   <div className="flex items-center space-x-3 text-secondary-600">
+                    <FileText className="h-4 w-4 text-slate-600 shrink-0" />
+                    <span className="font-medium text-secondary-900 shrink-0">RNT:</span>
+                    <span>{data.proveedor?.rnt || 'No registrado'}</span>
+                  </div>
+                  <div className="flex items-center space-x-3 text-secondary-600">
                     <User className="h-4 w-4 text-teal-500 shrink-0" />
                     <span className="font-medium text-secondary-900 shrink-0">Creador:</span>
                     <span>{data.proveedor?.usuario_creador}</span>
@@ -257,12 +262,12 @@ export const HotelDetailModal: React.FC<Props> = ({ hotelId, isOpen, onClose }) 
                 {[
                   { icon: <Clock className="h-4 w-4 text-indigo-500" />, label: 'Recepción 24h', value: data.hotel?.recepcion_24_horas },
                   { icon: <Waves className="h-4 w-4 text-blue-400" />, label: 'Piscina', value: data.hotel?.piscina },
-                  { icon: <Heart className="h-4 w-4 text-pink-500" />, label: 'Pet Friendly', value: data.hotel?.pet_friendly },
+                  { icon: <Heart className="h-4 w-4 text-pink-500" />, label: 'Servicios especializados', value: data.hotel?.pet_friendly },
                   { icon: <Heart className="h-4 w-4 text-orange-500" />, label: 'Mascotas', value: data.hotel?.admite_mascotas },
                   { icon: <Car className="h-4 w-4 text-secondary-600" />, label: 'Estacionamiento', value: data.hotel?.tiene_estacionamiento },
                   { icon: <Utensils className="h-4 w-4 text-amber-500" />, label: 'Restaurante', value: data.hotel?.servicio_restaurante },
                   { icon: <Coffee className="h-4 w-4 text-amber-700" />, label: 'Bar', value: data.hotel?.bar },
-                  { icon: <Utensils className="h-4 w-4 text-teal-500" />, label: 'Room Service', value: data.hotel?.room_service },
+                  { icon: <Utensils className="h-4 w-4 text-teal-500" />, label: 'Servicio al cuarto', value: data.hotel?.room_service },
                   { icon: <ArrowUpDown className="h-4 w-4 text-slate-500" />, label: 'Ascensor', value: data.hotel?.asensor },
                   { icon: <Accessibility className="h-4 w-4 text-blue-600" />, label: 'Rampa', value: data.hotel?.rampa_discapacitado },
                   { icon: <Mic className="h-4 w-4 text-violet-500" />, label: 'Auditorio', value: data.hotel?.auditorio },

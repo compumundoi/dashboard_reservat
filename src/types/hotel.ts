@@ -18,6 +18,7 @@ export interface ProveedorHotel {
   usuario_creador: string;
   tipo_documento: string;
   numero_documento: string;
+  rnt?: string;
   activo: boolean;
 }
 
@@ -61,6 +62,7 @@ export interface HotelUnificado {
   verificado: boolean;
   tipo_documento: string;
   numero_documento: string;
+  rnt?: string;
   // Campos del hotel
   id_hotel: string;
   estrellas: number;

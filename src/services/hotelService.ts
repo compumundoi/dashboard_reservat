@@ -36,6 +36,7 @@ class HotelService {
         verificado: item.proveedor.verificado,
         tipo_documento: item.proveedor.tipo_documento,
         numero_documento: item.proveedor.numero_documento,
+        rnt: item.proveedor.rnt,
         id_hotel: item.hotel.id_hotel,
         estrellas: item.hotel.estrellas,
         numero_habitaciones: item.hotel.numero_habitaciones,
