@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, X, Eye, Edit, Trash2, Calendar, Users, Clock, DollarSign } from 'lucide-react';
 import { ViajeTableProps, ESTADOS_VIAJE } from '../../types/viaje';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/Table';
@@ -107,7 +107,16 @@ const ViajeTable: React.FC<ViajeTableProps> = ({
     return buttons;
   };
 
-  if (loading) {
+  // El esqueleto sólo reemplaza el layout en la PRIMERA carga. Después, un
+  // early return desmontaría el buscador y el usuario perdería el foco en
+  // mitad de lo que está escribiendo, porque ahora cada búsqueda consulta
+  // al servidor y enciende el estado de carga.
+  const [yaCargoUnaVez, setYaCargoUnaVez] = useState(false);
+  useEffect(() => {
+    if (!loading) setYaCargoUnaVez(true);
+  }, [loading]);
+
+  if (loading && !yaCargoUnaVez) {
     return (
       <div className="space-y-6">
         <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm animate-pulse h-20"></div>

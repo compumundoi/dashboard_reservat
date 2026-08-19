@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, X, Eye, Edit, Trash2, MapPin, Clock, Star, Users, Calendar, ChevronLeft, ChevronRight, Utensils } from 'lucide-react';
 import { RestauranteData } from '../../types/restaurante';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '../ui/Table';
@@ -44,7 +44,16 @@ const RestauranteTable: React.FC<RestauranteTableProps> = ({
   const startItem = (currentPage - 1) * pageSize + 1;
   const endItem = Math.min(currentPage * pageSize, totalItems);
 
-  if (loading) {
+  // El esqueleto sólo reemplaza el layout en la PRIMERA carga. Después, un
+  // early return desmontaría el buscador y el usuario perdería el foco en
+  // mitad de lo que está escribiendo, porque ahora cada búsqueda consulta
+  // al servidor y enciende el estado de carga.
+  const [yaCargoUnaVez, setYaCargoUnaVez] = useState(false);
+  useEffect(() => {
+    if (!loading) setYaCargoUnaVez(true);
+  }, [loading]);
+
+  if (loading && !yaCargoUnaVez) {
     return (
       <div className="bg-white rounded-xl border border-gray-200 shadow-soft-sm p-8">
         <div className="animate-pulse space-y-6">

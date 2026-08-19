@@ -26,20 +26,18 @@ const ServicioTable: React.FC<ServicioTableProps> = ({
   const startItem = currentPage * pageSize + 1;
   const endItem = Math.min((currentPage + 1) * pageSize, totalItems);
 
-  if (loading) {
-    return (
-      <div className="bg-white rounded-xl border border-secondary-200 shadow-soft-sm p-8">
-        <div className="animate-pulse space-y-6">
-          <div className="h-10 bg-secondary-100 rounded-lg w-full"></div>
-          <div className="space-y-4">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-16 bg-secondary-50 rounded-lg w-full"></div>
-            ))}
-          </div>
-        </div>
+  // El esqueleto de carga se dibuja DENTRO del layout, nunca en lugar de el:
+  // un early return desmontaria el buscador y el usuario perderia el foco
+  // en mitad de lo que esta escribiendo.
+  const esqueleto = (
+    <div className="bg-white rounded-xl border border-secondary-200 shadow-soft-sm p-8">
+      <div className="animate-pulse space-y-4">
+        {[...Array(pageSize > 5 ? 5 : pageSize)].map((_, i) => (
+          <div key={i} className="h-16 bg-secondary-50 rounded-lg w-full"></div>
+        ))}
       </div>
-    );
-  }
+    </div>
+  );
 
   return (
     <div className="space-y-4">
@@ -75,6 +73,8 @@ const ServicioTable: React.FC<ServicioTableProps> = ({
       </div>
 
       {/* Table */}
+      {loading ? esqueleto : (
+      <>
       <Table>
         <TableHeader>
           <TableRow>
@@ -274,6 +274,8 @@ const ServicioTable: React.FC<ServicioTableProps> = ({
             </Button>
           </div>
         </div>
+      )}
+      </>
       )}
     </div>
   );
