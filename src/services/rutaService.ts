@@ -9,6 +9,13 @@ import {
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:8010/api/v1";
 
+// Devuelve el fragmento `&busqueda=...` ya codificado, o vacío si no hay
+// término. La búsqueda la resuelve el backend para que alcance todos los
+// registros y no sólo la página cargada.
+const paramBusqueda = (busqueda: string): string =>
+  busqueda.trim() ? `&busqueda=${encodeURIComponent(busqueda.trim())}` : "";
+
+
 class RutaService {
   private getAuthHeaders() {
     const token = document.cookie
@@ -22,10 +29,14 @@ class RutaService {
     };
   }
 
-  async getRutas(page: number = 0, size: number = 10): Promise<RutasResponse> {
+  async getRutas(
+    page: number = 0,
+    size: number = 10,
+    busqueda: string = "",
+  ): Promise<RutasResponse> {
     try {
       const response = await fetch(
-        `${API_BASE_URL}/rutas/listar/?pagina=${page}&limite=${size}`,
+        `${API_BASE_URL}/rutas/listar/?pagina=${page}&limite=${size}${paramBusqueda(busqueda)}`,
         {
           method: "GET",
           headers: this.getAuthHeaders(),

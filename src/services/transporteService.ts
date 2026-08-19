@@ -9,6 +9,13 @@ import * as XLSX from "xlsx";
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:8015/api/v1";
 
+// Devuelve el fragmento `&busqueda=...` ya codificado, o vacío si no hay
+// término. La búsqueda la resuelve el backend para que alcance todos los
+// registros y no sólo la página cargada.
+const paramBusqueda = (busqueda: string): string =>
+  busqueda.trim() ? `&busqueda=${encodeURIComponent(busqueda.trim())}` : "";
+
+
 // Función para obtener el token de autenticación
 const getAuthToken = (): string | null => {
   const cookies = document.cookie.split(";");
@@ -45,10 +52,11 @@ export const transporteService = {
   async getTransportes(
     page: number = 1,
     limit: number = 10,
+    busqueda: string = "",
   ): Promise<TransporteResponse> {
     try {
       const response = await authenticatedFetch(
-        `${API_BASE_URL}/transportes/listar/?pagina=${page}&limite=${limit}`,
+        `${API_BASE_URL}/transportes/listar/?pagina=${page}&limite=${limit}${paramBusqueda(busqueda)}`,
       );
 
       const data = await response.json();

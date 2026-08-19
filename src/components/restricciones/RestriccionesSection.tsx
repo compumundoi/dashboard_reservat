@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Plus, Download, ShieldAlert } from 'lucide-react';
 import { RestriccionData, RestriccionStatsData, RestriccionChartData } from '../../types/restriccion';
 import { restriccionService } from '../../services/restriccionService';
@@ -13,7 +13,6 @@ import Swal from 'sweetalert2';
 
 const RestriccionesSection: React.FC = () => {
   // Estados principales
-  const [restricciones, setRestricciones] = useState<RestriccionData[]>([]);
   const [filteredRestricciones, setFilteredRestricciones] = useState<RestriccionData[]>([]);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -21,6 +20,9 @@ const RestriccionesSection: React.FC = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [totalItems, setTotalItems] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  // Sólo la última petición pedida puede pintar la tabla.
+  const ultimaPeticion = useRef(0);
 
   // Estados para estadísticas y gráficos
   const [stats, setStats] = useState<RestriccionStatsData>({
@@ -43,20 +45,17 @@ const RestriccionesSection: React.FC = () => {
   const [selectedRestriccionId, setSelectedRestriccionId] = useState<string | null>(null);
 
   // Cargar restricciones
-  const loadRestricciones = useCallback(async (page: number = currentPage, size: number = pageSize) => {
+  const loadRestricciones = useCallback(async (page: number = currentPage, size: number = pageSize, busqueda: string = '') => {
+    const peticion = ++ultimaPeticion.current;
     try {
       setLoading(true);
-      const response = await restriccionService.getRestricciones(page - 1, size); // API usa paginación 0-based
+      const response = await restriccionService.getRestricciones(page - 1, size, busqueda); // API usa paginación 0-based
+      if (peticion !== ultimaPeticion.current) return;
 
       const processedData = restriccionService.processRestriccionesForUI(response.fechas_bloqueadas);
-      setRestricciones(processedData);
       setTotalItems(response.total);
       setTotalPages(Math.ceil(response.total / size));
-
-      // Si no hay búsqueda activa, usar los datos paginados de la API
-      if (!searchTerm) {
-        setFilteredRestricciones(processedData);
-      }
+      setFilteredRestricciones(processedData);
 
     } catch (error) {
       console.error('Error loading restricciones:', error);
@@ -69,7 +68,7 @@ const RestriccionesSection: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, pageSize, searchTerm]);
+  }, [currentPage, pageSize]);
 
   // Cargar estadísticas
   const loadStats = useCallback(async () => {
@@ -97,37 +96,28 @@ const RestriccionesSection: React.FC = () => {
     }
   }, []);
 
-  // Filtrado local para búsqueda
+  // Se espera a que el usuario deje de tipear para no pedir por tecla.
   useEffect(() => {
-    if (searchTerm) {
-      const filtered = restricciones.filter(restriccion =>
-        restriccion.motivo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        restriccion.bloqueado_por.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        restriccion.servicio_nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        restriccion.fecha_formateada.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setFilteredRestricciones(filtered);
-      setTotalItems(filtered.length);
-      setTotalPages(Math.ceil(filtered.length / pageSize));
-    } else {
-      setFilteredRestricciones(restricciones);
-      // NO llamar loadRestricciones aquí para evitar bucle infinito
-    }
-  }, [searchTerm, restricciones, pageSize]);
+    const timeout = setTimeout(() => setDebouncedSearch(searchTerm), 350);
+    return () => clearTimeout(timeout);
+  }, [searchTerm]);
 
-  // Cargar datos iniciales
+  // Otro término, otro conjunto de resultados: vuelve a la primera página.
   useEffect(() => {
-    loadRestricciones();
+    setCurrentPage(1);
+  }, [debouncedSearch]);
+
+  // Las tarjetas y gráficos resumen todo, no dependen de la búsqueda.
+  useEffect(() => {
     loadStats();
     loadChartData();
-  }, [loadRestricciones, loadStats, loadChartData]);
+  }, [loadStats, loadChartData]);
 
-  // Cargar restricciones cuando cambie la página o el tamaño de página (solo si no hay búsqueda activa)
+  // La búsqueda la resuelve el backend: alcanza todas las restricciones y
+  // no sólo la página cargada.
   useEffect(() => {
-    if (!searchTerm) {
-      loadRestricciones(currentPage, pageSize);
-    }
-  }, [currentPage, pageSize, searchTerm, loadRestricciones]);
+    loadRestricciones(currentPage, pageSize, debouncedSearch);
+  }, [currentPage, pageSize, debouncedSearch, loadRestricciones]);
 
   // Handlers
   const handlePageChange = (page: number) => {
@@ -237,7 +227,7 @@ const RestriccionesSection: React.FC = () => {
   };
 
   const selectedRestriccion = selectedRestriccionId
-    ? restricciones.find(r => r.id === selectedRestriccionId)
+    ? filteredRestricciones.find(r => r.id === selectedRestriccionId)
     : null;
 
   return (

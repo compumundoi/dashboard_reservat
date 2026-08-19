@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Plus, Download, Car } from 'lucide-react';
 import { TransporteData, TransporteStats as TransporteStatsType, TransporteChartData } from '../../types/transporte';
 import { transporteService } from '../../services/transporteService';
@@ -20,8 +20,9 @@ const TransportesSection: React.FC = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [totalItems, setTotalItems] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filteredTransportes, setFilteredTransportes] = useState<TransporteData[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  // Sólo la última petición pedida puede pintar la tabla.
+  const ultimaPeticion = useRef(0);
 
   // Estados para estadísticas y gráficos
   const [stats, setStats] = useState<TransporteStatsType>({
@@ -43,10 +44,12 @@ const TransportesSection: React.FC = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   // Cargar transportes
-  const loadTransportes = useCallback(async (page: number = currentPage, size: number = pageSize) => {
+  const loadTransportes = useCallback(async (page: number = currentPage, size: number = pageSize, busqueda: string = '') => {
+    const peticion = ++ultimaPeticion.current;
     try {
       setLoading(true);
-      const response = await transporteService.getTransportes(page, size);
+      const response = await transporteService.getTransportes(page, size, busqueda);
+      if (peticion !== ultimaPeticion.current) return;
 
       setTransportes(response.data);
       setTotalItems(response.total);
@@ -128,36 +131,22 @@ const TransportesSection: React.FC = () => {
     setChartData({ tiposVehiculo, estados });
   };
 
-  // Manejar búsqueda
+  // La búsqueda la resuelve el backend: alcanza todos los transportes y
+  // no sólo la página cargada.
   const handleSearch = (term: string) => {
     setSearchTerm(term);
-    if (term.trim()) {
-      setIsSearching(true);
-      const filtered = transporteService.searchTransportes(transportes, term);
-      setFilteredTransportes(filtered);
-    } else {
-      setIsSearching(false);
-      setFilteredTransportes([]);
-    }
   };
 
   // Manejar cambio de página
   const handlePageChange = (page: number) => {
-    if (!isSearching) {
-      loadTransportes(page, pageSize);
-    } else {
-      setCurrentPage(page);
-    }
+    setCurrentPage(page);
   };
 
-  // Manejar cambio de tamaño de página
   const handlePageSizeChange = (size: number) => {
     setPageSize(size);
     setCurrentPage(1);
-    if (!isSearching) {
-      loadTransportes(1, size);
-    }
   };
+
 
   // Handlers para modales
   const handleViewDetails = (transporte: TransporteData) => {
@@ -245,17 +234,26 @@ const TransportesSection: React.FC = () => {
     handleModalClose();
   };
 
-  // Cargar datos al montar el componente
+  // Se espera a que el usuario deje de tipear para no pedir por tecla.
   useEffect(() => {
-    loadTransportes();
-  }, [loadTransportes]);
+    const timeout = setTimeout(() => setDebouncedSearch(searchTerm), 350);
+    return () => clearTimeout(timeout);
+  }, [searchTerm]);
+
+  // Otro término, otro conjunto de resultados: vuelve a la primera página.
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch]);
+
+  useEffect(() => {
+    loadTransportes(currentPage, pageSize, debouncedSearch);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, pageSize, debouncedSearch]);
 
   // Datos para mostrar (filtrados o normales)
-  const displayTransportes = isSearching ? filteredTransportes : transportes;
-  const displayTotalItems = isSearching ? filteredTransportes.length : totalItems;
-  const displayTotalPages = isSearching
-    ? Math.ceil(filteredTransportes.length / pageSize)
-    : totalPages;
+  const displayTransportes = transportes;
+  const displayTotalItems = totalItems;
+  const displayTotalPages = totalPages;
 
   return (
     <div className="space-y-8">

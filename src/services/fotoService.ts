@@ -12,6 +12,13 @@ import * as XLSX from "xlsx";
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:8008/api/v1";
 
+// Devuelve el fragmento `&busqueda=...` ya codificado, o vacío si no hay
+// término. La búsqueda la resuelve el backend para que alcance todos los
+// registros y no sólo la página cargada.
+const paramBusqueda = (busqueda: string): string =>
+  busqueda.trim() ? `&busqueda=${encodeURIComponent(busqueda.trim())}` : "";
+
+
 // Función para obtener el token de autenticación
 const getAuthToken = (): string => {
   const cookies = document.cookie.split(";");
@@ -75,9 +82,10 @@ export const crearFoto = async (datosFoto: DatosFoto): Promise<void> => {
 export const listarFotos = async (
   pagina: number = 0,
   limite: number = 10,
+  busqueda: string = "",
 ): Promise<ResponseListFotos> => {
   const response = await fetch(
-    `${API_BASE_URL}/fotos/listar/?pagina=${pagina}&limite=${limite}`,
+    `${API_BASE_URL}/fotos/listar/?pagina=${pagina}&limite=${limite}${paramBusqueda(busqueda)}`,
     {
       method: "GET",
       headers: getAuthHeaders(),
@@ -295,7 +303,7 @@ export const exportarFotosExcel = async (): Promise<void> => {
     // Descargar archivo
     const fechaActual = new Date().toISOString().split("T")[0];
     XLSX.writeFile(workbook, `fotos_${fechaActual}.xlsx`);
-  } catch (error) {
+  } catch {
     throw new Error("Error al exportar fotos a Excel");
   }
 };

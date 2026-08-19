@@ -9,6 +9,13 @@ import {
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:8013/api/v1";
 
+// Devuelve el fragmento `&busqueda=...` ya codificado, o vacío si no hay
+// término. La búsqueda la resuelve el backend para que alcance todos los
+// registros y no sólo la página cargada.
+const paramBusqueda = (busqueda: string): string =>
+  busqueda.trim() ? `&busqueda=${encodeURIComponent(busqueda.trim())}` : "";
+
+
 // Interfaces para las respuestas de la API
 interface ApiResponseList {
   data: Array<{
@@ -36,6 +43,7 @@ class RestauranteService {
   async getRestaurantes(
     page: number = 0,
     size: number = 10,
+    busqueda: string = "",
   ): Promise<{
     restaurantes: RestauranteData[];
     total: number;
@@ -44,7 +52,7 @@ class RestauranteService {
   }> {
     try {
       const response = await fetch(
-        `${API_BASE_URL}/restaurantes/listar/?pagina=${page + 1}&limite=${size}`,
+        `${API_BASE_URL}/restaurantes/listar/?pagina=${page + 1}&limite=${size}${paramBusqueda(busqueda)}`,
         {
           method: "GET",
           headers: this.getAuthHeaders(),

@@ -14,7 +14,6 @@ import * as XLSX from 'xlsx';
 
 const MayoristasSection: React.FC = () => {
   // Estados principales
-  const [mayoristas, setMayoristas] = useState<MayoristaData[]>([]);
   const [filteredMayoristas, setFilteredMayoristas] = useState<MayoristaData[]>([]);
   const [loading, setLoading] = useState(true);
   const [statsLoading, setStatsLoading] = useState(true);
@@ -28,6 +27,9 @@ const MayoristasSection: React.FC = () => {
 
   // Estados de búsqueda
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  // Sólo la última petición pedida puede pintar la tabla.
+  const ultimaPeticion = React.useRef(0);
 
   // Estados de modales
   const [detailOpen, setDetailOpen] = useState(false);
@@ -48,10 +50,11 @@ const MayoristasSection: React.FC = () => {
   });
 
   const loadMayoristas = React.useCallback(async () => {
+    const peticion = ++ultimaPeticion.current;
     try {
       setLoading(true);
-      const response = await mayoristaService.getMayoristas(currentPage - 1, pageSize);
-      setMayoristas(response.mayoristas);
+      const response = await mayoristaService.getMayoristas(currentPage - 1, pageSize, debouncedSearch);
+      if (peticion !== ultimaPeticion.current) return;
       setFilteredMayoristas(response.mayoristas);
       setTotalItems(response.total);
       setTotalPages(response.totalPages);
@@ -67,7 +70,7 @@ const MayoristasSection: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, pageSize]);
+  }, [currentPage, pageSize, debouncedSearch]);
 
   const loadStats = React.useCallback(async () => {
     try {
@@ -93,37 +96,29 @@ const MayoristasSection: React.FC = () => {
     }
   }, []);
 
+  // El listado se recarga con cada cambio de página o de búsqueda.
   useEffect(() => {
     loadMayoristas();
+  }, [loadMayoristas]);
+
+  // Las tarjetas y gráficos resumen todo el padrón: no dependen de la
+  // búsqueda. Atarlas a loadMayoristas hacía que cada tecleo se trajera
+  // 1000 registros dos veces.
+  useEffect(() => {
     loadStats();
     loadChartData();
-  }, [loadMayoristas, loadStats, loadChartData]);
+  }, [loadStats, loadChartData]);
 
+  // Se espera a que el usuario deje de tipear para no pedir por tecla.
   useEffect(() => {
-    if (searchTerm.trim()) {
+    const timeout = setTimeout(() => setDebouncedSearch(searchTerm), 350);
+    return () => clearTimeout(timeout);
+  }, [searchTerm]);
 
-      const filtered = mayoristas.filter(mayorista =>
-        mayorista.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (mayorista.apellidos && mayorista.apellidos.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        mayorista.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        mayorista.ciudad.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        mayorista.pais.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        mayorista.numero_documento.includes(searchTerm) ||
-        mayorista.telefono.includes(searchTerm) ||
-        (mayorista.descripcion && mayorista.descripcion.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (mayorista.intereses && mayorista.intereses.toLowerCase().includes(searchTerm.toLowerCase()))
-      );
-      setFilteredMayoristas(filtered);
-      setTotalItems(filtered.length);
-      setTotalPages(Math.ceil(filtered.length / pageSize));
-      setCurrentPage(1);
-
-    } else {
-      setFilteredMayoristas(mayoristas);
-      // No sobrescribir totalItems y totalPages cuando no hay búsqueda
-      // Estos valores ya vienen correctos de la API
-    }
-  }, [searchTerm, mayoristas, pageSize]);
+  // Otro término, otro conjunto de resultados: vuelve a la primera página.
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -272,16 +267,9 @@ const MayoristasSection: React.FC = () => {
     }
   };
 
-  const getCurrentPageMayoristas = () => {
-    // Si hay término de búsqueda, usar paginación local
-    if (searchTerm.trim()) {
-      const startIndex = (currentPage - 1) * pageSize;
-      const endIndex = startIndex + pageSize;
-      return filteredMayoristas.slice(startIndex, endIndex);
-    }
-    // Si no hay búsqueda, los datos ya vienen paginados de la API
-    return mayoristas;
-  };
+  // La búsqueda la resuelve el backend, así que la respuesta ya viene
+  // paginada tanto con término como sin él.
+  const getCurrentPageMayoristas = () => filteredMayoristas;
 
   return (
     <div className="space-y-8">

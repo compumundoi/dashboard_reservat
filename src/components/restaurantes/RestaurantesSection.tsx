@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Download, Plus, UtensilsCrossed } from 'lucide-react';
 import { RestauranteData } from '../../types/restaurante';
 import { restauranteService } from '../../services/restauranteService';
@@ -14,7 +14,6 @@ import * as XLSX from 'xlsx';
 
 const RestaurantesSection: React.FC = () => {
   // Estados principales
-  const [restaurantes, setRestaurantes] = useState<RestauranteData[]>([]);
   const [filteredRestaurantes, setFilteredRestaurantes] = useState<RestauranteData[]>([]);
   const [loading, setLoading] = useState(false);
   const [statsLoading, setStatsLoading] = useState(true);
@@ -29,6 +28,10 @@ const RestaurantesSection: React.FC = () => {
   // Estados de búsqueda
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearching, setIsSearching] = useState(false);
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  // Un término nuevo puede dejar en vuelo la petición anterior. Sólo la
+  // última pedida tiene derecho a pintar la tabla.
+  const ultimaPeticion = useRef(0);
 
   // Estados de modales
   const [detailModalOpen, setDetailModalOpen] = useState(false);
@@ -37,12 +40,13 @@ const RestaurantesSection: React.FC = () => {
   const [selectedRestauranteId, setSelectedRestauranteId] = useState<string | null>(null);
 
   // Cargar restaurantes
-  const loadRestaurantes = useCallback(async (page: number = currentPage, size: number = pageSize) => {
+  const loadRestaurantes = useCallback(async (page: number = currentPage, size: number = pageSize, busqueda: string = '') => {
+    const peticion = ++ultimaPeticion.current;
     try {
       setLoading(true);
-      const response = await restauranteService.getRestaurantes(page - 1, size);
+      const response = await restauranteService.getRestaurantes(page - 1, size, busqueda);
+      if (peticion !== ultimaPeticion.current) return;
 
-      setRestaurantes(response.restaurantes);
       setFilteredRestaurantes(response.restaurantes);
       setTotalPages(response.totalPages);
       setTotalItems(response.total);
@@ -59,39 +63,35 @@ const RestaurantesSection: React.FC = () => {
     }
   }, [currentPage, pageSize]);
 
-  // Efecto para cargar datos iniciales
   useEffect(() => {
-    loadRestaurantes();
-    // Simular carga de stats y charts
     setTimeout(() => setStatsLoading(false), 1000);
     setTimeout(() => setChartsLoading(false), 1200);
-  }, [loadRestaurantes]);
+  }, []);
 
-  // Efecto para recargar cuando cambia la página o el tamaño
+  // Se espera a que el usuario deje de tipear para no disparar un request
+  // por tecla.
   useEffect(() => {
-    if (currentPage > 0) {
-      loadRestaurantes(currentPage, pageSize);
-    }
-  }, [currentPage, pageSize, loadRestaurantes]);
+    setIsSearching(Boolean(searchTerm.trim()));
+    const timeout = setTimeout(() => setDebouncedSearch(searchTerm), 350);
+    return () => clearTimeout(timeout);
+  }, [searchTerm]);
 
-  // Manejar búsqueda
+  // Un término nuevo devuelve otro conjunto de resultados, así que la
+  // página actual deja de tener sentido.
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch]);
+
+  useEffect(() => {
+    loadRestaurantes(currentPage, pageSize, debouncedSearch).finally(() =>
+      setIsSearching(false),
+    );
+  }, [currentPage, pageSize, debouncedSearch, loadRestaurantes]);
+
+  // La búsqueda la resuelve el backend: alcanza todos los restaurantes y
+  // no sólo la página cargada.
   const handleSearch = (term: string) => {
     setSearchTerm(term);
-    setIsSearching(true);
-
-    if (term.trim() === '') {
-      setFilteredRestaurantes(restaurantes);
-    } else {
-      const filtered = restaurantes.filter(restaurante =>
-        restaurante.nombre.toLowerCase().includes(term.toLowerCase()) ||
-        restaurante.ciudad.toLowerCase().includes(term.toLowerCase()) ||
-        restaurante.tipo_cocina.toLowerCase().includes(term.toLowerCase()) ||
-        restaurante.email.toLowerCase().includes(term.toLowerCase())
-      );
-      setFilteredRestaurantes(filtered);
-    }
-
-    setTimeout(() => setIsSearching(false), 300);
   };
 
   // Manejar cambio de página

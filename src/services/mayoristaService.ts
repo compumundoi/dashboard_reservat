@@ -9,6 +9,13 @@ import {
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:8004/api/v1";
 
+// Devuelve el fragmento `&busqueda=...` ya codificado, o vacío si no hay
+// término. La búsqueda la resuelve el backend para que alcance todos los
+// registros y no sólo la página cargada.
+const paramBusqueda = (busqueda: string): string =>
+  busqueda.trim() ? `&busqueda=${encodeURIComponent(busqueda.trim())}` : "";
+
+
 // Interfaces para las respuestas de la API oficial
 interface ApiResponseList {
   mayoristas: MayoristaData[];
@@ -34,6 +41,7 @@ class MayoristaService {
   async getMayoristas(
     page: number = 0,
     size: number = 10,
+    busqueda: string = "",
   ): Promise<{
     mayoristas: MayoristaData[];
     total: number;
@@ -42,7 +50,7 @@ class MayoristaService {
   }> {
     try {
       const response = await fetch(
-        `${API_BASE_URL}/mayorista/listar?pagina=${page}&limite=${size}`,
+        `${API_BASE_URL}/mayorista/listar?pagina=${page}&limite=${size}${paramBusqueda(busqueda)}`,
         {
           method: "GET",
           headers: this.getAuthHeaders(),

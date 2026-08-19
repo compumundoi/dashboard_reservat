@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Package, Download, Plus } from "lucide-react";
 import Swal from "sweetalert2";
 import ServicioTable from "./ServicioTable";
@@ -34,6 +34,10 @@ const ServiciosSection: React.FC = () => {
   );
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  // Un término nuevo puede dejar en vuelo la petición de la página anterior.
+  // Sólo la última pedida tiene derecho a pintar la tabla.
+  const ultimaPeticion = useRef(0);
 
   // Estados de paginación
   const [currentPage, setCurrentPage] = useState(0);
@@ -63,18 +67,27 @@ const ServiciosSection: React.FC = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   // Cargar servicios
-  const loadServicios = async (page: number = 0, size: number = 5) => {
+  const loadServicios = async (
+    page: number = 0,
+    size: number = 5,
+    busqueda: string = "",
+  ) => {
+    const peticion = ++ultimaPeticion.current;
     try {
       setLoading(true);
-      const response = await listarServicios(page, size);
+      const response = await listarServicios(page, size, busqueda);
+      if (peticion !== ultimaPeticion.current) return;
+
       const processedData = procesarDatosServicios(response);
 
       setServicios(processedData.servicios);
       setFilteredServicios(processedData.servicios);
       setTotalItems(processedData.totalItems);
       setTotalPages(processedData.totalPages);
-      setCurrentPage(processedData.currentPage);
+      // La página la manda este componente; reflejar la de la respuesta
+      // deshacía el salto a la primera página al cambiar la búsqueda.
     } catch (error) {
+      if (peticion !== ultimaPeticion.current) return;
       console.error("Error al cargar servicios:", error);
       Swal.fire({
         icon: "error",
@@ -82,7 +95,7 @@ const ServiciosSection: React.FC = () => {
         text: "No se pudieron cargar los servicios",
       });
     } finally {
-      setLoading(false);
+      if (peticion === ultimaPeticion.current) setLoading(false);
     }
   };
 
@@ -106,47 +119,31 @@ const ServiciosSection: React.FC = () => {
     }
   };
 
-  // Efecto para carga inicial
+  // La búsqueda se resuelve en el backend, así que alcanza todos los
+  // servicios y no solo la página cargada. Se espera a que el usuario deje
+  // de tipear para no disparar un request por tecla.
   useEffect(() => {
-    loadServicios(currentPage, pageSize);
+    const timeout = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+    }, 350);
+    return () => clearTimeout(timeout);
+  }, [searchTerm]);
+
+  // Un término nuevo devuelve un conjunto de resultados distinto, así que
+  // la página actual deja de tener sentido y se vuelve a la primera.
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [debouncedSearch]);
+
+  useEffect(() => {
+    loadServicios(currentPage, pageSize, debouncedSearch);
+  }, [currentPage, pageSize, debouncedSearch]);
+
+  // Las tarjetas y gráficos resumen el catálogo completo, así que no
+  // dependen del término de búsqueda.
+  useEffect(() => {
     loadStatsAndCharts();
-  }, [currentPage, pageSize]);
-
-  // Efecto para cambios de página/tamaño
-  useEffect(() => {
-    if (!searchTerm) {
-      loadServicios(currentPage, pageSize);
-    }
-  }, [currentPage, pageSize, searchTerm]);
-
-  // Efecto para filtrado local por búsqueda
-  useEffect(() => {
-    if (searchTerm) {
-      const filtered = servicios.filter(
-        (servicio) =>
-          servicio.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          servicio.descripcion
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase()) ||
-          servicio.tipo_servicio
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase()) ||
-          servicio.ciudad.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          servicio.departamento
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase()) ||
-          servicio.proveedorNombre
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase()) ||
-          servicio.proveedorEmail
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase()),
-      );
-      setFilteredServicios(filtered);
-    } else {
-      setFilteredServicios(servicios);
-    }
-  }, [searchTerm, servicios]);
+  }, []);
 
   // Handlers de paginación
   const handlePageChange = (page: number) => {
@@ -225,7 +222,7 @@ const ServiciosSection: React.FC = () => {
           }
         });
         // Recargar datos
-        loadServicios(currentPage, pageSize);
+        loadServicios(currentPage, pageSize, debouncedSearch);
         loadStatsAndCharts();
       } catch (error) {
         console.error(error);
@@ -259,7 +256,7 @@ const ServiciosSection: React.FC = () => {
       });
       setShowCreateModal(false);
       // Recargar datos
-      loadServicios(currentPage, pageSize);
+      loadServicios(currentPage, pageSize, debouncedSearch);
       loadStatsAndCharts();
     } catch (error) {
       console.error(error);
@@ -293,7 +290,7 @@ const ServiciosSection: React.FC = () => {
       setShowEditModal(false);
       setSelectedServicio(null);
       // Recargar datos
-      loadServicios(currentPage, pageSize);
+      loadServicios(currentPage, pageSize, debouncedSearch);
       loadStatsAndCharts();
     } catch (error) {
       console.error(error);

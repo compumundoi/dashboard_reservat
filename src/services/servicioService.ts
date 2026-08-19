@@ -94,9 +94,18 @@ export const crearServicio = async (
 export const listarServicios = async (
   pagina: number = 0,
   limite: number = 10,
+  busqueda: string = "",
 ): Promise<ResponseListServicios> => {
+  const params = new URLSearchParams({
+    pagina: String(pagina),
+    limite: String(limite),
+  });
+  if (busqueda.trim()) {
+    params.set("busqueda", busqueda.trim());
+  }
+
   const response = await fetch(
-    `${API_BASE_URL}/servicios/listar/?pagina=${pagina}&limite=${limite}`,
+    `${API_BASE_URL}/servicios/listar/?${params.toString()}`,
     {
       method: "GET",
       headers: getAuthHeaders(),

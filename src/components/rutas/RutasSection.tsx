@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Plus, Download, Route } from 'lucide-react';
 import { RutaData, RutaStats as RutaStatsType, RutaChartData } from '../../types/ruta';
 import { rutaService } from '../../services/rutaService';
@@ -13,7 +13,6 @@ import { Button } from '../ui/Button';
 
 const RutasSection: React.FC = () => {
   // Estados principales
-  const [rutas, setRutas] = useState<RutaData[]>([]);
   const [filteredRutas, setFilteredRutas] = useState<RutaData[]>([]);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -21,6 +20,9 @@ const RutasSection: React.FC = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [totalItems, setTotalItems] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  // Sólo la última petición pedida puede pintar la tabla.
+  const ultimaPeticion = useRef(0);
 
   // Estados para estadísticas y gráficos
   const [stats, setStats] = useState<RutaStatsType>({
@@ -43,19 +45,16 @@ const RutasSection: React.FC = () => {
   const [selectedRutaId, setSelectedRutaId] = useState<string | null>(null);
 
   // Cargar rutas
-  const loadRutas = async (page: number = currentPage, size: number = pageSize) => {
+  const loadRutas = async (page: number = currentPage, size: number = pageSize, busqueda: string = '') => {
+    const peticion = ++ultimaPeticion.current;
     try {
       setLoading(true);
-      const response = await rutaService.getRutas(page - 1, size); // API usa paginación 0-based
+      const response = await rutaService.getRutas(page - 1, size, busqueda); // API usa paginación 0-based
+      if (peticion !== ultimaPeticion.current) return;
 
-      setRutas(response.rutas);
       setTotalItems(response.total);
       setTotalPages(Math.ceil(response.total / size));
-
-      // Si no hay búsqueda activa, usar los datos paginados de la API
-      if (!searchTerm) {
-        setFilteredRutas(response.rutas);
-      }
+      setFilteredRutas(response.rutas);
 
     } catch (error) {
       console.error('Error loading rutas:', error);
@@ -129,39 +128,32 @@ const RutasSection: React.FC = () => {
     }
   };
 
-  // Filtrado local para búsqueda
+  // Se espera a que el usuario deje de tipear para no pedir por tecla.
   useEffect(() => {
-    if (searchTerm) {
-      const filtered = rutas.filter(ruta =>
-        ruta.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        ruta.descripcion.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        ruta.origen.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        ruta.destino.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        ruta.puntos_interes.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setFilteredRutas(filtered);
-      setTotalItems(filtered.length);
-      setTotalPages(Math.ceil(filtered.length / pageSize));
-    } else {
-      setFilteredRutas(rutas);
-      // NO llamar loadRutas aquí para evitar bucle infinito
-      // Los valores de paginación se restaurarán cuando se carguen nuevos datos
-    }
-  }, [searchTerm, rutas, pageSize]);
+    const timeout = setTimeout(() => setDebouncedSearch(searchTerm), 350);
+    return () => clearTimeout(timeout);
+  }, [searchTerm]);
+
+  // Otro término, otro conjunto de resultados: vuelve a la primera página.
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch]);
+
+  // La búsqueda la resuelve el backend: alcanza todas las rutas y no sólo
+  // la página cargada.
+  useEffect(() => {
+    loadRutas(currentPage, pageSize, debouncedSearch);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, pageSize, debouncedSearch]);
 
   // Cargar datos iniciales
+  // Las tarjetas y gráficos resumen todo, no dependen de la búsqueda.
+  // La carga del listado la maneja el efecto de arriba, que sí conoce el
+  // término: recargar acá sin él pisaba los resultados de la búsqueda.
   useEffect(() => {
-    loadRutas();
     loadStats();
     loadChartData();
   }, []);
-
-  // Cargar rutas cuando cambie la página o el tamaño de página (solo si no hay búsqueda activa)
-  useEffect(() => {
-    if (!searchTerm) {
-      loadRutas(currentPage, pageSize);
-    }
-  }, [currentPage, pageSize]);
 
   // Handlers
   const handlePageChange = (page: number) => {
@@ -195,7 +187,7 @@ const RutasSection: React.FC = () => {
   };
 
   const handleDelete = async (id: string) => {
-    const ruta = rutas.find(r => r.id === id);
+    const ruta = filteredRutas.find(r => r.id === id);
     const rutaName = ruta ? ruta.nombre : 'esta ruta';
 
     const result = await Swal.fire({
@@ -363,7 +355,7 @@ const RutasSection: React.FC = () => {
           setDetailModalOpen(false);
           setSelectedRutaId(null);
         }}
-        ruta={selectedRutaId ? rutas.find(r => r.id === selectedRutaId) || null : null}
+        ruta={selectedRutaId ? filteredRutas.find(r => r.id === selectedRutaId) || null : null}
       />
 
       <EditRutaModal
@@ -372,7 +364,7 @@ const RutasSection: React.FC = () => {
           setEditModalOpen(false);
           setSelectedRutaId(null);
         }}
-        ruta={selectedRutaId ? rutas.find(r => r.id === selectedRutaId) || null : null}
+        ruta={selectedRutaId ? filteredRutas.find(r => r.id === selectedRutaId) || null : null}
         onSave={handleDataChange}
       />
 

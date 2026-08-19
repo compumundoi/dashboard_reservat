@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Plus, Download, Image } from 'lucide-react';
 import Swal from 'sweetalert2';
 import FotoTable from './FotoTable';
@@ -21,13 +21,15 @@ import { FotoData, DatosFoto, ActualizarFoto, FotoStatsData, FotoChartData } fro
 
 const FotosSection: React.FC = () => {
   // Estados principales
-  const [fotos, setFotos] = useState<FotoData[]>([]);
   const [filteredFotos, setFilteredFotos] = useState<FotoData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Estados de paginación
   const [currentPage, setCurrentPage] = useState(0);
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  // Sólo la última petición pedida puede pintar la tabla.
+  const ultimaPeticion = useRef(0);
   const [pageSize, setPageSize] = useState(5);
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
@@ -55,15 +57,16 @@ const FotosSection: React.FC = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   // Cargar fotos
-  const loadFotos = async (page: number, size: number) => {
+  const loadFotos = async (page: number, size: number, busqueda: string = '') => {
+    const peticion = ++ultimaPeticion.current;
     try {
       setLoading(true);
       setError(null);
-      
-      const response = await listarFotos(page, size);
+
+      const response = await listarFotos(page, size, busqueda);
+      if (peticion !== ultimaPeticion.current) return;
       const { fotos: fotosData, totalItems: total, totalPages: pages, currentPage: current } = procesarDatosFotos(response);
       
-      setFotos(fotosData);
       setFilteredFotos(fotosData);
       setTotalItems(total);
       setTotalPages(pages);
@@ -101,32 +104,27 @@ const FotosSection: React.FC = () => {
     }
   };
 
-  // Efecto para carga inicial
+  // Las tarjetas resumen todo el catálogo, no dependen de la búsqueda.
   useEffect(() => {
-    loadFotos(currentPage, pageSize);
     loadStatsAndCharts();
   }, []);
 
-  // Efecto para paginación (solo cuando no hay búsqueda)
+  // Se espera a que el usuario deje de tipear para no pedir por tecla.
   useEffect(() => {
-    if (!searchTerm) {
-      loadFotos(currentPage, pageSize);
-    }
-  }, [currentPage, pageSize]);
+    const timeout = setTimeout(() => setDebouncedSearch(searchTerm), 350);
+    return () => clearTimeout(timeout);
+  }, [searchTerm]);
 
-  // Efecto para filtrado de búsqueda
+  // Otro término, otro conjunto de resultados: la página vuelve a la primera.
   useEffect(() => {
-    if (searchTerm) {
-      const filtered = fotos.filter(foto =>
-        foto.descripcion.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        foto.servicioNombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        foto.url.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setFilteredFotos(filtered);
-    } else {
-      setFilteredFotos(fotos);
-    }
-  }, [searchTerm, fotos]);
+    setCurrentPage(0);
+  }, [debouncedSearch]);
+
+  // La búsqueda la resuelve el backend, así que alcanza todas las fotos y
+  // no sólo la página cargada.
+  useEffect(() => {
+    loadFotos(currentPage, pageSize, debouncedSearch);
+  }, [currentPage, pageSize, debouncedSearch]);
 
   // Manejar cambio de página
   const handlePageChange = (page: number) => {

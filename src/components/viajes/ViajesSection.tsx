@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Plus, Download, MapPin } from 'lucide-react';
 import { ViajeData, ViajeStatsData, ViajeChartData } from '../../types/viaje';
 import { viajeService } from '../../services/viajeService';
@@ -25,8 +24,9 @@ const ViajesSection: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
 
   // Estados para filtrado local
-  const [filteredViajes, setFilteredViajes] = useState<ViajeData[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  // Sólo la última petición pedida puede pintar la tabla.
+  const ultimaPeticion = useRef(0);
 
   // Estados de estadísticas y gráficos
   const [stats, setStats] = useState<ViajeStatsData>({
@@ -47,11 +47,13 @@ const ViajesSection: React.FC = () => {
   const [selectedViaje, setSelectedViaje] = useState<ViajeData | null>(null);
 
   // Cargar viajes
-  const loadViajes = useCallback(async (page: number = currentPage, size: number = pageSize) => {
+  const loadViajes = useCallback(async (page: number = currentPage, size: number = pageSize, busqueda: string = '') => {
+    const peticion = ++ultimaPeticion.current;
     try {
       setLoading(true);
 
-      const response = await viajeService.getViajes(page - 1, size);
+      const response = await viajeService.getViajes(page - 1, size, busqueda);
+      if (peticion !== ultimaPeticion.current) return;
 
       // Procesar datos para la UI
       const processedViajes = response.viajes.map(viaje =>
@@ -81,42 +83,36 @@ const ViajesSection: React.FC = () => {
     }
   }, [currentPage, pageSize]);
 
-  // Efecto para cargar datos iniciales
+  // Se espera a que el usuario deje de tipear para no pedir por tecla.
   useEffect(() => {
-    loadViajes();
-  }, [loadViajes]);
+    const timeout = setTimeout(() => setDebouncedSearch(searchTerm), 350);
+    return () => clearTimeout(timeout);
+  }, [searchTerm]);
 
-  // Efecto para búsqueda local
+  // Otro término, otro conjunto de resultados: vuelve a la primera página.
   useEffect(() => {
-    if (searchTerm.trim()) {
-      setIsSearching(true);
-      const filtered = viajeService.searchViajes(viajes, searchTerm);
-      setFilteredViajes(filtered);
-    } else {
-      setIsSearching(false);
-      setFilteredViajes([]);
-    }
-  }, [searchTerm, viajes]);
+    setCurrentPage(1);
+  }, [debouncedSearch]);
+
+  // La búsqueda la resuelve el backend: alcanza todos los viajes y no sólo
+  // la página cargada.
+  useEffect(() => {
+    loadViajes(currentPage, pageSize, debouncedSearch);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, pageSize, debouncedSearch]);
 
   // Handlers
   const handleSearch = (term: string) => {
     setSearchTerm(term);
-    setCurrentPage(1);
   };
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    if (!isSearching) {
-      loadViajes(page, pageSize);
-    }
   };
 
   const handlePageSizeChange = (size: number) => {
     setPageSize(size);
     setCurrentPage(1);
-    if (!isSearching) {
-      loadViajes(1, size);
-    }
   };
 
   const handleViewDetails = (viaje: ViajeData) => {
@@ -218,7 +214,7 @@ const ViajesSection: React.FC = () => {
 
   const handleExport = async () => {
     try {
-      const allViajes = isSearching ? filteredViajes : viajes;
+      const allViajes = viajes;
       await viajeService.exportToExcel(allViajes);
 
       Swal.fire({
@@ -239,9 +235,9 @@ const ViajesSection: React.FC = () => {
   };
 
   // Datos para mostrar (filtrados o todos)
-  const displayViajes = isSearching ? filteredViajes : viajes;
-  const displayTotalItems = isSearching ? filteredViajes.length : totalItems;
-  const displayTotalPages = isSearching ? Math.ceil(filteredViajes.length / pageSize) : totalPages;
+  const displayViajes = viajes;
+  const displayTotalItems = totalItems;
+  const displayTotalPages = totalPages;
 
   return (
     <div className="space-y-6">
