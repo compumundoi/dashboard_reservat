@@ -45,7 +45,7 @@ export const UserTable: React.FC<UserTableProps> = ({
   onPageSizeChange
 }) => {
   const [localSearchTerm, setLocalSearchTerm] = useState(searchTerm);
-  const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [searchTimeout, setSearchTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
 
   const safeUsers = Array.isArray(users) ? users : [];
 

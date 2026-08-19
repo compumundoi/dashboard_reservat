@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar, MapPin, Users, DollarSign, User, Clock, CheckCircle, XCircle, Route, Truck, Info, Hash } from 'lucide-react';
+import { Calendar, Users, User, Clock, CheckCircle, XCircle, Route, Truck, Info, Hash } from 'lucide-react';
 import { ViajeDetailModalProps, ESTADOS_VIAJE } from '../../types/viaje';
 import { Modal } from '../ui/Modal';
 import { Badge } from '../ui/Badge';
