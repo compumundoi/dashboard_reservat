@@ -4,6 +4,7 @@ import { ExperienceTableProps } from '../../types/experience';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '../ui/Table';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
+import ServiciosDelProveedorModal from '../common/ServiciosDelProveedorModal';
 import { Input } from '../ui/Input';
 import { cn } from '../../lib/utils';
 
@@ -31,6 +32,9 @@ export const ExperienceTable: React.FC<ExperienceTableProps> = ({
   // early return desmontaría el buscador y el usuario perdería el foco en
   // mitad de lo que está escribiendo, porque ahora cada búsqueda consulta
   // al servidor y enciende el estado de carga.
+  // Proveedor cuyo listado de servicios se está mirando. Vive acá porque el
+  // botón es de la fila y no necesita subir a la sección.
+  const [proveedorServicios, setProveedorServicios] = useState<{ id: string; nombre: string } | null>(null);
   const [yaCargoUnaVez, setYaCargoUnaVez] = useState(false);
   useEffect(() => {
     if (!loading) setYaCargoUnaVez(true);
@@ -180,6 +184,16 @@ export const ExperienceTable: React.FC<ExperienceTableProps> = ({
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end gap-1">
                     {/* View - Blue */}
+                                        {/* El id de la fila ES el del proveedor en este esquema. */}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-primary-600 hover:text-primary-700 hover:bg-primary-50"
+                      title="Ver servicios ofrecidos"
+                      onClick={() => setProveedorServicios({ id: exp.id_experiencia, nombre: exp.proveedor_nombre || '' })}
+                    >
+                      <Package className="h-4 w-4" />
+                    </Button>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -281,6 +295,13 @@ export const ExperienceTable: React.FC<ExperienceTableProps> = ({
           </div>
         </div>
       )}
+
+      <ServiciosDelProveedorModal
+        isOpen={proveedorServicios !== null}
+        onClose={() => setProveedorServicios(null)}
+        proveedorId={proveedorServicios?.id ?? null}
+        proveedorNombre={proveedorServicios?.nombre ?? ''}
+      />
     </div>
   );
 };
