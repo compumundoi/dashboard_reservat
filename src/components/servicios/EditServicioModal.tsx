@@ -226,29 +226,20 @@ const EditServicioModal: React.FC<EditServicioModalProps> = ({ isOpen, onClose, 
                 error={errors.proveedor_id}
               />
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Input
-                  label="Precio Unitario *"
-                  type="number"
-                  name="precio"
-                  value={formData.precio}
-                  onChange={handleInputChange}
-                  error={errors.precio}
-                  min="0"
-                  placeholder="0"
-                />
-                <Select
-                  label="Moneda *"
-                  name="moneda"
-                  value={formData.moneda}
-                  onChange={handleInputChange}
-                  options={[
-                    { value: 'COP', label: 'COP - Peso Colombiano' },
-                    { value: 'USD', label: 'USD - Dólar Americano' },
-                    { value: 'EUR', label: 'EUR - Euro' }
-                  ]}
-                />
-              </div>
+              {/* Sin campo de moneda, igual que el formulario de alta. La
+                  moneda guardada viaja intacta en el payload: pisarla con COP
+                  convertiría 79 USD en 79 COP sin tocar el número. Por eso el
+                  label la nombra, en vez de dar por sentado que es COP. */}
+              <Input
+                label={`Precio Unitario (${formData.moneda || 'COP'}) *`}
+                type="number"
+                name="precio"
+                value={formData.precio}
+                onChange={handleInputChange}
+                error={errors.precio}
+                min="0"
+                placeholder="0"
+              />
 
               <Select
                 label="Nivel de Relevancia"
