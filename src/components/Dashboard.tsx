@@ -13,6 +13,7 @@ import ViajesSection from './viajes/ViajesSection';
 import RestriccionesSection from './restricciones/RestriccionesSection';
 import FotosSection from './fotos/FotosSection';
 import ServiciosSection from './servicios/ServiciosSection';
+import ReservasSection from './reservas/ReservasSection';
 import { Button, Input } from './ui';
 
 interface DashboardProps {
@@ -44,6 +45,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
         );
       case 'usuarios':
         return <UsersSection />;
+      case 'reservas':
+        return <ReservasSection adminId={user.id} />;
       case 'servicios':
         return <ServiciosSection />;
       case 'experiencias':
@@ -77,6 +80,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
     const titles: Record<string, string> = {
       'dashboard': 'Panel Principal',
       'usuarios': 'Gestión de Usuarios',
+      'reservas': 'Solicitudes de Reserva',
       'servicios': 'Catálogo de Servicios',
       'experiencias': 'Experiencias Turísticas',
       'hoteles': 'Alojamientos y Hoteles',

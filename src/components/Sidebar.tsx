@@ -10,6 +10,7 @@ import {
   Route,
   MapPin,
   Calendar,
+  ClipboardList,
   Image,
   ChevronLeft,
   ChevronRight,
@@ -27,6 +28,7 @@ interface SidebarProps {
 const menuItems = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'usuarios', label: 'Usuarios', icon: Users },
+  { id: 'reservas', label: 'Reservas', icon: ClipboardList },
   { id: 'servicios', label: 'Servicios', icon: Settings },
   { id: 'experiencias', label: 'Experiencias', icon: Star },
   { id: 'hoteles', label: 'Hoteles', icon: Building },
