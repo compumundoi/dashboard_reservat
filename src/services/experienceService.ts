@@ -10,6 +10,13 @@ import { getCookie } from "../utils/auth";
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:8014/api/v1";
 
+// Devuelve el fragmento `&busqueda=...` ya codificado, o vacío si no hay
+// término. La búsqueda la resuelve el backend para que alcance todos los
+// registros y no sólo la página cargada.
+const paramBusqueda = (busqueda: string): string =>
+  busqueda.trim() ? `&busqueda=${encodeURIComponent(busqueda.trim())}` : "";
+
+
 class ExperienceService {
   async createExperience(payload: any) {
     try {
@@ -88,7 +95,7 @@ class ExperienceService {
     }));
   }
 
-  async getExperiences(page: number, size: number) {
+  async getExperiences(page: number, size: number, busqueda: string = "") {
     try {
       console.log("📊 === SERVICIO: Obteniendo experiencias ===");
       console.log("📊 Parámetros:", { page, size });
@@ -98,7 +105,7 @@ class ExperienceService {
       );
 
       const response = await fetch(
-        `${API_BASE_URL}/experiencias/listar/?pagina=${page}&limite=${size}`,
+        `${API_BASE_URL}/experiencias/listar/?pagina=${page}&limite=${size}${paramBusqueda(busqueda)}`,
         {
           method: "GET",
           headers: this.getAuthHeaders(),

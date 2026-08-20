@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { ExperienceStats } from './ExperienceStats';
 import { CreateExperienceModal } from './CreateExperienceModal';
 import { ExperienceTable } from './ExperienceTable';
@@ -22,6 +22,9 @@ export const ExperiencesSection: React.FC = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearching, setIsSearching] = useState(false);
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  // Sólo la última petición pedida puede pintar la tabla.
+  const ultimaPeticion = useRef(0);
 
   // Modals state
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -46,10 +49,14 @@ export const ExperiencesSection: React.FC = () => {
   const [chartsLoading, setChartsLoading] = useState(true);
 
   // --- Helpers ---
+  // La búsqueda la resuelve el backend: alcanza todas las experiencias y no
+  // sólo las primeras 300 que antes se traían para filtrar en el cliente.
   const loadExperiences = useCallback(async () => {
+    const peticion = ++ultimaPeticion.current;
     try {
       setLoading(true);
-      const experiencesData = await experienceService.getExperiences(currentPage, pageSize);
+      const experiencesData = await experienceService.getExperiences(currentPage, pageSize, debouncedSearch);
+      if (peticion !== ultimaPeticion.current) return;
       if (experiencesData && typeof experiencesData === 'object' && 'experiencias' in experiencesData) {
         setExperiences(experiencesData.experiencias || []);
         setTotalExperiences(experiencesData.total || 0);
@@ -80,7 +87,7 @@ export const ExperiencesSection: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, pageSize]);
+  }, [currentPage, pageSize, debouncedSearch]);
 
   const loadStats = useCallback(async () => {
     try {
@@ -100,82 +107,6 @@ export const ExperiencesSection: React.FC = () => {
     }
   }, []);
 
-  const handleSearch = useCallback(async (term: string) => {
-    if (!term.trim()) {
-      setIsSearching(false);
-      setSearchTerm('');
-      loadExperiences();
-      return;
-    }
-
-    try {
-      setIsSearching(true);
-      setLoading(true);
-
-      // Obtener todas las experiencias para búsqueda local
-      const allExperiencesData = await experienceService.getExperiences(1, 300);
-      const allExperiences = Array.isArray(allExperiencesData)
-        ? allExperiencesData
-        : (allExperiencesData as any).experiencias || [];
-
-      // Filtrar localmente
-      const filteredExperiences = allExperiences.filter((exp: ExperienciaCompleta) =>
-        exp.proveedor_nombre.toLowerCase().includes(term.toLowerCase()) ||
-        exp.proveedor_ciudad.toLowerCase().includes(term.toLowerCase()) ||
-        exp.proveedor_pais.toLowerCase().includes(term.toLowerCase()) ||
-        exp.idioma.toLowerCase().includes(term.toLowerCase()) ||
-        exp.dificultad.toLowerCase().includes(term.toLowerCase()) ||
-        exp.punto_de_encuentro.toLowerCase().includes(term.toLowerCase())
-      );
-
-      // Aplicar paginación manual
-      const startIndex = (currentPage - 1) * pageSize;
-      const endIndex = startIndex + pageSize;
-      const paginatedResults = filteredExperiences.slice(startIndex, endIndex);
-
-      setExperiences(paginatedResults);
-      setTotalExperiences(filteredExperiences.length);
-      setTotalPages(Math.ceil(filteredExperiences.length / pageSize));
-
-      if (filteredExperiences.length === 0) {
-        Swal.fire({
-          title: 'Sin resultados',
-          text: `No se encontraron experiencias que coincidan con "${term}"`,
-          icon: 'info',
-          confirmButtonColor: '#3b82f6',
-          confirmButtonText: 'Entendido',
-          customClass: {
-            popup: 'rounded-xl shadow-2xl',
-            title: 'text-xl font-bold text-gray-900',
-            confirmButton: 'px-6 py-3 rounded-lg font-medium transition-all duration-200 hover:shadow-lg',
-          },
-          buttonsStyling: false,
-          timer: 3000,
-          timerProgressBar: true
-        });
-      }
-    } catch (error) {
-      console.error('Error en búsqueda local:', error);
-      setExperiences([]);
-      setTotalExperiences(0);
-      setTotalPages(0);
-      Swal.fire({
-        title: 'Error',
-        text: 'Error al buscar experiencias',
-        icon: 'error',
-        confirmButtonColor: '#dc2626',
-        confirmButtonText: 'Entendido',
-        customClass: {
-          popup: 'rounded-xl shadow-2xl',
-          title: 'text-xl font-bold text-gray-900',
-          confirmButton: 'px-6 py-3 rounded-lg font-medium transition-all duration-200 hover:shadow-lg',
-        },
-        buttonsStyling: false
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [currentPage, pageSize, loadExperiences]);
 
   const loadChartsData = useCallback(async () => {
     try {
@@ -215,17 +146,16 @@ export const ExperiencesSection: React.FC = () => {
   }, []);
 
   // --- Effects ---
+  // Se espera a que el usuario deje de tipear para no pedir por tecla.
   useEffect(() => {
-    if (!isSearching) {
-      loadExperiences();
-    }
-  }, [isSearching, loadExperiences]);
+    setIsSearching(Boolean(searchTerm.trim()));
+    const timeout = setTimeout(() => setDebouncedSearch(searchTerm), 350);
+    return () => clearTimeout(timeout);
+  }, [searchTerm]);
 
   useEffect(() => {
-    if (searchTerm.trim()) {
-      handleSearch(searchTerm);
-    }
-  }, [searchTerm, handleSearch]);
+    loadExperiences();
+  }, [loadExperiences]);
 
   useEffect(() => {
     loadStats();
@@ -234,14 +164,8 @@ export const ExperiencesSection: React.FC = () => {
 
   const handleSearchChange = (term: string) => {
     setSearchTerm(term);
+    // Otro término, otro conjunto de resultados: vuelve a la primera página.
     setCurrentPage(1);
-
-    if (!term.trim()) {
-      setIsSearching(false);
-      loadExperiences();
-    } else {
-      setIsSearching(true);
-    }
   };
 
   const clearSearch = () => {

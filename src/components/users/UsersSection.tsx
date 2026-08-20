@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { UserStats } from './UserStats';
 import { UserTable } from './UserTable';
 import { UserCharts } from './UserCharts';
@@ -22,6 +22,9 @@ export const UsersSection: React.FC = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearching, setIsSearching] = useState(false);
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  // Sólo la última petición pedida puede pintar la tabla.
+  const ultimaPeticion = useRef(0);
 
   // Estados para estadísticas
   const [stats, setStats] = useState({
@@ -49,44 +52,33 @@ export const UsersSection: React.FC = () => {
     }
   }, []);
 
+  // La búsqueda la resuelve el backend: alcanza a todos los usuarios y no
+  // sólo a los de la página cargada. Antes traía los primeros 1000 y
+  // filtraba en el cliente, así que a partir de ahí dejaba de encontrar
+  // gente sin avisar.
   const loadUsers = useCallback(async () => {
+    const peticion = ++ultimaPeticion.current;
     try {
       setLoading(true);
-      if (searchTerm.trim()) {
-        const allUsersData = await userService.getUsers(1, 1000);
-        const allUsers = Array.isArray(allUsersData) ? allUsersData : (allUsersData?.usuarios || []);
+      const usersData = await userService.getUsers(currentPage, pageSize, debouncedSearch);
+      if (peticion !== ultimaPeticion.current) return;
 
-        const filteredUsers = allUsers.filter((user: User) =>
-          user.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          user.apellido.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          user.tipo_usuario.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-
-        const startIndex = (currentPage - 1) * pageSize;
-        const endIndex = startIndex + pageSize;
-
-        setUsers(filteredUsers.slice(startIndex, endIndex));
-        setTotalUsers(filteredUsers.length);
-        setTotalPages(Math.ceil(filteredUsers.length / pageSize));
-      } else {
-        const usersData = await userService.getUsers(currentPage, pageSize);
-        if (usersData && typeof usersData === 'object' && 'usuarios' in usersData) {
-          setUsers(usersData.usuarios || []);
-          setTotalUsers(usersData.total || 0);
-          setTotalPages(Math.ceil((usersData.total || 0) / pageSize));
-        } else if (Array.isArray(usersData)) {
-          setUsers(usersData);
-          setTotalUsers(usersData.length);
-          setTotalPages(1);
-        }
+      if (usersData && typeof usersData === 'object' && 'usuarios' in usersData) {
+        setUsers(usersData.usuarios || []);
+        setTotalUsers(usersData.total || 0);
+        setTotalPages(Math.ceil((usersData.total || 0) / pageSize));
+      } else if (Array.isArray(usersData)) {
+        setUsers(usersData);
+        setTotalUsers(usersData.length);
+        setTotalPages(1);
       }
     } catch (error) {
+      if (peticion !== ultimaPeticion.current) return;
       console.error('Error cargando usuarios:', error);
     } finally {
-      setLoading(false);
+      if (peticion === ultimaPeticion.current) setLoading(false);
     }
-  }, [currentPage, pageSize, searchTerm]);
+  }, [currentPage, pageSize, debouncedSearch]);
 
   const loadChartsData = useCallback(async () => {
     try {
@@ -145,11 +137,23 @@ export const UsersSection: React.FC = () => {
     }
   }, []);
 
+  // Se espera a que el usuario deje de tipear para no pedir por tecla.
+  useEffect(() => {
+    const timeout = setTimeout(() => setDebouncedSearch(searchTerm), 350);
+    return () => clearTimeout(timeout);
+  }, [searchTerm]);
+
   useEffect(() => {
     loadUsers();
+  }, [loadUsers]);
+
+  // Las tarjetas y gráficos resumen el padrón completo: no dependen de la
+  // búsqueda. Atarlas a loadUsers hacía que cada tecleo se trajera 1000
+  // registros de más.
+  useEffect(() => {
     loadStats();
     loadChartsData();
-  }, [loadUsers, loadStats, loadChartsData]);
+  }, [loadStats, loadChartsData]);
 
   const handleCreateUser = async (userData: any) => {
     try {

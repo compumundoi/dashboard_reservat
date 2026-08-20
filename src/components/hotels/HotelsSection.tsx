@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { hotelService } from '../../services/hotelService';
 import { HotelUnificado } from '../../types/hotel';
 import { HotelTable } from './HotelTable';
@@ -15,7 +15,6 @@ import * as XLSX from 'xlsx';
 
 export const HotelsSection: React.FC = () => {
   const [hotels, setHotels] = useState<HotelUnificado[]>([]);
-  const [filtered, setFiltered] = useState<HotelUnificado[]>([]);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
@@ -28,22 +27,60 @@ export const HotelsSection: React.FC = () => {
   const [createLoading, setCreateLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearching, setIsSearching] = useState(false);
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [totalHotels, setTotalHotels] = useState(0);
+  const [resumen, setResumen] = useState({ total: 0, verificadas: 0, recep24: 0, conPiscina: 0 });
+  // Sólo la última petición pedida puede pintar la tabla.
+  const ultimaPeticion = useRef(0);
+
+  // La búsqueda y la paginación las resuelve el backend: antes se traía el
+  // catálogo entero y se filtraba y paginaba en el cliente.
+  const cargarHoteles = useCallback(async () => {
+    const peticion = ++ultimaPeticion.current;
+    try {
+      setLoading(true);
+      const { hoteles, total } = await hotelService.getHotels(currentPage, pageSize, debouncedSearch);
+      if (peticion !== ultimaPeticion.current) return;
+      setHotels(hoteles);
+      setTotalHotels(total);
+    } catch (error) {
+      if (peticion !== ultimaPeticion.current) return;
+      console.error('Error loading hotels:', error);
+    } finally {
+      if (peticion === ultimaPeticion.current) setLoading(false);
+    }
+  }, [currentPage, pageSize, debouncedSearch]);
+
+  // Las tarjetas resumen todo el catálogo, así que no dependen ni de la
+  // página ni del término de búsqueda.
+  const cargarResumen = useCallback(async () => {
+    try {
+      const { hoteles, total } = await hotelService.getHotels(1, 1000);
+      setResumen({
+        total,
+        verificadas: hoteles.filter(h => h.verificado).length,
+        recep24: hoteles.filter(h => h.recepcion_24_horas).length,
+        conPiscina: hoteles.filter(h => h.piscina).length,
+      });
+    } catch (error) {
+      console.error('Error cargando resumen de hoteles:', error);
+    }
+  }, []);
+
+  // Se espera a que el usuario deje de tipear para no pedir por tecla.
+  useEffect(() => {
+    setIsSearching(Boolean(searchTerm.trim()));
+    const timeout = setTimeout(() => setDebouncedSearch(searchTerm), 350);
+    return () => clearTimeout(timeout);
+  }, [searchTerm]);
 
   useEffect(() => {
-    const fetchHotels = async () => {
-      try {
-        setLoading(true);
-        const data = await hotelService.getHotels(1, 300);
-        setHotels(data);
-        setFiltered(data);
-      } catch (error) {
-        console.error('Error loading hotels:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchHotels();
-  }, []);
+    cargarHoteles().finally(() => setIsSearching(false));
+  }, [cargarHoteles]);
+
+  useEffect(() => {
+    cargarResumen();
+  }, [cargarResumen]);
 
   const handleViewHotel = (id: string) => {
     setSelectedHotelId(id);
@@ -57,28 +94,12 @@ export const HotelsSection: React.FC = () => {
 
   const handleSearchChange = (term: string) => {
     setSearchTerm(term);
-    setIsSearching(true);
+    // Otro término, otro conjunto de resultados: vuelve a la primera página.
     setCurrentPage(1);
-
-    if (term.trim() === '') {
-      setFiltered(hotels);
-      setIsSearching(false);
-    } else {
-      const filtered = hotels.filter(hotel =>
-        hotel.nombre_proveedor.toLowerCase().includes(term.toLowerCase()) ||
-        hotel.ciudad.toLowerCase().includes(term.toLowerCase()) ||
-        hotel.pais.toLowerCase().includes(term.toLowerCase()) ||
-        (hotel.email && hotel.email.toLowerCase().includes(term.toLowerCase()))
-      );
-      setFiltered(filtered);
-      setIsSearching(false);
-    }
   };
 
   const handleClearSearch = () => {
     setSearchTerm('');
-    setIsSearching(false);
-    setFiltered(hotels);
     setCurrentPage(1);
   };
 
@@ -93,19 +114,8 @@ export const HotelsSection: React.FC = () => {
 
   const handleEditSuccess = () => {
     // Recargar la lista de hoteles después de editar
-    const fetchHotels = async () => {
-      try {
-        setLoading(true);
-        const data = await hotelService.getHotels(1, 300);
-        setHotels(data);
-        setFiltered(data);
-      } catch (e) {
-        console.error('Error recargando hoteles', e);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchHotels();
+    cargarHoteles();
+    cargarResumen();
   };
 
   const handleDeleteHotel = async (id: string) => {
@@ -156,9 +166,8 @@ export const HotelsSection: React.FC = () => {
       await hotelService.deleteHotel(id);
 
       // Recargar la lista después de eliminar
-      const data = await hotelService.getHotels(1, 300);
-      setHotels(data);
-      setFiltered(data);
+      await cargarHoteles();
+      cargarResumen();
 
       // Mostrar confirmación de éxito
       await Swal.fire({
@@ -204,9 +213,8 @@ export const HotelsSection: React.FC = () => {
       await hotelService.createHotel(payload);
 
       // Recargar la lista después de crear
-      const data = await hotelService.getHotels(1, 300);
-      setHotels(data);
-      setFiltered(data);
+      await cargarHoteles();
+      cargarResumen();
 
       setCreateOpen(false);
 
@@ -265,6 +273,8 @@ export const HotelsSection: React.FC = () => {
       // Obtener todos los hoteles directamente de la API
       const API_BASE_URL =
         import.meta.env.VITE_API_BASE_URL || "http://localhost:8008/api/v1";
+      // El endpoint espera `pagina` y `limite`: con `page` y `size` caía en
+      // los valores por defecto y la exportación se cortaba en 100 filas.
       const response = await fetch(`${API_BASE_URL}/hoteles/listar/?pagina=1&limite=1000`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -426,16 +436,9 @@ export const HotelsSection: React.FC = () => {
     }
   };
 
-  // Inicializar filtered con todos los hoteles
-  useEffect(() => {
-    setFiltered(hotels);
-  }, [hotels]);
-
-  // Estadísticas (pueden ser estáticas o simples conteos)
-  const total = hotels.length;
-  const verificadas = hotels.filter(h => h.verificado).length;
-  const recep24 = hotels.filter(h => h.recepcion_24_horas).length;
-  const conPiscina = hotels.filter(h => h.piscina).length;
+  // Las tarjetas resumen el catálogo completo. Calcularlas sobre `hotels`
+  // ahora contaría sólo la página visible.
+  const { total, verificadas, recep24, conPiscina } = resumen;
 
   return (
     <div className="space-y-8">
@@ -514,15 +517,15 @@ export const HotelsSection: React.FC = () => {
 
       {/* Tabla */}
       <HotelTable
-        hotels={filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
+        hotels={hotels}
         searchTerm={searchTerm}
         isSearching={isSearching}
         onSearchChange={handleSearchChange}
         onClearSearch={handleClearSearch}
         loading={loading}
         currentPage={currentPage}
-        totalPages={Math.ceil(filtered.length / pageSize)}
-        totalHotels={filtered.length}
+        totalPages={Math.ceil(totalHotels / pageSize)}
+        totalHotels={totalHotels}
         pageSize={pageSize}
         onPageChange={handlePageChange}
         onPageSizeChange={handlePageSizeChange}

@@ -14,9 +14,20 @@ class HotelService {
     };
   }
 
-  async getHotels(page = 1, size = 100) {
+  // El endpoint espera `pagina` y `limite`. Enviar `page` y `size` los dejaba
+  // caer en los valores por defecto, así que el listado y la exportación
+  // quedaban topados en 100 registros sin ningún aviso.
+  async getHotels(page = 1, size = 100, busqueda = "") {
+    const params = new URLSearchParams({
+      pagina: String(page),
+      limite: String(size),
+    });
+    if (busqueda.trim()) {
+      params.set("busqueda", busqueda.trim());
+    }
+
     const response = await fetch(
-      `${API_BASE_URL}/hoteles/listar/?pagina=${page}&limite=${size}`,
+      `${API_BASE_URL}/hoteles/listar/?${params.toString()}`,
       {
         headers: this.getAuthHeaders(),
       },
@@ -59,7 +70,7 @@ class HotelService {
       }),
     );
 
-    return unified;
+    return { hoteles: unified, total: data.total ?? unified.length };
   }
 
   async getHotelById(id: string) {
