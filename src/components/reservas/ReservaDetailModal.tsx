@@ -2,6 +2,7 @@ import React from 'react';
 import { Modal } from '../ui/Modal';
 import { Badge } from '../ui/Badge';
 import { EstadoReserva, ReservaData } from '../../types/reserva';
+import { formatearFecha, formatearFechaHora, formatearTotal } from './formato';
 
 interface ReservaDetailModalProps {
   isOpen: boolean;
@@ -13,18 +14,6 @@ const VARIANTE_ESTADO: Record<EstadoReserva, 'warning' | 'success' | 'error'> = 
   pendiente: 'warning',
   aprobada: 'success',
   rechazada: 'error',
-};
-
-const formatearFecha = (fecha: string | null): string => {
-  if (!fecha) return '—';
-  const valor = new Date(fecha);
-  return isNaN(valor.getTime()) ? fecha : valor.toLocaleDateString('es-CO');
-};
-
-const formatearFechaHora = (fecha: string | null): string => {
-  if (!fecha) return '—';
-  const valor = new Date(fecha);
-  return isNaN(valor.getTime()) ? fecha : valor.toLocaleString('es-CO');
 };
 
 const Campo: React.FC<{ etiqueta: string; children: React.ReactNode }> = ({
@@ -46,14 +35,7 @@ const ReservaDetailModal: React.FC<ReservaDetailModalProps> = ({
 }) => {
   if (!reserva) return null;
 
-  const unitario = Number(reserva.precio);
-  const total = isNaN(unitario)
-    ? reserva.precio
-    : (unitario * reserva.cantidad).toLocaleString('es-CO', {
-        style: 'currency',
-        currency: 'COP',
-        maximumFractionDigits: 0,
-      });
+  const total = formatearTotal(reserva.precio, reserva.cantidad);
 
   return (
     <Modal

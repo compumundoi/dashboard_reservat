@@ -5,27 +5,12 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '.
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 import { Select } from '../ui/Select';
+import { formatearFecha, formatearTotal } from './formato';
 
 const VARIANTE_ESTADO: Record<EstadoReserva, 'warning' | 'success' | 'error'> = {
   pendiente: 'warning',
   aprobada: 'success',
   rechazada: 'error',
-};
-
-const formatearFecha = (fecha: string | null): string => {
-  if (!fecha) return '—';
-  const valor = new Date(fecha);
-  return isNaN(valor.getTime()) ? fecha : valor.toLocaleDateString('es-CO');
-};
-
-const formatearPrecio = (precio: string, cantidad: number): string => {
-  const unitario = Number(precio);
-  if (isNaN(unitario)) return precio || '—';
-  return (unitario * cantidad).toLocaleString('es-CO', {
-    style: 'currency',
-    currency: 'COP',
-    maximumFractionDigits: 0,
-  });
 };
 
 const ReservaTable: React.FC<ReservaTableProps> = ({
@@ -130,7 +115,7 @@ const ReservaTable: React.FC<ReservaTableProps> = ({
                   </div>
                 </TableCell>
                 <TableCell className="font-medium">
-                  {formatearPrecio(reserva.precio, reserva.cantidad)}
+                  {formatearTotal(reserva.precio, reserva.cantidad)}
                 </TableCell>
                 <TableCell>
                   <Badge variant={VARIANTE_ESTADO[reserva.estado]}>
