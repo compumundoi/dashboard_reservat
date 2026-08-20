@@ -16,7 +16,7 @@ class HotelService {
 
   async getHotels(page = 1, size = 100) {
     const response = await fetch(
-      `${API_BASE_URL}/hoteles/listar/?page=${page}&size=${size}`,
+      `${API_BASE_URL}/hoteles/listar/?pagina=${page}&limite=${size}`,
       {
         headers: this.getAuthHeaders(),
       },

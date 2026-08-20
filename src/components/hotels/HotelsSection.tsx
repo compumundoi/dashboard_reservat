@@ -265,7 +265,7 @@ export const HotelsSection: React.FC = () => {
       // Obtener todos los hoteles directamente de la API
       const API_BASE_URL =
         import.meta.env.VITE_API_BASE_URL || "http://localhost:8008/api/v1";
-      const response = await fetch(`${API_BASE_URL}/hoteles/listar/?page=1&size=1000`, {
+      const response = await fetch(`${API_BASE_URL}/hoteles/listar/?pagina=1&limite=1000`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json',
