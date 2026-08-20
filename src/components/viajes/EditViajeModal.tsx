@@ -1,7 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Users, DollarSign, User, Route, Truck, Info, CheckCircle } from 'lucide-react';
+import { Calendar, Users, DollarSign, User, Info, CheckCircle } from 'lucide-react';
 import { EditViajeModalProps, DatosViaje, ESTADOS_VIAJE } from '../../types/viaje';
 import { Modal } from '../ui/Modal';
+import BuscadorEntidad from '../common/BuscadorEntidad';
+import {
+  buscarRutasComoOpciones,
+  buscarTransportesComoOpciones,
+  nombreDeRuta,
+  nombreDeTransportador,
+} from '../../services/entidadSearchService';
 import { Input } from '../ui/Input';
 import { Select } from '../ui/Select';
 import { Button } from '../ui/Button';
@@ -21,6 +28,9 @@ const EditViajeModal: React.FC<EditViajeModalProps> = ({ isOpen, onClose, onSave
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  // Lo que ve el usuario en cada buscador; el id viaja aparte en formData.
+  const [nombreRuta, setNombreRuta] = useState('');
+  const [nombreTransportador, setNombreTransportador] = useState('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -45,6 +55,13 @@ const EditViajeModal: React.FC<EditViajeModalProps> = ({ isOpen, onClose, onSave
         activo: viaje.activo ?? true
       });
       setErrors({});
+
+      // El viaje sólo guarda los ids: se resuelven a nombre para que los
+      // buscadores muestren lo que ya está asignado en vez de quedar vacíos.
+      setNombreRuta('');
+      setNombreTransportador('');
+      nombreDeRuta(viaje.ruta_id || '').then(setNombreRuta);
+      nombreDeTransportador(viaje.id_transportador || '').then(setNombreTransportador);
     }
   }, [viaje, isOpen]);
 
@@ -234,26 +251,37 @@ const EditViajeModal: React.FC<EditViajeModalProps> = ({ isOpen, onClose, onSave
             <h3 className="text-lg font-semibold text-gray-900">Información Técnica</h3>
           </div>
 
+          {/* Antes eran dos campos de texto donde había que pegar un UUID a
+              mano. Nadie conoce de memoria el identificador de una ruta: se
+              elige por nombre y se ve a dónde va y con qué vehículo. */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Input
-              name="ruta_id"
-              label="ID de Ruta"
+            <BuscadorEntidad
+              label="Ruta *"
+              placeholder="Buscar ruta por nombre..."
+              textoVacio="No se encontraron rutas"
               value={formData.ruta_id}
-              onChange={handleInputChange}
-              placeholder="UUID de la ruta"
-              leftIcon={<Route className="h-4 w-4" />}
+              selectedName={nombreRuta}
+              buscar={buscarRutasComoOpciones}
+              onChange={(id, titulo) => {
+                setNombreRuta(titulo);
+                setFormData((prev) => ({ ...prev, ruta_id: id }));
+                setErrors((prev) => ({ ...prev, ruta_id: '' }));
+              }}
               error={errors.ruta_id}
-              required
             />
-            <Input
-              name="id_transportador"
-              label="ID de Transportador"
+            <BuscadorEntidad
+              label="Transportador *"
+              placeholder="Buscar transportador por nombre..."
+              textoVacio="No se encontraron transportadores"
               value={formData.id_transportador}
-              onChange={handleInputChange}
-              placeholder="UUID del transportador"
-              leftIcon={<Truck className="h-4 w-4" />}
+              selectedName={nombreTransportador}
+              buscar={buscarTransportesComoOpciones}
+              onChange={(id, titulo) => {
+                setNombreTransportador(titulo);
+                setFormData((prev) => ({ ...prev, id_transportador: id }));
+                setErrors((prev) => ({ ...prev, id_transportador: '' }));
+              }}
               error={errors.id_transportador}
-              required
             />
           </div>
 
