@@ -2,7 +2,7 @@ import React from 'react';
 import { Modal } from '../ui/Modal';
 import { Badge } from '../ui/Badge';
 import { EstadoReserva, ReservaData } from '../../types/reserva';
-import { formatearFecha, formatearFechaHora, formatearTotal } from './formato';
+import { formatearFecha, formatearFechaHora, formatearTotal, detalleDelTotal } from './formato';
 
 interface ReservaDetailModalProps {
   isOpen: boolean;
@@ -35,7 +35,7 @@ const ReservaDetailModal: React.FC<ReservaDetailModalProps> = ({
 }) => {
   if (!reserva) return null;
 
-  const total = formatearTotal(reserva.precio, reserva.cantidad);
+  const total = formatearTotal(reserva);
 
   return (
     <Modal
@@ -55,7 +55,13 @@ const ReservaDetailModal: React.FC<ReservaDetailModalProps> = ({
           <Campo etiqueta="Fecha de inicio">{formatearFecha(reserva.fecha_inicio)}</Campo>
           <Campo etiqueta="Fecha de fin">{formatearFecha(reserva.fecha_fin)}</Campo>
           <Campo etiqueta="Cantidad">{reserva.cantidad}</Campo>
-          <Campo etiqueta="Total">{total}</Campo>
+          {reserva.hora && <Campo etiqueta="Hora">{reserva.hora}</Campo>}
+          <Campo etiqueta="Total">
+            {total}
+            <div className="text-xs text-secondary-500">
+              {detalleDelTotal(reserva)}
+            </div>
+          </Campo>
           <Campo etiqueta="Solicitada el">{formatearFecha(reserva.fecha_creacion)}</Campo>
           <Campo etiqueta="Mayorista">{reserva.id_mayorista || '—'}</Campo>
           <Campo etiqueta="Proveedor">{reserva.id_proveedor || '—'}</Campo>

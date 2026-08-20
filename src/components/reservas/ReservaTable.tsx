@@ -5,7 +5,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '.
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 import { Select } from '../ui/Select';
-import { formatearFecha, formatearTotal } from './formato';
+import { formatearFecha, formatearTotal, detalleDelTotal } from './formato';
 
 const VARIANTE_ESTADO: Record<EstadoReserva, 'warning' | 'success' | 'error'> = {
   pendiente: 'warning',
@@ -107,6 +107,11 @@ const ReservaTable: React.FC<ReservaTableProps> = ({
                     <CalendarRange size={15} className="text-secondary-400" />
                     {formatearFecha(reserva.fecha_inicio)} → {formatearFecha(reserva.fecha_fin)}
                   </div>
+                  {reserva.hora && (
+                    <div className="text-xs text-secondary-500 mt-0.5">
+                      Hora: {reserva.hora}
+                    </div>
+                  )}
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-1.5">
@@ -115,7 +120,10 @@ const ReservaTable: React.FC<ReservaTableProps> = ({
                   </div>
                 </TableCell>
                 <TableCell className="font-medium">
-                  {formatearTotal(reserva.precio, reserva.cantidad)}
+                  {formatearTotal(reserva)}
+                  <div className="text-xs font-normal text-secondary-500">
+                    {detalleDelTotal(reserva)}
+                  </div>
                 </TableCell>
                 <TableCell>
                   <Badge variant={VARIANTE_ESTADO[reserva.estado]}>

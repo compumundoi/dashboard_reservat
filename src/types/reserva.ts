@@ -29,6 +29,7 @@ export interface ReservaData {
   fecha_inicio: string | null;
   fecha_fin: string | null;
   cantidad: number;
+  hora: string | null;
   motivo_rechazo: string | null;
   fecha_decision: string | null;
   id_admin_decision: string | null;

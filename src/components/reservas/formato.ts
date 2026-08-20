@@ -27,14 +27,82 @@ export const formatearFechaHora = (fecha: string | null): string => {
   return isNaN(valor.getTime()) ? fecha : valor.toLocaleString('es-CO');
 };
 
-/** Total de la reserva: el precio unitario del servicio por la cantidad. */
-export const formatearTotal = (precio: string, cantidad: number): string => {
-  const unitario = Number(precio);
-  if (isNaN(unitario)) return precio || '—';
+// Tipos que se cobran por noche; el resto se cobra por persona.
+const TIPOS_POR_RANGO = ['alojamiento', 'hoteles', 'hotel'];
 
-  return (unitario * cantidad).toLocaleString('es-CO', {
+export const esPorRango = (tipoServicio: string | null): boolean =>
+  TIPOS_POR_RANGO.includes(String(tipoServicio || '').toLowerCase());
+
+/** Noches entre dos fechas "YYYY-MM-DD", comparadas como fechas locales. */
+export const calcularNoches = (
+  inicio: string | null,
+  fin: string | null,
+): number => {
+  if (!inicio || !fin) return 1;
+
+  const aFecha = (valor: string) => {
+    const partes = /^(\d{4})-(\d{2})-(\d{2})$/.exec(valor);
+    return partes
+      ? new Date(Number(partes[1]), Number(partes[2]) - 1, Number(partes[3]))
+      : new Date(valor);
+  };
+
+  const desde = aFecha(inicio);
+  const hasta = aFecha(fin);
+  if (isNaN(desde.getTime()) || isNaN(hasta.getTime())) return 1;
+
+  const noches = Math.round((hasta.getTime() - desde.getTime()) / 86400000);
+  return noches > 0 ? noches : 1;
+};
+
+/**
+ * Total de la reserva.
+ *
+ * El alojamiento se cobra por noche (las personas sólo validan capacidad) y
+ * el resto por persona. Es la misma regla que aplica la landing al crear la
+ * solicitud: si difieren, el administrador aprueba un monto distinto del que
+ * vio el mayorista.
+ */
+export const formatearTotal = (reserva: {
+  precio: string;
+  cantidad: number;
+  tipo_servicio: string | null;
+  fecha_inicio: string | null;
+  fecha_fin: string | null;
+}): string => {
+  const unitario = Number(reserva.precio);
+  if (isNaN(unitario)) return reserva.precio || '—';
+
+  const multiplicador = esPorRango(reserva.tipo_servicio)
+    ? calcularNoches(reserva.fecha_inicio, reserva.fecha_fin)
+    : reserva.cantidad;
+
+  return (unitario * multiplicador).toLocaleString('es-CO', {
     style: 'currency',
     currency: 'COP',
     maximumFractionDigits: 0,
   });
+};
+
+/** Detalle legible de cómo se compone el total. */
+export const detalleDelTotal = (reserva: {
+  precio: string;
+  cantidad: number;
+  tipo_servicio: string | null;
+  fecha_inicio: string | null;
+  fecha_fin: string | null;
+}): string => {
+  const unitario = Number(reserva.precio);
+  if (isNaN(unitario)) return '';
+
+  const formateado = `$${unitario.toLocaleString('es-CO')}`;
+
+  if (esPorRango(reserva.tipo_servicio)) {
+    const noches = calcularNoches(reserva.fecha_inicio, reserva.fecha_fin);
+    return `${formateado} × ${noches} ${noches === 1 ? 'noche' : 'noches'}`;
+  }
+
+  return `${formateado} × ${reserva.cantidad} ${
+    reserva.cantidad === 1 ? 'persona' : 'personas'
+  }`;
 };
