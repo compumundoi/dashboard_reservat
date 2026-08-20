@@ -6,6 +6,8 @@ import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { Select } from '../ui/Select';
+import { LocationFields } from '../ui/LocationFields';
+import { ValorUbicacion } from '../../types/ubicacion';
 import { Textarea } from '../ui/Textarea';
 
 const TIPOS_DOCUMENTO = [
@@ -71,6 +73,11 @@ export const EditHotelModal: React.FC<Props> = ({ isOpen, onClose, hotelId, onSu
       return;
     }
 
+    if (!data.proveedor.municipio_id) {
+      setFormError('Selecciona departamento y municipio para continuar');
+      return;
+    }
+
     try {
       setSaving(true);
       setFormError(null);
@@ -83,6 +90,22 @@ export const EditHotelModal: React.FC<Props> = ({ isOpen, onClose, hotelId, onSu
     } finally {
       setSaving(false);
     }
+  };
+
+  // La ubicación se aplica sobre data.proveedor de una sola vez: cambiar de
+  // departamento tiene que limpiar el municipio en el mismo commit de estado.
+  const actualizarUbicacion = (valor: ValorUbicacion) => {
+    if (!data) return;
+    setData({
+      ...data,
+      proveedor: {
+        ...data.proveedor,
+        pais_id: valor.paisId,
+        departamento_id: valor.departamentoId,
+        municipio_id: valor.municipioId,
+        direccion: valor.direccion,
+      },
+    });
   };
 
   const updateProveedorField = (field: keyof ProveedorHotel, value: string | number | boolean) => {
@@ -167,26 +190,23 @@ export const EditHotelModal: React.FC<Props> = ({ isOpen, onClose, hotelId, onSu
                   onChange={(e) => updateProveedorField('telefono', e.target.value)}
                 />
                 <Input
-                  label="Ciudad"
-                  value={data.proveedor.ciudad}
-                  onChange={(e) => updateProveedorField('ciudad', e.target.value)}
-                />
-                <Input
-                  label="País"
-                  value={data.proveedor.pais}
-                  onChange={(e) => updateProveedorField('pais', e.target.value)}
-                />
-                <Input
                   label="Sitio Web"
                   type="url"
                   value={data.proveedor.sitio_web}
                   onChange={(e) => updateProveedorField('sitio_web', e.target.value)}
                 />
-                <Input
-                  label="Dirección"
-                  value={data.proveedor.direccion}
-                  onChange={(e) => updateProveedorField('direccion', e.target.value)}
-                />
+                <div className="md:col-span-2 lg:col-span-3">
+                  <LocationFields
+                    value={{
+                      paisId: data.proveedor.pais_id ?? null,
+                      departamentoId: data.proveedor.departamento_id ?? null,
+                      municipioId: data.proveedor.municipio_id ?? null,
+                      direccion: data.proveedor.direccion || '',
+                    }}
+                    onChange={actualizarUbicacion}
+                    required
+                  />
+                </div>
                 <Input
                   label="Ubicación"
                   value={data.proveedor.ubicacion}

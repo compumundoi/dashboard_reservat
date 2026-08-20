@@ -42,6 +42,12 @@ class HotelService {
         id_proveedor: item.proveedor.id_proveedor,
         nombre_proveedor: item.proveedor.nombre,
         ciudad: item.proveedor.ciudad,
+        // Ids del catálogo de ubicaciones: sin ellos el modal de edición no
+        // puede preseleccionar departamento y municipio.
+        municipio_id: item.proveedor.municipio_id ?? null,
+        departamento_id: item.proveedor.departamento_id ?? null,
+        pais_id: item.proveedor.pais_id ?? null,
+        departamento: item.proveedor.departamento ?? '',
         pais: item.proveedor.pais,
         email: item.proveedor.email,
         verificado: item.proveedor.verificado,

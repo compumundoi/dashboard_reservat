@@ -76,6 +76,12 @@ class RestauranteService {
         telefono: item.proveedor.telefono,
         direccion: item.proveedor.direccion,
         ciudad: item.proveedor.ciudad,
+        // Ids del catálogo de ubicaciones: sin ellos el modal de edición no
+        // puede preseleccionar departamento y municipio.
+        municipio_id: item.proveedor.municipio_id ?? null,
+        departamento_id: item.proveedor.departamento_id ?? null,
+        pais_id: item.proveedor.pais_id ?? null,
+        departamento: item.proveedor.departamento ?? '',
         pais: item.proveedor.pais,
         sitio_web: item.proveedor.sitio_web,
         rating_promedio: item.proveedor.rating_promedio,
@@ -160,6 +166,12 @@ class RestauranteService {
         telefono: data.proveedor.telefono,
         direccion: data.proveedor.direccion,
         ciudad: data.proveedor.ciudad,
+        // Ids del catálogo de ubicaciones: sin ellos el modal de edición no
+        // puede preseleccionar departamento y municipio.
+        municipio_id: data.proveedor.municipio_id ?? null,
+        departamento_id: data.proveedor.departamento_id ?? null,
+        pais_id: data.proveedor.pais_id ?? null,
+        departamento: data.proveedor.departamento ?? '',
         pais: data.proveedor.pais,
         sitio_web: data.proveedor.sitio_web,
         rating_promedio: data.proveedor.rating_promedio,

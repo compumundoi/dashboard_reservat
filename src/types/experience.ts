@@ -9,6 +9,12 @@ export interface Proveedor {
   direccion: string;
   ciudad: string;
   pais: string;
+  // Ubicación: el formulario sólo envía municipio_id; ciudad, departamento y
+  // país los deriva el backend desde el catálogo de ubicaciones.
+  municipio_id?: number | null;
+  departamento_id?: number | null;
+  pais_id?: number | null;
+  departamento?: string;
   sitio_web: string;
   rating_promedio: number;
   verificado: boolean;
@@ -42,7 +48,11 @@ export interface ExperienciaCompleta {
   proveedor_email: string;
   proveedor_telefono: string;
   proveedor_ciudad: string;
+  proveedor_departamento?: string;
   proveedor_pais: string;
+  proveedor_municipio_id?: number | null;
+  proveedor_departamento_id?: number | null;
+  proveedor_pais_id?: number | null;
   proveedor_rating: number;
   proveedor_verificado: boolean;
   proveedor_activo: boolean;

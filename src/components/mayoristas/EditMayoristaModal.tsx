@@ -7,6 +7,8 @@ import Swal from 'sweetalert2';
 import { Modal } from '../ui/Modal';
 import { Input } from '../ui/Input';
 import { Select } from '../ui/Select';
+import { LocationFields } from '../ui/LocationFields';
+import { ValorUbicacion } from '../../types/ubicacion';
 import { Textarea } from '../ui/Textarea';
 import { Button } from '../ui/Button';
 
@@ -23,11 +25,20 @@ const EditMayoristaModal: React.FC<EditMayoristaModalProps> = ({
   mayoristaId,
   onMayoristaUpdated,
 }) => {
+  // La ubicación vive aparte del resto del formulario: son ids del catálogo,
+  // no texto. Al enviar se vuelca sobre el payload.
+  const [ubicacion, setUbicacion] = useState<ValorUbicacion>({
+    paisId: null,
+    departamentoId: null,
+    municipioId: null,
+    direccion: '',
+  });
   const [formData, setFormData] = useState<CreateMayoristaData>({
     nombre: '',
     email: '',
     telefono: '',
     direccion: '',
+    municipio_id: null,
     ciudad: '',
     pais: '',
     tipo_documento: 'NIT',
@@ -58,6 +69,7 @@ const EditMayoristaModal: React.FC<EditMayoristaModalProps> = ({
         email: mayorista.email,
         telefono: mayorista.telefono,
         direccion: mayorista.direccion,
+        municipio_id: mayorista.municipio_id ?? null,
         ciudad: mayorista.ciudad,
         pais: mayorista.pais,
         tipo_documento: mayorista.tipo_documento,
@@ -72,6 +84,14 @@ const EditMayoristaModal: React.FC<EditMayoristaModalProps> = ({
         observaciones: mayorista.observaciones || '',
         recurente: mayorista.recurente,
         activo: mayorista.activo
+      });
+      // Los registros anteriores al catálogo pueden no tener ids resueltos.
+      // En ese caso los selects abren vacíos y hay que volver a elegir.
+      setUbicacion({
+        paisId: mayorista.pais_id ?? null,
+        departamentoId: mayorista.departamento_id ?? null,
+        municipioId: mayorista.municipio_id ?? null,
+        direccion: mayorista.direccion || '',
       });
     } catch (error) {
       console.error('Error fetching mayorista data:', error);
@@ -101,9 +121,9 @@ const EditMayoristaModal: React.FC<EditMayoristaModalProps> = ({
     if (!formData.email.trim()) newErrors.email = 'El email es requerido';
     else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email inválido';
     if (!formData.telefono.trim()) newErrors.telefono = 'El teléfono es requerido';
-    if (!formData.direccion.trim()) newErrors.direccion = 'La dirección es requerida';
-    if (!formData.ciudad.trim()) newErrors.ciudad = 'La ciudad es requerida';
-    if (!formData.pais.trim()) newErrors.pais = 'El país es requerido';
+    if (ubicacion.departamentoId === null) newErrors.departamento = 'El departamento es requerido';
+    if (ubicacion.municipioId === null) newErrors.ciudad = 'El municipio es requerido';
+    if (!ubicacion.direccion.trim()) newErrors.direccion = 'La dirección es requerida';
     if (!formData.numero_documento.trim()) newErrors.numero_documento = 'El número de documento es requerido';
     if (!(formData.contacto_principal || '').trim()) newErrors.contacto_principal = 'El contacto principal es requerido';
     if (!(formData.telefono_contacto || '').trim()) newErrors.telefono_contacto = 'El teléfono de contacto es requerido';
@@ -123,7 +143,12 @@ const EditMayoristaModal: React.FC<EditMayoristaModalProps> = ({
 
     setLoading(true);
     try {
-      await mayoristaService.updateMayorista(mayoristaId, formData);
+      // ciudad, departamento y país los recalcula el backend desde municipio_id.
+      await mayoristaService.updateMayorista(mayoristaId, {
+        ...formData,
+        municipio_id: ubicacion.municipioId,
+        direccion: ubicacion.direccion,
+      });
 
       await Swal.fire({
         title: '¡Éxito!',
@@ -155,6 +180,7 @@ const EditMayoristaModal: React.FC<EditMayoristaModalProps> = ({
       email: '',
       telefono: '',
       direccion: '',
+      municipio_id: null,
       ciudad: '',
       pais: '',
       tipo_documento: 'NIT',
@@ -170,6 +196,7 @@ const EditMayoristaModal: React.FC<EditMayoristaModalProps> = ({
       recurente: false,
       activo: true
     });
+    setUbicacion({ paisId: null, departamentoId: null, municipioId: null, direccion: '' });
     setErrors({});
     onClose();
   };
@@ -276,30 +303,16 @@ const EditMayoristaModal: React.FC<EditMayoristaModalProps> = ({
                 error={errors.numero_documento}
                 placeholder="123456789"
               />
-              <Input
-                label="Ciudad *"
-                name="ciudad"
-                value={formData.ciudad}
-                onChange={handleInputChange}
-                error={errors.ciudad}
-                placeholder="Bogotá"
-              />
-              <Input
-                label="País *"
-                name="pais"
-                value={formData.pais}
-                onChange={handleInputChange}
-                error={errors.pais}
-                placeholder="Colombia"
-              />
               <div className="md:col-span-2">
-                <Input
-                  label="Dirección *"
-                  name="direccion"
-                  value={formData.direccion}
-                  onChange={handleInputChange}
-                  error={errors.direccion}
-                  placeholder="Calle 123 #45-67"
+                <LocationFields
+                  value={ubicacion}
+                  onChange={setUbicacion}
+                  errors={{
+                    departamentoId: errors.departamento,
+                    municipioId: errors.ciudad,
+                    direccion: errors.direccion,
+                  }}
+                  required
                 />
               </div>
             </div>

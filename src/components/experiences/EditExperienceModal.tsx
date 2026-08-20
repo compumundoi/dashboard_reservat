@@ -3,6 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { User, Compass, MapPin, Save, Info, Mail, Phone, Shield, Clock, Users, Globe2, Briefcase } from 'lucide-react';
 import { Modal } from '../ui/Modal';
 import { Input } from '../ui/Input';
+import { LocationFields } from '../ui/LocationFields';
+import { ValorUbicacion } from '../../types/ubicacion';
 import { Button } from '../ui/Button';
 import { Textarea } from '../ui/Textarea';
 import { Select } from '../ui/Select';
@@ -22,6 +24,7 @@ export const EditExperienceModal: React.FC<EditExperienceModalProps> = ({
       email: '',
       numero_documento: '',
       telefono: '',
+      municipio_id: null as number | null,
       ciudad: '',
       pais: '',
       direccion: '',
@@ -45,6 +48,14 @@ export const EditExperienceModal: React.FC<EditExperienceModalProps> = ({
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  // La ubicación vive aparte del resto del formulario: son ids del catálogo,
+  // no texto. Al enviar se vuelca sobre el payload del proveedor.
+  const [ubicacion, setUbicacion] = useState<ValorUbicacion>({
+    paisId: null,
+    departamentoId: null,
+    municipioId: null,
+    direccion: '',
+  });
 
   useEffect(() => {
     if (experience) {
@@ -54,6 +65,7 @@ export const EditExperienceModal: React.FC<EditExperienceModalProps> = ({
           email: experience.proveedor_email || '',
           numero_documento: experience.proveedor_numero_documento || '',
           telefono: experience.proveedor_telefono || '',
+          municipio_id: experience.proveedor_municipio_id ?? null,
           ciudad: experience.proveedor_ciudad || '',
           pais: experience.proveedor_pais || '',
           direccion: experience.proveedor_direccion || '',
@@ -75,6 +87,14 @@ export const EditExperienceModal: React.FC<EditExperienceModalProps> = ({
           guia_incluido: experience.guia_incluido || false,
         }
       });
+      // Los registros anteriores al catálogo pueden no tener ids resueltos.
+      // En ese caso los selects abren vacíos y hay que volver a elegir.
+      setUbicacion({
+        paisId: experience.proveedor_pais_id ?? null,
+        departamentoId: experience.proveedor_departamento_id ?? null,
+        municipioId: experience.proveedor_municipio_id ?? null,
+        direccion: experience.proveedor_direccion || '',
+      });
     }
   }, [experience]);
 
@@ -84,6 +104,9 @@ export const EditExperienceModal: React.FC<EditExperienceModalProps> = ({
     if (!formData.proveedor.email?.trim()) newErrors['proveedor.email'] = 'Email de contacto requerido';
     if (!formData.experiencia.punto_de_encuentro?.trim()) newErrors['experiencia.punto_de_encuentro'] = 'Punto de encuentro requerido';
     if (!formData.experiencia.numero_rnt?.trim()) newErrors['experiencia.numero_rnt'] = 'RNT requerido';
+    if (ubicacion.departamentoId === null) newErrors.departamentoId = 'Departamento requerido';
+    if (ubicacion.municipioId === null) newErrors.municipioId = 'Municipio requerido';
+    if (!ubicacion.direccion.trim()) newErrors.direccion = 'Dirección requerida';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -113,7 +136,15 @@ export const EditExperienceModal: React.FC<EditExperienceModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (validate()) {
-      await onSave(formData);
+      // ciudad, departamento y país los recalcula el backend desde municipio_id.
+      await onSave({
+        ...formData,
+        proveedor: {
+          ...formData.proveedor,
+          municipio_id: ubicacion.municipioId,
+          direccion: ubicacion.direccion,
+        },
+      });
     }
   };
 
@@ -181,24 +212,12 @@ export const EditExperienceModal: React.FC<EditExperienceModalProps> = ({
                   error={errors['proveedor.email']}
                 />
 
-                <div className="grid grid-cols-2 gap-4">
-                  <Input
-                    label="Ciudad"
-                    value={formData.proveedor.ciudad}
-                    onChange={(e) => updateFormValue('proveedor.ciudad', e.target.value)}
-                  />
-                  <Input
-                    label="País"
-                    value={formData.proveedor.pais}
-                    onChange={(e) => updateFormValue('proveedor.pais', e.target.value)}
-                  />
-                </div>
-
-                <Input
-                  label="Dirección Física"
-                  value={formData.proveedor.direccion}
-                  onChange={(e) => updateFormValue('proveedor.direccion', e.target.value)}
-                  leftIcon={<MapPin className="h-3 w-3 text-gray-400" />}
+                <LocationFields
+                  value={ubicacion}
+                  onChange={setUbicacion}
+                  errors={errors}
+                  required
+                  direccionLabel="Dirección Física"
                 />
 
                 <Textarea

@@ -8,6 +8,8 @@ import { Modal } from '../ui/Modal';
 import { Input } from '../ui/Input';
 import SelectProveedorDisponible from '../common/SelectProveedorDisponible';
 import { Select } from '../ui/Select';
+import { LocationFields } from '../ui/LocationFields';
+import { ValorUbicacion } from '../../types/ubicacion';
 import { Textarea } from '../ui/Textarea';
 import { Button } from '../ui/Button';
 
@@ -24,6 +26,14 @@ const CreateRestauranteModal: React.FC<CreateRestauranteModalProps> = ({
 }) => {
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  // La ubicación vive aparte del resto del formulario: son ids del catálogo,
+  // no texto. Al enviar se vuelca sobre el payload.
+  const [ubicacion, setUbicacion] = useState<ValorUbicacion>({
+    paisId: null,
+    departamentoId: null,
+    municipioId: null,
+    direccion: '',
+  });
   const [formData, setFormData] = useState<CreateRestauranteData>({
     // Datos del proveedor
     tipo: 'restaurante',
@@ -32,6 +42,7 @@ const CreateRestauranteModal: React.FC<CreateRestauranteModalProps> = ({
     email: '',
     telefono: '',
     direccion: '',
+    municipio_id: null,
     ciudad: '',
     pais: 'Colombia',
     sitio_web: '',
@@ -96,8 +107,9 @@ const CreateRestauranteModal: React.FC<CreateRestauranteModalProps> = ({
     if (!formData.nombre.trim()) newErrors.nombre = 'El nombre es requerido';
     if (!formData.email.trim()) newErrors.email = 'El email es requerido';
     if (!formData.telefono.trim()) newErrors.telefono = 'El teléfono es requerido';
-    if (!formData.direccion.trim()) newErrors.direccion = 'La dirección es requerida';
-    if (!formData.ciudad.trim()) newErrors.ciudad = 'La ciudad es requerida';
+    if (ubicacion.departamentoId === null) newErrors.departamento = 'El departamento es requerido';
+    if (ubicacion.municipioId === null) newErrors.ciudad = 'El municipio es requerido';
+    if (!ubicacion.direccion.trim()) newErrors.direccion = 'La dirección es requerida';
     if (!formData.tipo_cocina.trim()) newErrors.tipo_cocina = 'El tipo de cocina es requerido';
     if (!formData.tipo_comida.trim()) newErrors.tipo_comida = 'El tipo de comida es requerido';
     if (!formData.tipo_documento) newErrors.tipo_documento = 'Seleccione un tipo de documento';
@@ -113,7 +125,12 @@ const CreateRestauranteModal: React.FC<CreateRestauranteModalProps> = ({
 
     try {
       setSaving(true);
-      await restauranteService.createRestaurante(formData);
+      // ciudad, departamento y país los resuelve el backend desde municipio_id.
+      await restauranteService.createRestaurante({
+        ...formData,
+        municipio_id: ubicacion.municipioId,
+        direccion: ubicacion.direccion,
+      });
       onSuccess();
     } catch (error) {
       console.error('Error creating restaurante:', error);
@@ -183,32 +200,16 @@ const CreateRestauranteModal: React.FC<CreateRestauranteModalProps> = ({
                 />
               </div>
 
-              <Input
-                label="Dirección *"
-                name="direccion"
-                value={formData.direccion}
-                onChange={handleInputChange}
-                error={errors.direccion}
-                placeholder="Calle 123 #45-67"
-                leftIcon={<MapPin className="h-4 w-4" />}
+              <LocationFields
+                value={ubicacion}
+                onChange={setUbicacion}
+                errors={{
+                  departamentoId: errors.departamento,
+                  municipioId: errors.ciudad,
+                  direccion: errors.direccion,
+                }}
+                required
               />
-
-              <div className="grid grid-cols-2 gap-4">
-                <Input
-                  label="Ciudad *"
-                  name="ciudad"
-                  value={formData.ciudad}
-                  onChange={handleInputChange}
-                  error={errors.ciudad}
-                  placeholder="Bogotá"
-                />
-                <Input
-                  label="País *"
-                  name="pais"
-                  value={formData.pais}
-                  onChange={handleInputChange}
-                />
-              </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <Select

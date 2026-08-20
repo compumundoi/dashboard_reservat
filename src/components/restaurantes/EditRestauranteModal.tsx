@@ -7,6 +7,8 @@ import Swal from 'sweetalert2';
 import { Modal } from '../ui/Modal';
 import { Input } from '../ui/Input';
 import { Select } from '../ui/Select';
+import { LocationFields } from '../ui/LocationFields';
+import { ValorUbicacion } from '../../types/ubicacion';
 import { Textarea } from '../ui/Textarea';
 import { Button } from '../ui/Button';
 
@@ -27,6 +29,14 @@ const EditRestauranteModal: React.FC<EditRestauranteModalProps> = ({
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState<UpdateRestauranteData>({});
+  // La ubicación vive aparte del resto del formulario: son ids del catálogo,
+  // no texto. Al enviar se vuelca sobre el payload.
+  const [ubicacion, setUbicacion] = useState<ValorUbicacion>({
+    paisId: null,
+    departamentoId: null,
+    municipioId: null,
+    direccion: '',
+  });
 
   const loadRestauranteData = useCallback(async () => {
     try {
@@ -40,6 +50,7 @@ const EditRestauranteModal: React.FC<EditRestauranteModalProps> = ({
         email: data.email,
         telefono: data.telefono,
         direccion: data.direccion,
+        municipio_id: data.municipio_id ?? null,
         ciudad: data.ciudad,
         pais: data.pais,
         sitio_web: data.sitio_web,
@@ -83,6 +94,14 @@ const EditRestauranteModal: React.FC<EditRestauranteModalProps> = ({
         tipo_comida: data.tipo_comida,
         precio_ascendente: data.precio_ascendente
       });
+      // Los registros anteriores al catálogo pueden no tener ids resueltos.
+      // En ese caso los selects abren vacíos y hay que volver a elegir.
+      setUbicacion({
+        paisId: data.pais_id ?? null,
+        departamentoId: data.departamento_id ?? null,
+        municipioId: data.municipio_id ?? null,
+        direccion: data.direccion || '',
+      });
     } catch (error) {
       console.error('Error loading restaurante data:', error);
       Swal.fire({
@@ -121,8 +140,9 @@ const EditRestauranteModal: React.FC<EditRestauranteModalProps> = ({
     if (!formData.nombre?.trim()) newErrors.nombre = 'El nombre es requerido';
     if (!formData.email?.trim()) newErrors.email = 'El email es requerido';
     if (!formData.telefono?.trim()) newErrors.telefono = 'El teléfono es requerido';
-    if (!formData.direccion?.trim()) newErrors.direccion = 'La dirección es requerida';
-    if (!formData.ciudad?.trim()) newErrors.ciudad = 'La ciudad es requerida';
+    if (ubicacion.departamentoId === null) newErrors.departamento = 'El departamento es requerido';
+    if (ubicacion.municipioId === null) newErrors.ciudad = 'El municipio es requerido';
+    if (!ubicacion.direccion.trim()) newErrors.direccion = 'La dirección es requerida';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -134,7 +154,12 @@ const EditRestauranteModal: React.FC<EditRestauranteModalProps> = ({
 
     try {
       setSaving(true);
-      await restauranteService.updateRestaurante(restauranteId, formData);
+      // ciudad, departamento y país los recalcula el backend desde municipio_id.
+      await restauranteService.updateRestaurante(restauranteId, {
+        ...formData,
+        municipio_id: ubicacion.municipioId,
+        direccion: ubicacion.direccion,
+      });
       onSuccess();
     } catch (error) {
       console.error('Error updating restaurante:', error);
@@ -222,30 +247,16 @@ const EditRestauranteModal: React.FC<EditRestauranteModalProps> = ({
                   />
                 </div>
 
-                <Input
-                  label="Dirección *"
-                  name="direccion"
-                  value={formData.direccion || ''}
-                  onChange={handleInputChange}
-                  error={errors.direccion}
-                  leftIcon={<MapPin className="h-4 w-4" />}
+                <LocationFields
+                  value={ubicacion}
+                  onChange={setUbicacion}
+                  errors={{
+                    departamentoId: errors.departamento,
+                    municipioId: errors.ciudad,
+                    direccion: errors.direccion,
+                  }}
+                  required
                 />
-
-                <div className="grid grid-cols-2 gap-4">
-                  <Input
-                    label="Ciudad *"
-                    name="ciudad"
-                    value={formData.ciudad || ''}
-                    onChange={handleInputChange}
-                    error={errors.ciudad}
-                  />
-                  <Input
-                    label="País *"
-                    name="pais"
-                    value={formData.pais || ''}
-                    onChange={handleInputChange}
-                  />
-                </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <Select

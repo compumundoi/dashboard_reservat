@@ -8,6 +8,12 @@ export interface ProveedorHotel {
   direccion: string;
   ciudad: string;
   pais: string;
+  // Ubicación: el formulario sólo envía municipio_id; ciudad, departamento y
+  // país los deriva el backend desde el catálogo de ubicaciones.
+  municipio_id?: number | null;
+  departamento_id?: number | null;
+  pais_id?: number | null;
+  departamento?: string;
   sitio_web: string;
   rating_promedio: number;
   verificado: boolean;
@@ -51,7 +57,11 @@ export interface HotelUnificado {
   id_proveedor: string;
   nombre_proveedor: string;
   ciudad: string;
+  departamento?: string;
   pais: string;
+  municipio_id?: number | null;
+  departamento_id?: number | null;
+  pais_id?: number | null;
   email: string;
   telefono?: string;
   direccion?: string;

@@ -26,8 +26,14 @@ export interface DatosServicio {
   fecha_creacion: string;
   fecha_actualizacion: string;
   relevancia: string;
+  // Ubicación: el formulario sólo envía municipio_id; ciudad, departamento y
+  // país los deriva el backend desde el catálogo de ubicaciones.
+  municipio_id: number | null;
   ciudad: string;
   departamento: string;
+  pais?: string;
+  pais_id?: number | null;
+  departamento_id?: number | null;
   ubicacion: string;
   detalles_del_servicio: string;
 }
@@ -46,8 +52,14 @@ export interface RespuestaServicio {
   fecha_creacion: string;
   fecha_actualizacion: string;
   relevancia: string;
+  // Ubicación: el formulario sólo envía municipio_id; ciudad, departamento y
+  // país los deriva el backend desde el catálogo de ubicaciones.
+  municipio_id: number | null;
   ciudad: string;
   departamento: string;
+  pais?: string;
+  pais_id?: number | null;
+  departamento_id?: number | null;
   ubicacion: string;
   detalles_del_servicio: string;
 }
@@ -64,8 +76,14 @@ export interface ActualizarServicio {
   fecha_creacion: string;
   fecha_actualizacion: string;
   relevancia: string;
+  // Ubicación: el formulario sólo envía municipio_id; ciudad, departamento y
+  // país los deriva el backend desde el catálogo de ubicaciones.
+  municipio_id: number | null;
   ciudad: string;
   departamento: string;
+  pais?: string;
+  pais_id?: number | null;
+  departamento_id?: number | null;
   ubicacion: string;
   detalles_del_servicio: string;
 }
@@ -95,6 +113,10 @@ export interface ServicioData {
   fechaCreacionFormateada: string;
   fechaActualizacionFormateada: string;
   relevancia: string;
+  municipio_id: number | null;
+  departamento_id: number | null;
+  pais_id: number | null;
+  pais: string;
   ciudad: string;
   departamento: string;
   ubicacionCompleta: string;

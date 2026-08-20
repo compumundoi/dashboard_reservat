@@ -7,3 +7,4 @@ export * from "./Modal";
 export * from "./Table";
 export * from "./Alert";
 export * from "./Textarea";
+export * from "./LocationFields";

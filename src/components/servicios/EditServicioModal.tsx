@@ -7,6 +7,8 @@ import ProveedorAutocomplete from '../common/ProveedorAutocomplete';
 import { Modal } from '../ui/Modal';
 import { Input } from '../ui/Input';
 import { Select } from '../ui/Select';
+import { LocationFields } from '../ui/LocationFields';
+import { ValorUbicacion } from '../../types/ubicacion';
 import { Textarea } from '../ui/Textarea';
 import { Button } from '../ui/Button';
 
@@ -23,6 +25,7 @@ const EditServicioModal: React.FC<EditServicioModalProps> = ({ isOpen, onClose, 
     fecha_creacion: '',
     fecha_actualizacion: '',
     relevancia: 'Media',
+    municipio_id: null,
     ciudad: '',
     departamento: '',
     ubicacion: '',
@@ -31,6 +34,14 @@ const EditServicioModal: React.FC<EditServicioModalProps> = ({ isOpen, onClose, 
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [selectedProveedorName, setSelectedProveedorName] = useState('');
+  // La ubicación vive aparte del resto del formulario: son ids del catálogo,
+  // no texto. Al enviar se vuelca sobre el payload.
+  const [ubicacion, setUbicacion] = useState<ValorUbicacion>({
+    paisId: null,
+    departamentoId: null,
+    municipioId: null,
+    direccion: '',
+  });
 
   useEffect(() => {
     if (servicio) {
@@ -46,10 +57,19 @@ const EditServicioModal: React.FC<EditServicioModalProps> = ({ isOpen, onClose, 
         fecha_creacion: servicio.fecha_creacion,
         fecha_actualizacion: new Date().toISOString(),
         relevancia: servicio.relevancia,
+        municipio_id: servicio.municipio_id ?? null,
         ciudad: servicio.ciudad,
         departamento: servicio.departamento,
         ubicacion: servicio.ubicacion,
         detalles_del_servicio: servicio.detalles_del_servicio
+      });
+      // Los registros anteriores al catálogo pueden no tener ids resueltos.
+      // En ese caso los selects abren vacíos y hay que volver a elegir.
+      setUbicacion({
+        paisId: servicio.pais_id ?? null,
+        departamentoId: servicio.departamento_id ?? null,
+        municipioId: servicio.municipio_id ?? null,
+        direccion: servicio.ubicacion || '',
       });
       setSelectedProveedorName(servicio.proveedorNombre || '');
       setErrors({});
@@ -96,16 +116,16 @@ const EditServicioModal: React.FC<EditServicioModalProps> = ({ isOpen, onClose, 
       newErrors.precio = 'El precio debe ser mayor o igual a 0';
     }
 
-    if (!formData.ciudad.trim()) {
-      newErrors.ciudad = 'La ciudad es requerida';
+    if (ubicacion.departamentoId === null) {
+      newErrors.departamentoId = 'El departamento es requerido';
     }
 
-    if (!formData.departamento.trim()) {
-      newErrors.departamento = 'El departamento es requerido';
+    if (ubicacion.municipioId === null) {
+      newErrors.municipioId = 'El municipio es requerido';
     }
 
-    if (!formData.ubicacion.trim()) {
-      newErrors.ubicacion = 'La ubicación es requerida';
+    if (!ubicacion.direccion.trim()) {
+      newErrors.direccion = 'La dirección es requerida';
     }
 
     if (!formData.detalles_del_servicio.trim()) {
@@ -125,7 +145,13 @@ const EditServicioModal: React.FC<EditServicioModalProps> = ({ isOpen, onClose, 
 
     setLoading(true);
     try {
-      await onSave(formData);
+      // ciudad, departamento y país los recalcula el backend desde
+      // municipio_id. En servicios la dirección se guarda en `ubicacion`.
+      await onSave({
+        ...formData,
+        municipio_id: ubicacion.municipioId,
+        ubicacion: ubicacion.direccion,
+      });
     } catch (error) {
       console.error(error);
       Swal.fire({
@@ -263,34 +289,14 @@ const EditServicioModal: React.FC<EditServicioModalProps> = ({ isOpen, onClose, 
               <h3 className="text-lg font-semibold text-secondary-900">Ubicación</h3>
             </div>
 
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Input
-                  label="Ciudad *"
-                  name="ciudad"
-                  value={formData.ciudad}
-                  onChange={handleInputChange}
-                  error={errors.ciudad}
-                  placeholder="Ciudad"
-                />
-                <Input
-                  label="Departamento *"
-                  name="departamento"
-                  value={formData.departamento}
-                  onChange={handleInputChange}
-                  error={errors.departamento}
-                  placeholder="Departamento"
-                />
-              </div>
-              <Input
-                label="Dirección / Punto de Encuentro *"
-                name="ubicacion"
-                value={formData.ubicacion}
-                onChange={handleInputChange}
-                error={errors.ubicacion}
-                placeholder="Ubicación exacta o descripción del punto de encuentro"
-              />
-            </div>
+            <LocationFields
+              value={ubicacion}
+              onChange={setUbicacion}
+              errors={errors}
+              required
+              direccionLabel="Dirección / Punto de Encuentro"
+              direccionPlaceholder="Ubicación exacta o descripción del punto de encuentro"
+            />
           </div>
         </div>
 

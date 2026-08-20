@@ -5,6 +5,8 @@ import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import SelectProveedorDisponible from '../common/SelectProveedorDisponible';
 import { Select } from '../ui/Select';
+import { LocationFields } from '../ui/LocationFields';
+import { ValorUbicacion } from '../../types/ubicacion';
 import { Textarea } from '../ui/Textarea';
 
 // ... (keep initialForm same as before or define it here if not exported)
@@ -17,6 +19,7 @@ const initialForm = {
     email: '',
     telefono: '',
     direccion: '',
+    municipio_id: null as number | null,
     ciudad: '',
     pais: '',
     sitio_web: '',
@@ -56,6 +59,15 @@ const initialForm = {
   },
 };
 
+// La ubicación vive aparte del resto del formulario: son ids del catálogo,
+// no texto. Al enviar se vuelca sobre el payload del proveedor.
+const UBICACION_INICIAL: ValorUbicacion = {
+  paisId: null,
+  departamentoId: null,
+  municipioId: null,
+  direccion: '',
+};
+
 interface CreateHotelModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -70,6 +82,7 @@ export const CreateHotelModal: React.FC<CreateHotelModalProps> = ({
   loading,
 }) => {
   const [form, setForm] = useState(initialForm);
+  const [ubicacion, setUbicacion] = useState<ValorUbicacion>(UBICACION_INICIAL);
 
   const updateProveedorField = (field: string, value: string | number | boolean) => {
     setForm(prev => ({
@@ -107,12 +120,16 @@ export const CreateHotelModal: React.FC<CreateHotelModalProps> = ({
       alert('El teléfono del proveedor es requerido');
       return;
     }
-    if (!form.proveedor.ciudad.trim()) {
-      alert('La ciudad es requerida');
+    if (ubicacion.departamentoId === null) {
+      alert('El departamento es requerido');
       return;
     }
-    if (!form.proveedor.pais.trim()) {
-      alert('El país es requerido');
+    if (ubicacion.municipioId === null) {
+      alert('El municipio es requerido');
+      return;
+    }
+    if (!ubicacion.direccion.trim()) {
+      alert('La dirección es requerida');
       return;
     }
 
@@ -120,6 +137,9 @@ export const CreateHotelModal: React.FC<CreateHotelModalProps> = ({
     const payload = {
       proveedor: {
         ...form.proveedor,
+        // ciudad, departamento y país los resuelve el backend desde municipio_id.
+        municipio_id: ubicacion.municipioId,
+        direccion: ubicacion.direccion,
         fecha_registro: new Date().toISOString(),
       },
       hotel: {
@@ -134,6 +154,7 @@ export const CreateHotelModal: React.FC<CreateHotelModalProps> = ({
 
   const handleClose = () => {
     setForm(initialForm);
+    setUbicacion(UBICACION_INICIAL);
     onClose();
   };
 
@@ -179,32 +200,20 @@ export const CreateHotelModal: React.FC<CreateHotelModalProps> = ({
               required
             />
             <Input
-              label="Ciudad *"
-              placeholder="Bogotá"
-              value={form.proveedor.ciudad}
-              onChange={(e) => updateProveedorField('ciudad', e.target.value)}
-              required
-            />
-            <Input
-              label="País *"
-              placeholder="Colombia"
-              value={form.proveedor.pais}
-              onChange={(e) => updateProveedorField('pais', e.target.value)}
-              required
-            />
-            <Input
               label="Sitio Web"
               type="url"
               placeholder="https://hotel.com"
               value={form.proveedor.sitio_web}
               onChange={(e) => updateProveedorField('sitio_web', e.target.value)}
             />
-            <Input
-              label="Dirección"
-              placeholder="Calle Principal 123"
-              value={form.proveedor.direccion}
-              onChange={(e) => updateProveedorField('direccion', e.target.value)}
-            />
+            <div className="md:col-span-2 lg:col-span-3">
+              <LocationFields
+                value={ubicacion}
+                onChange={setUbicacion}
+                required
+                direccionPlaceholder="Calle Principal 123"
+              />
+            </div>
             <Input
               label="Ubicación (Barrio/Zona)"
               placeholder="Centro"

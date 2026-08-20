@@ -70,6 +70,12 @@ class ExperienceService {
       proveedor_email: item.proveedor.email,
       proveedor_telefono: item.proveedor.telefono,
       proveedor_ciudad: item.proveedor.ciudad,
+      // Ids del catálogo de ubicaciones: sin ellos el modal de edición no
+      // puede preseleccionar departamento y municipio.
+      proveedor_municipio_id: item.proveedor.municipio_id ?? null,
+      proveedor_departamento_id: item.proveedor.departamento_id ?? null,
+      proveedor_pais_id: item.proveedor.pais_id ?? null,
+      proveedor_departamento: item.proveedor.departamento ?? '',
       proveedor_pais: item.proveedor.pais,
       proveedor_rating: item.proveedor.rating_promedio,
       proveedor_verificado: item.proveedor.verificado,

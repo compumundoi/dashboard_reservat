@@ -7,6 +7,8 @@ import Swal from 'sweetalert2';
 import { Modal } from '../ui/Modal';
 import { Input } from '../ui/Input';
 import { Select } from '../ui/Select';
+import { LocationFields } from '../ui/LocationFields';
+import { ValorUbicacion } from '../../types/ubicacion';
 import { Textarea } from '../ui/Textarea';
 import { Button } from '../ui/Button';
 
@@ -26,6 +28,7 @@ const CreateMayoristaModal: React.FC<CreateMayoristaModalProps> = ({
     email: '',
     telefono: '',
     direccion: '',
+    municipio_id: null,
     ciudad: '',
     pais: '',
     tipo_documento: 'NIT',
@@ -41,6 +44,14 @@ const CreateMayoristaModal: React.FC<CreateMayoristaModalProps> = ({
     recurente: false,
     activo: true
   });
+  // La ubicación vive aparte del resto del formulario: son ids del catálogo,
+  // no texto. Al enviar se vuelca sobre el payload.
+  const [ubicacion, setUbicacion] = useState<ValorUbicacion>({
+    paisId: null,
+    departamentoId: null,
+    municipioId: null,
+    direccion: '',
+  });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof CreateMayoristaData, string>>>({});
 
@@ -51,9 +62,9 @@ const CreateMayoristaModal: React.FC<CreateMayoristaModalProps> = ({
     if (!formData.email.trim()) newErrors.email = 'El email es requerido';
     else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email inválido';
     if (!formData.telefono.trim()) newErrors.telefono = 'El teléfono es requerido';
-    if (!formData.direccion.trim()) newErrors.direccion = 'La dirección es requerida';
-    if (!formData.ciudad.trim()) newErrors.ciudad = 'La ciudad es requerida';
-    if (!formData.pais.trim()) newErrors.pais = 'El país es requerido';
+    if (ubicacion.departamentoId === null) newErrors.departamento = 'El departamento es requerido';
+    if (ubicacion.municipioId === null) newErrors.ciudad = 'El municipio es requerido';
+    if (!ubicacion.direccion.trim()) newErrors.direccion = 'La dirección es requerida';
     if (!formData.numero_documento.trim()) newErrors.numero_documento = 'El número de documento es requerido';
     if (!(formData.contacto_principal || '').trim()) newErrors.contacto_principal = 'El contacto principal es requerido';
     if (!(formData.telefono_contacto || '').trim()) newErrors.telefono_contacto = 'El teléfono de contacto es requerido';
@@ -73,7 +84,12 @@ const CreateMayoristaModal: React.FC<CreateMayoristaModalProps> = ({
 
     setLoading(true);
     try {
-      await mayoristaService.createMayorista(formData);
+      // ciudad, departamento y país los resuelve el backend desde municipio_id.
+      await mayoristaService.createMayorista({
+        ...formData,
+        municipio_id: ubicacion.municipioId,
+        direccion: ubicacion.direccion,
+      });
 
       await Swal.fire({
         title: '¡Éxito!',
@@ -105,6 +121,7 @@ const CreateMayoristaModal: React.FC<CreateMayoristaModalProps> = ({
       email: '',
       telefono: '',
       direccion: '',
+      municipio_id: null,
       ciudad: '',
       pais: '',
       tipo_documento: 'NIT',
@@ -120,6 +137,7 @@ const CreateMayoristaModal: React.FC<CreateMayoristaModalProps> = ({
       recurente: false,
       activo: true
     });
+    setUbicacion({ paisId: null, departamentoId: null, municipioId: null, direccion: '' });
     setErrors({});
     onClose();
   };
@@ -209,30 +227,16 @@ const CreateMayoristaModal: React.FC<CreateMayoristaModalProps> = ({
               error={errors.numero_documento}
               placeholder="123456789"
             />
-            <Input
-              label="Ciudad *"
-              name="ciudad"
-              value={formData.ciudad}
-              onChange={handleInputChange}
-              error={errors.ciudad}
-              placeholder="Bogotá"
-            />
-            <Input
-              label="País *"
-              name="pais"
-              value={formData.pais}
-              onChange={handleInputChange}
-              error={errors.pais}
-              placeholder="Colombia"
-            />
             <div className="md:col-span-2">
-              <Input
-                label="Dirección *"
-                name="direccion"
-                value={formData.direccion}
-                onChange={handleInputChange}
-                error={errors.direccion}
-                placeholder="Calle 123 #45-67"
+              <LocationFields
+                value={ubicacion}
+                onChange={setUbicacion}
+                errors={{
+                  departamentoId: errors.departamento,
+                  municipioId: errors.ciudad,
+                  direccion: errors.direccion,
+                }}
+                required
               />
             </div>
           </div>

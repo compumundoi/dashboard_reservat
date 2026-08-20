@@ -7,6 +7,8 @@ import ProveedorAutocomplete from '../common/ProveedorAutocomplete';
 import { Modal } from '../ui/Modal';
 import { Input } from '../ui/Input';
 import { Select } from '../ui/Select';
+import { LocationFields } from '../ui/LocationFields';
+import { ValorUbicacion } from '../../types/ubicacion';
 import { Textarea } from '../ui/Textarea';
 import { Button } from '../ui/Button';
 
@@ -22,6 +24,7 @@ const CreateServicioModal: React.FC<CreateServicioModalProps> = ({ isOpen, onClo
     fecha_creacion: new Date().toISOString(),
     fecha_actualizacion: new Date().toISOString(),
     relevancia: 'Media',
+    municipio_id: null,
     ciudad: '',
     departamento: '',
     ubicacion: '',
@@ -30,6 +33,14 @@ const CreateServicioModal: React.FC<CreateServicioModalProps> = ({ isOpen, onClo
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [selectedProveedorName, setSelectedProveedorName] = useState('');
+  // La ubicación vive aparte del resto del formulario: son ids del catálogo,
+  // no texto. Al enviar se vuelca sobre formData.
+  const [ubicacion, setUbicacion] = useState<ValorUbicacion>({
+    paisId: null,
+    departamentoId: null,
+    municipioId: null,
+    direccion: '',
+  });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -71,16 +82,16 @@ const CreateServicioModal: React.FC<CreateServicioModalProps> = ({ isOpen, onClo
       newErrors.precio = 'El precio debe ser mayor o igual a 0';
     }
 
-    if (!formData.ciudad.trim()) {
-      newErrors.ciudad = 'La ciudad es requerida';
+    if (ubicacion.departamentoId === null) {
+      newErrors.departamentoId = 'El departamento es requerido';
     }
 
-    if (!formData.departamento.trim()) {
-      newErrors.departamento = 'El departamento es requerido';
+    if (ubicacion.municipioId === null) {
+      newErrors.municipioId = 'El municipio es requerido';
     }
 
-    if (!formData.ubicacion.trim()) {
-      newErrors.ubicacion = 'La ubicación es requerida';
+    if (!ubicacion.direccion.trim()) {
+      newErrors.direccion = 'La dirección es requerida';
     }
 
     if (!formData.detalles_del_servicio.trim()) {
@@ -100,7 +111,13 @@ const CreateServicioModal: React.FC<CreateServicioModalProps> = ({ isOpen, onClo
 
     setLoading(true);
     try {
-      await onSave(formData);
+      // ciudad y departamento van vacíos a propósito: los resuelve el backend
+      // desde municipio_id. En servicios la dirección se guarda en `ubicacion`.
+      await onSave({
+        ...formData,
+        municipio_id: ubicacion.municipioId,
+        ubicacion: ubicacion.direccion,
+      });
       handleReset();
     } catch (error) {
       console.error(error);
@@ -131,11 +148,13 @@ const CreateServicioModal: React.FC<CreateServicioModalProps> = ({ isOpen, onClo
       fecha_creacion: new Date().toISOString(),
       fecha_actualizacion: new Date().toISOString(),
       relevancia: 'Media',
+      municipio_id: null,
       ciudad: '',
       departamento: '',
       ubicacion: '',
       detalles_del_servicio: ''
     });
+    setUbicacion({ paisId: null, departamentoId: null, municipioId: null, direccion: '' });
     setSelectedProveedorName('');
     setErrors({});
   };
@@ -264,34 +283,14 @@ const CreateServicioModal: React.FC<CreateServicioModalProps> = ({ isOpen, onClo
               <h3 className="text-lg font-semibold text-secondary-900">Ubicación</h3>
             </div>
 
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Input
-                  label="Ciudad *"
-                  name="ciudad"
-                  value={formData.ciudad}
-                  onChange={handleInputChange}
-                  error={errors.ciudad}
-                  placeholder="Ciudad"
-                />
-                <Input
-                  label="Departamento *"
-                  name="departamento"
-                  value={formData.departamento}
-                  onChange={handleInputChange}
-                  error={errors.departamento}
-                  placeholder="Departamento"
-                />
-              </div>
-              <Input
-                label="Dirección / Punto de Encuentro *"
-                name="ubicacion"
-                value={formData.ubicacion}
-                onChange={handleInputChange}
-                error={errors.ubicacion}
-                placeholder="Ubicación exacta o descripción del punto de encuentro"
-              />
-            </div>
+            <LocationFields
+              value={ubicacion}
+              onChange={setUbicacion}
+              errors={errors}
+              required
+              direccionLabel="Dirección / Punto de Encuentro"
+              direccionPlaceholder="Ubicación exacta o descripción del punto de encuentro"
+            />
           </div>
         </div>
 

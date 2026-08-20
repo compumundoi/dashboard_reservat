@@ -5,6 +5,8 @@ import { transporteService } from '../../services/transporteService';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
+import { LocationFields } from '../ui/LocationFields';
+import { ValorUbicacion } from '../../types/ubicacion';
 import SelectProveedorDisponible from '../common/SelectProveedorDisponible';
 import { Select } from '../ui/Select';
 import { Textarea } from '../ui/Textarea';
@@ -19,6 +21,7 @@ const CreateTransporteModal: React.FC<TransporteModalProps> = ({ isOpen, onClose
       email: '',
       telefono: '',
       direccion: '',
+      municipio_id: null as number | null,
       ciudad: '',
       pais: 'Colombia',
       sitio_web: '',
@@ -50,8 +53,17 @@ const CreateTransporteModal: React.FC<TransporteModalProps> = ({ isOpen, onClose
 
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  // La ubicación vive aparte del resto del formulario: son ids del catálogo,
+  // no texto. Al enviar se vuelca sobre el payload del proveedor.
+  const [ubicacion, setUbicacion] = useState<ValorUbicacion>({
+    paisId: null,
+    departamentoId: null,
+    municipioId: null,
+    direccion: '',
+  });
 
   const resetForm = () => {
+    setUbicacion({ paisId: null, departamentoId: null, municipioId: null, direccion: '' });
     setFormData({
       proveedor: {
         tipo: 'transporte',
@@ -60,6 +72,7 @@ const CreateTransporteModal: React.FC<TransporteModalProps> = ({ isOpen, onClose
         email: '',
         telefono: '',
         direccion: '',
+        municipio_id: null as number | null,
         ciudad: '',
         pais: 'Colombia',
         sitio_web: '',
@@ -97,7 +110,9 @@ const CreateTransporteModal: React.FC<TransporteModalProps> = ({ isOpen, onClose
     if (!formData.proveedor.nombre.trim()) newErrors['proveedor.nombre'] = 'El nombre es requerido';
     if (!formData.proveedor.email.trim()) newErrors['proveedor.email'] = 'El email es requerido';
     if (!formData.proveedor.telefono.trim()) newErrors['proveedor.telefono'] = 'El teléfono es requerido';
-    if (!formData.proveedor.ciudad.trim()) newErrors['proveedor.ciudad'] = 'La ciudad es requerida';
+    if (ubicacion.departamentoId === null) newErrors.departamentoId = 'El departamento es requerido';
+    if (ubicacion.municipioId === null) newErrors.municipioId = 'El municipio es requerido';
+    if (!ubicacion.direccion.trim()) newErrors.direccion = 'La dirección es requerida';
     if (!formData.proveedor.numero_documento.trim()) newErrors['proveedor.numero_documento'] = 'El NIT es requerido';
 
     if (!formData.transporte.tipo_vehiculo.trim()) newErrors['transporte.tipo_vehiculo'] = 'El tipo es requerido';
@@ -121,7 +136,13 @@ const CreateTransporteModal: React.FC<TransporteModalProps> = ({ isOpen, onClose
     try {
       setLoading(true);
       const createData = {
-        proveedor: { ...formData.proveedor, fecha_registro: new Date().toISOString() },
+        // ciudad, departamento y país los resuelve el backend desde municipio_id.
+        proveedor: {
+          ...formData.proveedor,
+          municipio_id: ubicacion.municipioId,
+          direccion: ubicacion.direccion,
+          fecha_registro: new Date().toISOString(),
+        },
         transporte: { ...formData.transporte, fecha_mantenimiento: new Date().toISOString() }
       };
 
@@ -204,14 +225,6 @@ const CreateTransporteModal: React.FC<TransporteModalProps> = ({ isOpen, onClose
               required
             />
             <Input
-              label="Ciudad *"
-              placeholder="Bogotá"
-              value={formData.proveedor.ciudad}
-              onChange={(e) => handleInputChange('proveedor', 'ciudad', e.target.value)}
-              error={errors['proveedor.ciudad']}
-              required
-            />
-            <Input
               label="Número de Documento (NIT) *"
               placeholder="900.000.000-1"
               value={formData.proveedor.numero_documento}
@@ -219,12 +232,15 @@ const CreateTransporteModal: React.FC<TransporteModalProps> = ({ isOpen, onClose
               error={errors['proveedor.numero_documento']}
               required
             />
-            <Input
-              label="Dirección"
-              placeholder="Calle 123 # 45 - 67"
-              value={formData.proveedor.direccion}
-              onChange={(e) => handleInputChange('proveedor', 'direccion', e.target.value)}
-            />
+            <div className="md:col-span-2 lg:col-span-3">
+              <LocationFields
+                value={ubicacion}
+                onChange={setUbicacion}
+                errors={errors}
+                required
+                direccionPlaceholder="Calle 123 # 45 - 67"
+              />
+            </div>
             <Input
               label="Ubicación (Zona/Barrio)"
               placeholder="Sede principal"

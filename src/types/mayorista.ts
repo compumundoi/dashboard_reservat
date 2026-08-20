@@ -6,8 +6,14 @@ export interface MayoristaData {
   email: string;
   telefono: string;
   direccion: string;
+  // Ubicación: el formulario sólo envía municipio_id; ciudad, departamento y
+  // país los deriva el backend desde el catálogo de ubicaciones.
+  municipio_id: number | null;
   ciudad: string;
+  departamento?: string;
   pais: string;
+  pais_id?: number | null;
+  departamento_id?: number | null;
   recurente: boolean;
   usuario_creador?: string | null;
   verificado: boolean;
@@ -33,8 +39,14 @@ export interface CreateMayoristaData {
   email: string;
   telefono: string;
   direccion: string;
+  // Ubicación: el formulario sólo envía municipio_id; ciudad, departamento y
+  // país los deriva el backend desde el catálogo de ubicaciones.
+  municipio_id: number | null;
   ciudad: string;
+  departamento?: string;
   pais: string;
+  pais_id?: number | null;
+  departamento_id?: number | null;
   recurente: boolean;
   usuario_creador?: string | null;
   verificado: boolean;
@@ -58,8 +70,12 @@ export interface UpdateMayoristaData {
   email?: string;
   telefono?: string;
   direccion?: string;
+  municipio_id?: number | null;
   ciudad?: string;
+  departamento?: string;
   pais?: string;
+  pais_id?: number | null;
+  departamento_id?: number | null;
   recurente?: boolean;
   usuario_creador?: string | null;
   verificado?: boolean;
