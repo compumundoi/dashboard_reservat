@@ -147,7 +147,16 @@ export const HotelTable: React.FC<HotelTableProps> = ({
     onClearSearch();
   };
 
-  if (loading) {
+  // El esqueleto sólo reemplaza el layout en la PRIMERA carga. Después, un
+  // early return desmontaría el buscador y el usuario perdería el foco en
+  // mitad de lo que está escribiendo, porque ahora cada búsqueda consulta
+  // al servidor y enciende el estado de carga.
+  const [yaCargoUnaVez, setYaCargoUnaVez] = useState(false);
+  useEffect(() => {
+    if (!loading) setYaCargoUnaVez(true);
+  }, [loading]);
+
+  if (loading && !yaCargoUnaVez) {
     return (
       <div className="space-y-4">
         <div className="flex justify-between items-center">
