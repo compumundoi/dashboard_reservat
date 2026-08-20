@@ -19,6 +19,7 @@ const getAuthHeaders = () => ({
 export interface ProveedorOption {
   id_proveedor: string;
   nombre: string;
+  email?: string | null;
 }
 
 interface ResponseBusqueda {

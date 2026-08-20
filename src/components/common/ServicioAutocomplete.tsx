@@ -137,7 +137,11 @@ const ServicioAutocomplete: React.FC<ServicioAutocompleteProps> = ({
                                 className="w-full text-left px-4 py-2.5 text-sm hover:bg-primary-50 transition-colors border-b border-secondary-100 last:border-b-0 group"
                             >
                                 <span className="font-medium text-secondary-900 block group-hover:text-primary-700">{servicio.nombre || 'Sin nombre'}</span>
-                                <span className="block text-xs text-secondary-500 truncate mt-0.5">{servicio.id_servicio}</span>
+                                <span className="block text-xs text-secondary-500 truncate mt-0.5">
+                                    {[servicio.proveedor_nombre, servicio.proveedor_email]
+                                        .filter(Boolean)
+                                        .join(' · ') || 'Sin proveedor asociado'}
+                                </span>
                             </button>
                         ))
                     )}

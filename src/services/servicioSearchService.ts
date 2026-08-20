@@ -19,6 +19,8 @@ const getAuthHeaders = () => ({
 export interface ServicioOption {
   id_servicio: string;
   nombre: string;
+  proveedor_nombre?: string | null;
+  proveedor_email?: string | null;
 }
 
 interface ResponseBusquedaServicios {

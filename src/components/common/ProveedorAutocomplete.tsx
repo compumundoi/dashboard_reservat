@@ -134,7 +134,9 @@ const ProveedorAutocomplete: React.FC<ProveedorAutocompleteProps> = ({
                                 className="w-full text-left px-4 py-2 text-sm hover:bg-blue-50 transition-colors border-b border-gray-100 last:border-b-0"
                             >
                                 <span className="font-medium text-gray-900">{proveedor.nombre || 'Sin nombre'}</span>
-                                <span className="block text-xs text-gray-400 truncate">{proveedor.id_proveedor}</span>
+                                <span className="block text-xs text-gray-500 truncate">
+                                    {proveedor.email || 'Sin email registrado'}
+                                </span>
                             </button>
                         ))
                     )}
