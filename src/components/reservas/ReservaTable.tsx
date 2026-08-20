@@ -101,6 +101,15 @@ const ReservaTable: React.FC<ReservaTableProps> = ({
                   <div className="text-xs text-secondary-500">
                     {reserva.tipo_servicio} · {reserva.ciudad}
                   </div>
+                  {(reserva.nombre_mayorista || reserva.nombre_proveedor) && (
+                    <div className="text-xs text-secondary-400 mt-0.5">
+                      {reserva.nombre_mayorista && (
+                        <>Solicita: {reserva.nombre_mayorista}</>
+                      )}
+                      {reserva.nombre_mayorista && reserva.nombre_proveedor && ' · '}
+                      {reserva.nombre_proveedor}
+                    </div>
+                  )}
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-1.5 text-sm">

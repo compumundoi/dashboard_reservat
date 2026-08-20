@@ -48,7 +48,9 @@ const ReservaDetailModal: React.FC<ReservaDetailModalProps> = ({
       <div className="space-y-6">
         <div className="flex items-center gap-3">
           <Badge variant={VARIANTE_ESTADO[reserva.estado]}>{reserva.estado}</Badge>
-          <span className="text-xs text-secondary-400">ID {reserva.id}</span>
+          <span className="text-xs text-secondary-400">
+            Reserva {reserva.id.slice(0, 8)}
+          </span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -63,9 +65,14 @@ const ReservaDetailModal: React.FC<ReservaDetailModalProps> = ({
             </div>
           </Campo>
           <Campo etiqueta="Solicitada el">{formatearFecha(reserva.fecha_creacion)}</Campo>
-          <Campo etiqueta="Mayorista">{reserva.id_mayorista || '—'}</Campo>
-          <Campo etiqueta="Proveedor">{reserva.id_proveedor || '—'}</Campo>
-          <Campo etiqueta="Servicio">{reserva.id_servicio || '—'}</Campo>
+          {/* El identificador sólo aparece si el nombre no se pudo resolver:
+              a un administrador un UUID no le dice nada. */}
+          <Campo etiqueta="Mayorista">
+            {reserva.nombre_mayorista || reserva.id_mayorista || '—'}
+          </Campo>
+          <Campo etiqueta="Proveedor">
+            {reserva.nombre_proveedor || reserva.id_proveedor || '—'}
+          </Campo>
         </div>
 
         {reserva.descripcion && (

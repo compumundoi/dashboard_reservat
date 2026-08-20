@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Sidebar } from './Sidebar';
 import { UserData } from '../types/auth';
-import { LogOut, Bell, Search, Menu } from 'lucide-react';
+import { LogOut, Search, Menu } from 'lucide-react';
 import { UsersSection } from './users/UsersSection';
 import { ExperiencesSection } from './experiences/ExperiencesSection';
 import { HotelsSection } from './hotels/HotelsSection';
@@ -14,6 +14,7 @@ import RestriccionesSection from './restricciones/RestriccionesSection';
 import FotosSection from './fotos/FotosSection';
 import ServiciosSection from './servicios/ServiciosSection';
 import ReservasSection from './reservas/ReservasSection';
+import NotificacionesReservas from './reservas/NotificacionesReservas';
 import { Button, Input } from './ui';
 
 interface DashboardProps {
@@ -128,10 +129,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
               />
             </div>
 
-            <button className="relative p-2.5 text-secondary-400 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-all duration-200 group">
-              <Bell className="w-5 h-5 group-hover:animate-bounce-gentle" />
-              <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-error-500 rounded-full border-2 border-white"></span>
-            </button>
+            <NotificacionesReservas
+              onIrAReservas={() => setActiveSection('reservas')}
+            />
 
             <div className="h-8 w-px bg-secondary-200 mx-1 hidden sm:block"></div>
 

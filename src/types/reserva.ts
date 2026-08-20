@@ -17,6 +17,9 @@ export interface ReservaData {
   id_proveedor: string | null;
   id_servicio: string | null;
   id_mayorista: string | null;
+  // Resueltos por el backend a partir de los ids, para no mostrar UUIDs.
+  nombre_proveedor: string | null;
+  nombre_mayorista: string | null;
   nombre_servicio: string;
   descripcion: string | null;
   tipo_servicio: string;
