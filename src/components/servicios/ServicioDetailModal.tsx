@@ -5,6 +5,102 @@ import { Modal } from '../ui/Modal';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
 
+// Los detalles llegan como un JSON cuya forma cambia según el tipo de
+// servicio (un tour trae duración y dificultad, un alojamiento trae
+// capacidad). Por eso se renderiza de forma genérica en vez de mapear
+// campos conocidos: un tipo nuevo se muestra igual de bien sin tocar nada.
+// Las claves del JSON vienen sin tildes y a veces abreviadas. Se traducen
+// las conocidas; cualquier clave nueva cae en el formato genérico, así que
+// un tipo de servicio no visto sigue mostrándose de forma legible.
+const ETIQUETAS: Record<string, string> = {
+  tipo_tour: 'Tipo de tour',
+  tipo_alojamiento: 'Tipo de alojamiento',
+  tipo_establecimiento: 'Tipo de establecimiento',
+  grupo_objetivo: 'Grupo objetivo',
+  duracion: 'Duración',
+  dificultad: 'Dificultad',
+  habitacion: 'Habitación',
+  capacidad: 'Capacidad',
+  incluye: 'Incluye',
+  transporte: 'Transporte',
+  guia: 'Guía',
+  alimentacion: 'Alimentación',
+  entradas_sitios: 'Entradas a sitios',
+};
+
+const etiquetaDeClave = (clave: string): string => {
+  if (ETIQUETAS[clave]) return ETIQUETAS[clave];
+  const texto = clave.replace(/_/g, ' ');
+  return texto.charAt(0).toUpperCase() + texto.slice(1);
+};
+
+const textoDeValor = (valor: unknown): string => {
+  if (typeof valor === 'boolean') return valor ? 'Sí' : 'No';
+  if (Array.isArray(valor)) return valor.map((v) => textoDeValor(v)).join(', ');
+  if (valor === null || valor === undefined || valor === '') return '—';
+  return String(valor);
+};
+
+const ParDeDatos: React.FC<{ etiqueta: string; valor: unknown }> = ({ etiqueta, valor }) => (
+  <div className="flex items-baseline justify-between gap-3 py-1.5 border-b border-secondary-50 last:border-b-0">
+    <span className="text-xs text-secondary-500 shrink-0">{etiqueta}</span>
+    <span className="text-sm text-secondary-900 font-medium text-right break-words">
+      {textoDeValor(valor)}
+    </span>
+  </div>
+);
+
+const DetallesDelServicio: React.FC<{ valor: string }> = ({ valor }) => {
+  let datos: Record<string, unknown>;
+  try {
+    const parseado = JSON.parse(valor);
+    if (!parseado || typeof parseado !== 'object' || Array.isArray(parseado)) {
+      throw new Error('no es un objeto');
+    }
+    datos = parseado as Record<string, unknown>;
+  } catch {
+    // Si algún registro guarda texto plano en vez de JSON, se muestra tal
+    // cual en lugar de esconder el dato detrás de un error.
+    return <p className="text-sm text-secondary-700 leading-relaxed">{valor}</p>;
+  }
+
+  const simples = Object.entries(datos).filter(
+    ([, v]) => v === null || typeof v !== 'object' || Array.isArray(v),
+  );
+  const anidados = Object.entries(datos).filter(
+    ([, v]) => v !== null && typeof v === 'object' && !Array.isArray(v),
+  );
+
+  return (
+    <div className="rounded-xl border border-secondary-100 bg-white p-4 space-y-4">
+      {simples.length > 0 && (
+        <div>
+          {simples.map(([clave, v]) => (
+            <ParDeDatos key={clave} etiqueta={etiquetaDeClave(clave)} valor={v} />
+          ))}
+        </div>
+      )}
+
+      {anidados.map(([clave, v]) => (
+        <div key={clave}>
+          <p className="text-xs font-medium text-secondary-400 uppercase tracking-tighter mb-1">
+            {etiquetaDeClave(clave)}
+          </p>
+          <div className="pl-3 border-l-2 border-secondary-100">
+            {Object.entries(v as Record<string, unknown>).map(([subclave, subvalor]) => (
+              <ParDeDatos
+                key={subclave}
+                etiqueta={etiquetaDeClave(subclave)}
+                valor={subvalor}
+              />
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
 const ServicioDetailModal: React.FC<ServicioDetailModalProps> = ({ isOpen, onClose, servicio }) => {
   if (!servicio) return null;
 
@@ -14,7 +110,7 @@ const ServicioDetailModal: React.FC<ServicioDetailModalProps> = ({ isOpen, onClo
       onClose={onClose}
       title="Detalles del Servicio"
       description="Información completa sobre el servicio registrado"
-      size="lg"
+      size="3xl"
     >
       <div className="space-y-8">
         {/* Header Information */}
@@ -60,7 +156,9 @@ const ServicioDetailModal: React.FC<ServicioDetailModalProps> = ({ isOpen, onClo
                     <Building className="h-4 w-4 text-secondary-400" />
                     <span className="font-semibold">{servicio.proveedorNombre}</span>
                   </div>
-                  <p className="text-[10px] text-secondary-400 font-mono pl-6">{servicio.proveedor_id}</p>
+                  <p className="text-sm text-secondary-500 pl-6 break-all">
+                    {servicio.proveedorEmail || 'Sin email registrado'}
+                  </p>
                 </div>
 
                 <div className="p-4 rounded-xl border border-secondary-100 bg-white shadow-sm space-y-1">
@@ -115,9 +213,7 @@ const ServicioDetailModal: React.FC<ServicioDetailModalProps> = ({ isOpen, onClo
                 {servicio.detalles_del_servicio && (
                   <div>
                     <p className="text-xs font-medium text-secondary-400 uppercase tracking-tighter mb-2">Detalles Adicionales</p>
-                    <p className="text-sm text-secondary-700 leading-relaxed">
-                      {servicio.detalles_del_servicio}
-                    </p>
+                    <DetallesDelServicio valor={servicio.detalles_del_servicio} />
                   </div>
                 )}
               </div>
