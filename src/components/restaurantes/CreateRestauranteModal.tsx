@@ -6,6 +6,7 @@ import { restauranteService } from '../../services/restauranteService';
 import Swal from 'sweetalert2';
 import { Modal } from '../ui/Modal';
 import { Input } from '../ui/Input';
+import SelectProveedorDisponible from '../common/SelectProveedorDisponible';
 import { Select } from '../ui/Select';
 import { Textarea } from '../ui/Textarea';
 import { Button } from '../ui/Button';
@@ -162,14 +163,15 @@ const CreateRestauranteModal: React.FC<CreateRestauranteModalProps> = ({
               />
 
               <div className="grid grid-cols-2 gap-4">
-                <Input
-                  label="Email *"
-                  name="email"
-                  type="email"
+                <SelectProveedorDisponible
+                  isOpen={isOpen}
                   value={formData.email}
-                  onChange={handleInputChange}
+                  onChange={(email) =>
+                    handleInputChange({
+                      target: { name: 'email', value: email },
+                    } as React.ChangeEvent<HTMLInputElement>)
+                  }
                   error={errors.email}
-                  placeholder="ejemplo@correo.com"
                 />
                 <Input
                   label="Teléfono *"

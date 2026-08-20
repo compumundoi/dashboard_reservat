@@ -5,6 +5,7 @@ import { transporteService } from '../../services/transporteService';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
+import SelectProveedorDisponible from '../common/SelectProveedorDisponible';
 import { Select } from '../ui/Select';
 import { Textarea } from '../ui/Textarea';
 import Swal from 'sweetalert2';
@@ -188,14 +189,11 @@ const CreateTransporteModal: React.FC<TransporteModalProps> = ({ isOpen, onClose
                 required
               />
             </div>
-            <Input
-              label="Email *"
-              type="email"
-              placeholder="proveedor@ejemplo.com"
+            <SelectProveedorDisponible
+              isOpen={isOpen}
               value={formData.proveedor.email}
-              onChange={(e) => handleInputChange('proveedor', 'email', e.target.value)}
+              onChange={(email) => handleInputChange('proveedor', 'email', email)}
               error={errors['proveedor.email']}
-              required
             />
             <Input
               label="Teléfono *"

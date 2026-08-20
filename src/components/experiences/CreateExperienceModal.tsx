@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from 'react';
-import { User, Compass, MapPin, Save, Info, Mail, Phone, Shield, Clock, Users, Globe2, Briefcase } from 'lucide-react';
+import { User, Compass, MapPin, Save, Info, Phone, Shield, Clock, Users, Globe2, Briefcase } from 'lucide-react';
 import { Modal } from '../ui/Modal';
 import { Input } from '../ui/Input';
+import SelectProveedorDisponible from '../common/SelectProveedorDisponible';
 import { Button } from '../ui/Button';
 import { Textarea } from '../ui/Textarea';
 import { Select } from '../ui/Select';
@@ -145,14 +146,10 @@ export const CreateExperienceModal: React.FC<CreateExperienceModalProps> = ({
                 />
               </div>
 
-              <Input
-                label="Email de Contacto *"
-                type="email"
+              <SelectProveedorDisponible
+                isOpen={isOpen}
                 value={formData.proveedor.email}
-                onChange={(e) => updateFormValue('proveedor.email', e.target.value)}
-                placeholder="contacto@ejemplo.com"
-                leftIcon={<Mail className="h-3 w-3 text-gray-400" />}
-                className={errors['proveedor.email'] ? "border-red-500" : ""}
+                onChange={(email) => updateFormValue('proveedor.email', email)}
                 error={errors['proveedor.email']}
               />
 

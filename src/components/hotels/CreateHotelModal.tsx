@@ -3,6 +3,7 @@ import { Save, Building, Info } from 'lucide-react';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
+import SelectProveedorDisponible from '../common/SelectProveedorDisponible';
 import { Select } from '../ui/Select';
 import { Textarea } from '../ui/Textarea';
 
@@ -164,13 +165,10 @@ export const CreateHotelModal: React.FC<CreateHotelModalProps> = ({
               onChange={(e) => updateProveedorField('nombre', e.target.value)}
               required
             />
-            <Input
-              label="Email *"
-              type="email"
-              placeholder="hotel@ejemplo.com"
+            <SelectProveedorDisponible
+              isOpen={isOpen}
               value={form.proveedor.email}
-              onChange={(e) => updateProveedorField('email', e.target.value)}
-              required
+              onChange={(email) => updateProveedorField('email', email)}
             />
             <Input
               label="Teléfono *"
