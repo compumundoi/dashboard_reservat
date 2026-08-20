@@ -1,3 +1,19 @@
+// Tipos de servicio admitidos. El valor guardado respeta el que ya usan los
+// registros existentes ("experiencias" en plural), para que las estadísticas
+// y los filtros no partan en dos una misma categoría.
+export const TIPOS_DE_SERVICIO = [
+  { value: 'transporte', label: 'Transporte' },
+  { value: 'alojamiento', label: 'Alojamiento' },
+  { value: 'experiencias', label: 'Experiencia' },
+  { value: 'restaurante', label: 'Restaurante' },
+];
+
+// Devuelve la etiqueta legible de un valor guardado. Si el registro trae un
+// tipo fuera del catálogo —los había, cargados a mano cuando esto era texto
+// libre— se muestra tal cual en vez de dejar el campo en blanco.
+export const etiquetaDeTipo = (valor: string): string =>
+  TIPOS_DE_SERVICIO.find((t) => t.value === valor)?.label || valor;
+
 // Tipos e interfaces para la sección de Servicios
 export interface DatosServicio {
   proveedor_id: string;

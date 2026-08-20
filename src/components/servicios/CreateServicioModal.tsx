@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Package, Building, MapPin, Save, Info } from 'lucide-react';
 import Swal from 'sweetalert2';
-import { CreateServicioModalProps, DatosServicio } from '../../types/servicio';
+import { CreateServicioModalProps, DatosServicio, TIPOS_DE_SERVICIO } from '../../types/servicio';
 import { validarPrecio } from '../../services/servicioService';
 import ProveedorAutocomplete from '../common/ProveedorAutocomplete';
 import { Modal } from '../ui/Modal';
@@ -174,13 +174,16 @@ const CreateServicioModal: React.FC<CreateServicioModalProps> = ({ isOpen, onClo
                 placeholder="Ej: Tour Guatavita Premium"
               />
 
-              <Input
+              <Select
                 label="Tipo de Servicio *"
                 name="tipo_servicio"
                 value={formData.tipo_servicio}
                 onChange={handleInputChange}
                 error={errors.tipo_servicio}
-                placeholder="Ej: Hospedaje, Transporte, Alimentación"
+                options={[
+                  { value: '', label: 'Seleccionar...' },
+                  ...TIPOS_DE_SERVICIO,
+                ]}
               />
 
               <Textarea

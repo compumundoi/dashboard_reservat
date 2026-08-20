@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Package, Building, MapPin, Save, Info } from 'lucide-react';
 import Swal from 'sweetalert2';
-import { EditServicioModalProps, ActualizarServicio } from '../../types/servicio';
+import { EditServicioModalProps, ActualizarServicio, etiquetaDeTipo } from '../../types/servicio';
 import { validarPrecio } from '../../services/servicioService';
 import ProveedorAutocomplete from '../common/ProveedorAutocomplete';
 import { Modal } from '../ui/Modal';
@@ -172,13 +172,15 @@ const EditServicioModal: React.FC<EditServicioModalProps> = ({ isOpen, onClose, 
                 placeholder="Ej: Tour Guatavita Premium"
               />
 
+              {/* El tipo se define al crear el servicio y no se modifica:
+                  cambiarlo movería el registro de categoría y con él las
+                  estadísticas y los filtros que dependen de ella. */}
               <Input
-                label="Tipo de Servicio *"
-                name="tipo_servicio"
-                value={formData.tipo_servicio}
-                onChange={handleInputChange}
-                error={errors.tipo_servicio}
-                placeholder="Ej: Hospedaje, Transporte, Alimentación"
+                label="Tipo de Servicio"
+                value={etiquetaDeTipo(formData.tipo_servicio)}
+                readOnly
+                disabled
+                className="bg-secondary-50 cursor-not-allowed capitalize"
               />
 
               <Textarea
