@@ -20,7 +20,7 @@ class RutaService {
   private getAuthHeaders() {
     const token = document.cookie
       .split("; ")
-      .find((row) => row.startsWith("access_token="))
+      .find((row) => row.startsWith("auth_token="))
       ?.split("=")[1];
 
     return {
