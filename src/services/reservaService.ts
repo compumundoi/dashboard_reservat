@@ -5,6 +5,7 @@ import {
   RespuestaDecision,
   ResponseListReservas,
 } from "../types/reserva";
+import { deleteCookie } from "../utils/auth";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:8018/api/v1";
@@ -32,6 +33,22 @@ const getAuthHeaders = (): Record<string, string> => {
     "Content-Type": "application/json",
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
+};
+
+/**
+ * Cierra la sesión cuando el servidor ya no la reconoce.
+ *
+ * Sin esto el dashboard queda en un estado engañoso: el encabezado sigue
+ * mostrando al administrador y ninguna acción funciona.
+ */
+const cerrarSesionExpirada = (): void => {
+  deleteCookie('auth_token');
+  try {
+    localStorage.removeItem('auth_token');
+  } catch {
+    // Si el navegador bloquea el almacenamiento, alcanza con la cookie.
+  }
+  window.location.reload();
 };
 
 // El backend responde los errores en `detail`; sin esto el administrador ve
@@ -64,7 +81,10 @@ class ReservaService {
       { method: "GET", headers: getAuthHeaders() },
     );
 
-    if (!response.ok) throw new Error(await leerError(response));
+    if (!response.ok) {
+      if (response.status === 401) cerrarSesionExpirada();
+      throw new Error(await leerError(response));
+    }
     return response.json();
   }
 
@@ -74,7 +94,10 @@ class ReservaService {
       headers: getAuthHeaders(),
     });
 
-    if (!response.ok) throw new Error(await leerError(response));
+    if (!response.ok) {
+      if (response.status === 401) cerrarSesionExpirada();
+      throw new Error(await leerError(response));
+    }
     return response.json();
   }
 
@@ -87,7 +110,10 @@ class ReservaService {
       body: JSON.stringify(idAdmin ? { id_admin_decision: idAdmin } : {}),
     });
 
-    if (!response.ok) throw new Error(await leerError(response));
+    if (!response.ok) {
+      if (response.status === 401) cerrarSesionExpirada();
+      throw new Error(await leerError(response));
+    }
     return response.json();
   }
 
@@ -107,7 +133,10 @@ class ReservaService {
       }),
     });
 
-    if (!response.ok) throw new Error(await leerError(response));
+    if (!response.ok) {
+      if (response.status === 401) cerrarSesionExpirada();
+      throw new Error(await leerError(response));
+    }
     return response.json();
   }
 }
