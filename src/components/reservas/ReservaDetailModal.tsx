@@ -69,9 +69,19 @@ const ReservaDetailModal: React.FC<ReservaDetailModalProps> = ({
               a un administrador un UUID no le dice nada. */}
           <Campo etiqueta="Mayorista">
             {reserva.nombre_mayorista || reserva.id_mayorista || '—'}
+            {reserva.email_mayorista && (
+              <div className="text-xs text-secondary-500">
+                {reserva.email_mayorista}
+              </div>
+            )}
           </Campo>
           <Campo etiqueta="Proveedor">
             {reserva.nombre_proveedor || reserva.id_proveedor || '—'}
+            {reserva.email_proveedor && (
+              <div className="text-xs text-secondary-500">
+                {reserva.email_proveedor}
+              </div>
+            )}
           </Campo>
         </div>
 
@@ -112,7 +122,14 @@ const ReservaDetailModal: React.FC<ReservaDetailModalProps> = ({
                 {formatearFechaHora(reserva.fecha_decision)}
               </Campo>
               <Campo etiqueta="Decidida por">
-                {reserva.id_admin_decision || 'No registrado'}
+                {reserva.nombre_admin_decision ||
+                  reserva.email_admin_decision ||
+                  'No registrado'}
+                {reserva.nombre_admin_decision && reserva.email_admin_decision && (
+                  <div className="text-xs text-secondary-500">
+                    {reserva.email_admin_decision}
+                  </div>
+                )}
               </Campo>
             </div>
 

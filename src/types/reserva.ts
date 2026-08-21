@@ -19,7 +19,9 @@ export interface ReservaData {
   id_mayorista: string | null;
   // Resueltos por el backend a partir de los ids, para no mostrar UUIDs.
   nombre_proveedor: string | null;
+  email_proveedor: string | null;
   nombre_mayorista: string | null;
+  email_mayorista: string | null;
   nombre_servicio: string;
   descripcion: string | null;
   tipo_servicio: string;
@@ -41,6 +43,8 @@ export interface ReservaData {
   motivo_rechazo: string | null;
   fecha_decision: string | null;
   id_admin_decision: string | null;
+  nombre_admin_decision: string | null;
+  email_admin_decision: string | null;
 }
 
 export interface ResponseListReservas {
