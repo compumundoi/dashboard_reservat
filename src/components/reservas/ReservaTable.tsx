@@ -138,6 +138,20 @@ const ReservaTable: React.FC<ReservaTableProps> = ({
                   <Badge variant={VARIANTE_ESTADO[reserva.estado]}>
                     {reserva.estado}
                   </Badge>
+                  {reserva.estado === 'aprobada' &&
+                    reserva.estado_pago !== 'no_aplica' && (
+                      <div className="mt-1">
+                        <Badge
+                          variant={
+                            reserva.estado_pago === 'aprobado' ? 'success' : 'info'
+                          }
+                        >
+                          {reserva.estado_pago === 'aprobado'
+                            ? 'pagada'
+                            : `pago ${reserva.estado_pago}`}
+                        </Badge>
+                      </div>
+                    )}
                   {reserva.estado === 'rechazada' && reserva.motivo_rechazo && (
                     <div
                       className="text-xs text-secondary-500 mt-1 max-w-[16rem] truncate"

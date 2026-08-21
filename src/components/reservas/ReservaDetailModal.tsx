@@ -83,6 +83,27 @@ const ReservaDetailModal: React.FC<ReservaDetailModalProps> = ({
           <Campo etiqueta="Observaciones">{reserva.observaciones}</Campo>
         )}
 
+        {/* El cobro sólo existe si la reserva llegó a aprobarse. */}
+        {reserva.estado_pago !== 'no_aplica' && (
+          <div className="border-t border-secondary-100 pt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Campo etiqueta="Estado del pago">
+              <Badge
+                variant={reserva.estado_pago === 'aprobado' ? 'success' : 'info'}
+              >
+                {reserva.estado_pago}
+              </Badge>
+            </Campo>
+            {reserva.fecha_pago && (
+              <Campo etiqueta="Pagada el">
+                {formatearFechaHora(reserva.fecha_pago)}
+              </Campo>
+            )}
+            {reserva.pago_metodo && (
+              <Campo etiqueta="Medio de pago">{reserva.pago_metodo}</Campo>
+            )}
+          </div>
+        )}
+
         {/* La decisión sólo existe una vez que un administrador la tomó. */}
         {reserva.estado !== 'pendiente' && (
           <div className="border-t border-secondary-100 pt-4 space-y-4">

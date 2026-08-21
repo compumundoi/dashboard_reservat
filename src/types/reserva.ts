@@ -33,6 +33,11 @@ export interface ReservaData {
   fecha_fin: string | null;
   cantidad: number;
   hora: string | null;
+  // Cobro. 'no_aplica' mientras la reserva no esté aprobada.
+  estado_pago: 'no_aplica' | 'pendiente' | 'aprobado' | 'rechazado' | 'error';
+  pago_link_url: string | null;
+  fecha_pago: string | null;
+  pago_metodo: string | null;
   motivo_rechazo: string | null;
   fecha_decision: string | null;
   id_admin_decision: string | null;
