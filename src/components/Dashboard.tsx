@@ -15,6 +15,7 @@ import FotosSection from './fotos/FotosSection';
 import ServiciosSection from './servicios/ServiciosSection';
 import ReservasSection from './reservas/ReservasSection';
 import NotificacionesReservas from './reservas/NotificacionesReservas';
+import { DashboardHome } from './home/DashboardHome';
 import { Button, Input } from './ui';
 
 interface DashboardProps {
@@ -29,21 +30,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
   const renderContent = () => {
     switch (activeSection) {
       case 'dashboard':
-        return (
-          <div className="flex flex-col items-center justify-center h-[60vh] text-center space-y-4 animate-fade-in">
-            <div className="w-20 h-20 bg-primary-50 rounded-full flex items-center justify-center text-primary-600 mb-2 ring-8 ring-primary-50/50">
-              <span className="text-4xl">👋</span>
-            </div>
-            <h2 className="text-3xl font-display font-bold text-secondary-900">¡Hola, {user.nombre || 'Administrador'}!</h2>
-            <p className="text-secondary-500 max-w-md mx-auto">
-              Bienvenido a tu panel de control. Selecciona una opción en el menú lateral para comenzar a gestionar tu negocio.
-            </p>
-            <div className="flex gap-3 mt-4 justify-center">
-              <Button onClick={() => setActiveSection('servicios')}>Gestionar Servicios</Button>
-              <Button variant="outline" onClick={() => setActiveSection('usuarios')}>Ver Usuarios</Button>
-            </div>
-          </div>
-        );
+        return <DashboardHome userName={user.nombre} onNavigate={setActiveSection} />;
       case 'usuarios':
         return <UsersSection />;
       case 'reservas':
