@@ -1,7 +1,5 @@
 import React from 'react';
 import {
-  Area,
-  AreaChart,
   Bar,
   BarChart,
   CartesianGrid,
@@ -12,7 +10,6 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import type { LabelProps } from 'recharts';
 import {
   ArrowDownRight,
   ArrowUpRight,
@@ -28,78 +25,73 @@ import { Badge, Button, Card } from '../ui';
 
 // Datos estáticos de ejemplo hasta que existan los endpoints de reportes.
 const SERIES_CURRENT = '#4f46e5';
-const SERIES_PREVIOUS = '#f2785c';
 const GRID = '#e2e8f0';
 const AXIS_TEXT = '#64748b';
 
-const monthlyRevenue = [
-  { mes: 'Nov', actual: 182, anterior: 141 },
-  { mes: 'Dic', actual: 264, anterior: 219 },
-  { mes: 'Ene', actual: 298, anterior: 247 },
-  { mes: 'Feb', actual: 221, anterior: 198 },
-  { mes: 'Mar', actual: 236, anterior: 205 },
-  { mes: 'Abr', actual: 248, anterior: 214 },
-  { mes: 'May', actual: 229, anterior: 201 },
-  { mes: 'Jun', actual: 287, anterior: 238 },
-  { mes: 'Jul', actual: 342, anterior: 276 },
-  { mes: 'Ago', actual: 318, anterior: 262 },
-  { mes: 'Sep', actual: 274, anterior: 231 },
-  { mes: 'Oct', actual: 312, anterior: 249 },
+// Operación desde julio de 2026: curva de adopción con aceleración en el
+// último bimestre. Todo lo de octubre suma las 68 reservas del mes.
+const monthlyBookings = [
+  { mes: 'Jul', reservas: 18, participacion: 10.2 },
+  { mes: 'Ago', reservas: 32, participacion: 18.2 },
+  { mes: 'Sep', reservas: 58, participacion: 33.0 },
+  { mes: 'Oct', reservas: 68, participacion: 38.6 },
 ];
+
+const totalBookings = monthlyBookings.reduce((sum, m) => sum + m.reservas, 0);
 
 const kpis = [
   {
     label: 'Ingresos del mes',
-    value: '$312,4 M',
-    delta: 25.3,
+    value: '$16,7 M',
+    delta: 20.7,
     icon: DollarSign,
-    trend: [221, 236, 248, 229, 287, 342, 318, 274, 312],
+    trend: [4.1, 7.6, 13.8, 16.7],
   },
   {
-    label: 'Reservas',
-    value: '1.284',
-    delta: 12.8,
+    label: 'Reservas del mes',
+    value: '68',
+    delta: 17.2,
     icon: CalendarCheck,
-    trend: [880, 910, 952, 931, 1040, 1210, 1175, 1138, 1284],
+    trend: [18, 32, 58, 68],
   },
   {
     label: 'Ticket promedio',
-    value: '$243.300',
-    delta: 11.1,
+    value: '$245.000',
+    delta: 2.9,
     icon: Receipt,
-    trend: [251, 259, 260, 246, 276, 283, 271, 241, 243],
+    trend: [228, 236, 238, 245],
   },
   {
     label: 'Tasa de cancelación',
-    value: '4,6 %',
-    delta: -1.2,
+    value: '5,9 %',
+    delta: -14.5,
     // En esta métrica, bajar es bueno.
     invert: true,
     icon: Percent,
-    trend: [6.9, 6.4, 6.1, 6.3, 5.8, 5.2, 5.5, 5.8, 4.6],
+    trend: [11.1, 9.4, 6.9, 5.9],
   },
 ];
 
 const bookingsByType = [
-  { tipo: 'Hoteles', reservas: 486 },
-  { tipo: 'Experiencias', reservas: 342 },
-  { tipo: 'Transportes', reservas: 218 },
-  { tipo: 'Restaurantes', reservas: 151 },
-  { tipo: 'Viajes', reservas: 87 },
+  { tipo: 'Hoteles', reservas: 26 },
+  { tipo: 'Experiencias', reservas: 19 },
+  { tipo: 'Transportes', reservas: 12 },
+  { tipo: 'Restaurantes', reservas: 7 },
+  { tipo: 'Viajes', reservas: 4 },
 ];
 
 const bookingStatus = [
-  { label: 'Confirmadas', value: 1031, color: '#22c55e', icon: CheckCircle2 },
-  { label: 'Pendientes', value: 194, color: '#eab308', icon: Clock },
-  { label: 'Canceladas', value: 59, color: '#ef4444', icon: XCircle },
+  { label: 'Confirmadas', value: 56, color: '#22c55e', icon: CheckCircle2 },
+  { label: 'Pendientes', value: 8, color: '#eab308', icon: Clock },
+  { label: 'Canceladas', value: 4, color: '#ef4444', icon: XCircle },
 ];
 
 const topDestinations = [
-  { ciudad: 'Cartagena', reservas: 328, ingresos: '$84,2 M' },
-  { ciudad: 'Santa Marta', reservas: 241, ingresos: '$58,9 M' },
-  { ciudad: 'Medellín', reservas: 197, ingresos: '$43,1 M' },
-  { ciudad: 'San Andrés', reservas: 164, ingresos: '$51,7 M' },
-  { ciudad: 'Bogotá', reservas: 129, ingresos: '$27,4 M' },
+  { ciudad: 'Cartagena', reservas: 21, ingresos: '$5,4 M' },
+  { ciudad: 'Santa Marta', reservas: 16, ingresos: '$4,0 M' },
+  { ciudad: 'Medellín', reservas: 13, ingresos: '$3,0 M' },
+  { ciudad: 'San Andrés', reservas: 10, ingresos: '$2,9 M' },
+  { ciudad: 'Bogotá', reservas: 8, ingresos: '$1,4 M' },
 ];
 
 const recentBookings = [
@@ -147,17 +139,22 @@ const ChartTooltip: React.FC<ChartTooltipProps> = ({ active, label, payload, uni
   );
 };
 
-// Etiqueta directa solo en el último punto de la serie.
-const endLabel = (lastIndex: number, fill: string, fontWeight: number) => {
-  const EndLabel = (props: LabelProps) =>
-    props.index === lastIndex ? (
-      <text x={Number(props.x) + 8} y={Number(props.y) + 4} fontSize={12} fontWeight={fontWeight} fill={fill}>
-        {props.value}
-      </text>
-    ) : (
-      <g />
-    );
-  return EndLabel;
+const MonthTooltip: React.FC<{ active?: boolean; label?: string; payload?: { payload: (typeof monthlyBookings)[number] }[] }> = ({
+  active,
+  label,
+  payload,
+}) => {
+  if (!active || !payload?.length) return null;
+  const { reservas, participacion } = payload[0].payload;
+  return (
+    <div className="rounded-xl border border-secondary-100 bg-white px-3 py-2 shadow-soft-lg text-sm">
+      <p className="font-medium text-secondary-900 mb-1">{label}</p>
+      <p className="text-secondary-600">
+        <span className="font-semibold text-secondary-900 tabular-nums">{reservas}</span> reservas
+      </p>
+      <p className="text-secondary-500 tabular-nums">{participacion.toLocaleString('es-CO')}% del total</p>
+    </div>
+  );
 };
 
 const KpiCard: React.FC<(typeof kpis)[number]> = ({ label, value, delta, icon: Icon, trend, invert }) => {
@@ -208,7 +205,6 @@ interface DashboardHomeProps {
 export const DashboardHome: React.FC<DashboardHomeProps> = ({ userName, onNavigate }) => {
   const totalStatus = bookingStatus.reduce((sum, s) => sum + s.value, 0);
   const maxDestination = Math.max(...topDestinations.map((d) => d.reservas));
-  const lastIndex = monthlyRevenue.length - 1;
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -218,7 +214,7 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({ userName, onNaviga
             <h2 className="text-2xl font-display font-bold text-secondary-900">¡Hola, {userName || 'Administrador'}! 👋</h2>
             <Badge variant="secondary">Datos de ejemplo</Badge>
           </div>
-          <p className="mt-1 text-secondary-500">Así va tu negocio en los últimos 12 meses.</p>
+          <p className="mt-1 text-secondary-500">Así va tu negocio desde que arrancó la operación en julio.</p>
         </div>
         <div className="flex gap-3">
           <Button variant="outline" onClick={() => onNavigate('reservas')}>Ver reservas</Button>
@@ -236,60 +232,29 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({ userName, onNaviga
         <Card className="p-5 sm:p-6 xl:col-span-2">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <h3 className="font-display font-semibold text-secondary-900">Ingresos mensuales</h3>
-              <p className="text-sm text-secondary-500">Millones de COP · comparado con el año anterior</p>
+              <h3 className="font-display font-semibold text-secondary-900">Reservas por mes</h3>
+              <p className="text-sm text-secondary-500">Julio – octubre 2026</p>
             </div>
-            <div className="flex items-center gap-4 text-sm text-secondary-600">
-              <span className="flex items-center gap-2">
-                <span className="h-0.5 w-4 rounded-full" style={{ backgroundColor: SERIES_CURRENT }} />
-                2026
-              </span>
-              <span className="flex items-center gap-2">
-                <span className="h-0.5 w-4 rounded-full border-t-2 border-dashed" style={{ borderColor: SERIES_PREVIOUS }} />
-                2025
-              </span>
+            <div className="text-right">
+              <p className="text-2xl font-display font-bold text-secondary-900 tabular-nums">{totalBookings}</p>
+              <p className="text-sm text-secondary-500">reservas en total</p>
             </div>
           </div>
           <div className="mt-6 h-72">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={monthlyRevenue} margin={{ top: 8, right: 40, left: -12, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="revenueFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={SERIES_CURRENT} stopOpacity={0.18} />
-                    <stop offset="100%" stopColor={SERIES_CURRENT} stopOpacity={0} />
-                  </linearGradient>
-                </defs>
+              <BarChart data={monthlyBookings} margin={{ top: 24, right: 8, left: -12, bottom: 0 }} barCategoryGap="28%">
                 <CartesianGrid stroke={GRID} strokeDasharray="3 3" vertical={false} />
                 <XAxis dataKey="mes" tickLine={false} axisLine={false} tick={{ fill: AXIS_TEXT, fontSize: 12 }} dy={8} />
-                <YAxis tickLine={false} axisLine={false} tick={{ fill: AXIS_TEXT, fontSize: 12 }} width={48} />
-                <Tooltip
-                  cursor={{ stroke: '#cbd5e1', strokeWidth: 1 }}
-                  content={<ChartTooltip unit={(v) => `$${v} M`} />}
+                <YAxis tickLine={false} axisLine={false} tick={{ fill: AXIS_TEXT, fontSize: 12 }} width={40} allowDecimals={false} />
+                <Tooltip cursor={{ fill: '#f1f5f9' }} content={<MonthTooltip />} />
+                <Bar
+                  dataKey="reservas"
+                  name="Reservas"
+                  fill={SERIES_CURRENT}
+                  radius={[4, 4, 0, 0]}
+                  label={{ position: 'top', fill: '#0f172a', fontSize: 12, fontWeight: 600 }}
                 />
-                <Area
-                  type="monotone"
-                  dataKey="anterior"
-                  name="2025"
-                  stroke={SERIES_PREVIOUS}
-                  strokeWidth={2}
-                  strokeDasharray="5 4"
-                  fill="none"
-                  dot={false}
-                  activeDot={{ r: 4, strokeWidth: 2, stroke: '#fff' }}
-                  label={endLabel(lastIndex, AXIS_TEXT, 400)}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="actual"
-                  name="2026"
-                  stroke={SERIES_CURRENT}
-                  strokeWidth={2}
-                  fill="url(#revenueFill)"
-                  dot={false}
-                  activeDot={{ r: 5, strokeWidth: 2, stroke: '#fff' }}
-                  label={endLabel(lastIndex, '#0f172a', 600)}
-                />
-              </AreaChart>
+              </BarChart>
             </ResponsiveContainer>
           </div>
         </Card>
@@ -317,7 +282,7 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({ userName, onNaviga
                 <span className="text-secondary-700">{label}</span>
                 <span className="ml-auto font-semibold text-secondary-900 tabular-nums">{value.toLocaleString('es-CO')}</span>
                 <span className="w-12 text-right text-secondary-500 tabular-nums">
-                  {((value / totalStatus) * 100).toFixed(1)}%
+                  {((value / totalStatus) * 100).toLocaleString('es-CO', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%
                 </span>
               </li>
             ))}
