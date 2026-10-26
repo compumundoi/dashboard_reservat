@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
-import { X, Save, Camera, Link, FileText, Hash, Star, Calendar } from 'lucide-react';
+import { X, Save, Camera, Image as ImageIcon, FileText, Hash, Star, Calendar } from 'lucide-react';
 import { EditFotoModalProps, ActualizarFoto } from '../../types/foto';
-import { validarURLImagen } from '../../services/fotoService';
 import ServicioAutocomplete from '../common/ServicioAutocomplete';
+import { aFechaLocalInput } from '../../utils/fecha';
 
 const EditFotoModal: React.FC<EditFotoModalProps> = ({ isOpen, onClose, foto, onSave }) => {
   const [formData, setFormData] = useState<ActualizarFoto>({
     servicio_id: '',
-    url: '',
     descripcion: '',
     orden: 0,
     es_portada: false,
@@ -23,11 +22,10 @@ const EditFotoModal: React.FC<EditFotoModalProps> = ({ isOpen, onClose, foto, on
   useEffect(() => {
     if (isOpen && foto) {
       // Convertir fecha para input datetime-local
-      const fechaLocal = new Date(foto.fecha_subida).toISOString().slice(0, 16);
+      const fechaLocal = aFechaLocalInput(new Date(foto.fecha_subida));
 
       setFormData({
         servicio_id: foto.servicio_id,
-        url: foto.url,
         descripcion: foto.descripcion,
         orden: foto.orden,
         es_portada: foto.es_portada,
@@ -44,10 +42,6 @@ const EditFotoModal: React.FC<EditFotoModalProps> = ({ isOpen, onClose, foto, on
     const newErrors: Record<string, string> = {};
 
     // servicio_id validation handled by the autocomplete component
-
-    if (formData.url && !validarURLImagen(formData.url)) {
-      newErrors.url = 'Debe ser una URL válida de imagen (jpg, jpeg, png, gif, bmp, webp)';
-    }
 
     if (formData.descripcion && formData.descripcion.length < 5) {
       newErrors.descripcion = 'La descripción debe tener al menos 5 caracteres';
@@ -119,7 +113,6 @@ const EditFotoModal: React.FC<EditFotoModalProps> = ({ isOpen, onClose, foto, on
       onClose();
       setFormData({
         servicio_id: '',
-        url: '',
         descripcion: '',
         orden: 0,
         es_portada: false,
@@ -169,23 +162,18 @@ const EditFotoModal: React.FC<EditFotoModalProps> = ({ isOpen, onClose, foto, on
                 error={errors.servicio_id}
               />
 
+              {/* La imagen no se edita: para cambiarla se elimina la foto y se sube otra. */}
               <div>
                 <label className="flex items-center space-x-2 text-sm font-medium text-gray-700 mb-2">
-                  <Link className="h-4 w-4" />
-                  <span>URL de la Imagen</span>
+                  <ImageIcon className="h-4 w-4" />
+                  <span>Imagen</span>
                 </label>
-                <input
-                  type="url"
-                  name="url"
-                  value={formData.url || ''}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent ${errors.url ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                  placeholder="https://ejemplo.com/imagen.jpg"
+                <img
+                  src={foto.url}
+                  alt={foto.descripcion || 'Imagen de la foto'}
+                  className="w-full h-32 object-cover rounded border border-gray-200"
                 />
-                {errors.url && (
-                  <p className="mt-1 text-sm text-red-600">{errors.url}</p>
-                )}
+                <p className="mt-1 text-xs text-gray-500">Para cambiar la imagen, elimina esta foto y sube una nueva.</p>
               </div>
 
               <div>

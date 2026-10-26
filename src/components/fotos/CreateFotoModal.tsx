@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import ReactDOM from 'react-dom';
-import { X, Save, Camera, Link, FileText, Hash, Star, Calendar } from 'lucide-react';
+import { X, Save, Camera, FileText, Hash, Star, Calendar, UploadCloud } from 'lucide-react';
 import { CreateFotoModalProps, DatosFoto } from '../../types/foto';
-import { validarURLImagen } from '../../services/fotoService';
 import ServicioAutocomplete from '../common/ServicioAutocomplete';
+import { aFechaLocalInput } from '../../utils/fecha';
+
+const TIPOS_PERMITIDOS = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+const TAMANO_MAXIMO_MB = 5;
 
 const CreateFotoModal: React.FC<CreateFotoModalProps> = ({ isOpen, onClose, onSave }) => {
   const [formData, setFormData] = useState<DatosFoto>({
@@ -12,12 +15,25 @@ const CreateFotoModal: React.FC<CreateFotoModalProps> = ({ isOpen, onClose, onSa
     descripcion: '',
     orden: 1,
     es_portada: false,
-    fecha_subida: new Date().toISOString().slice(0, 16),
+    fecha_subida: aFechaLocalInput(),
     eliminado: false
   });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [selectedServicioName, setSelectedServicioName] = useState('');
+  const [archivo, setArchivo] = useState<File | null>(null);
+  const [preview, setPreview] = useState('');
+
+  // Libera la URL temporal de la vista previa al cambiar o cerrar.
+  useEffect(() => {
+    if (!archivo) {
+      setPreview('');
+      return undefined;
+    }
+    const objectUrl = URL.createObjectURL(archivo);
+    setPreview(objectUrl);
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [archivo]);
 
   // Validar formulario
   const validateForm = (): boolean => {
@@ -27,10 +43,9 @@ const CreateFotoModal: React.FC<CreateFotoModalProps> = ({ isOpen, onClose, onSa
       newErrors.servicio_id = 'Debe seleccionar un servicio';
     }
 
-    if (!formData.url) {
-      newErrors.url = 'La URL de la imagen es requerida';
-    } else if (!validarURLImagen(formData.url)) {
-      newErrors.url = 'Debe ser una URL válida de imagen (jpg, jpeg, png, gif, bmp, webp)';
+    // El tipo y el tamaño ya se validaron al seleccionarlo; la URL la genera el backend.
+    if (!archivo) {
+      newErrors.archivo = 'Selecciona la imagen que quieres subir';
     }
 
     if (!formData.descripcion) {
@@ -77,11 +92,27 @@ const CreateFotoModal: React.FC<CreateFotoModalProps> = ({ isOpen, onClose, onSa
     }
   };
 
+  const handleArchivoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0] || null;
+    if (f && !TIPOS_PERMITIDOS.includes(f.type)) {
+      setErrors(prev => ({ ...prev, archivo: 'Formato no soportado. Usa JPG, PNG, WEBP o GIF' }));
+      e.target.value = '';
+      return;
+    }
+    if (f && f.size > TAMANO_MAXIMO_MB * 1024 * 1024) {
+      setErrors(prev => ({ ...prev, archivo: `La imagen supera el máximo de ${TAMANO_MAXIMO_MB} MB` }));
+      e.target.value = '';
+      return;
+    }
+    setArchivo(f);
+    setErrors(prev => ({ ...prev, archivo: '' }));
+  };
+
   // Manejar envío del formulario
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!validateForm()) {
+    if (!validateForm() || !archivo) {
       return;
     }
 
@@ -93,7 +124,7 @@ const CreateFotoModal: React.FC<CreateFotoModalProps> = ({ isOpen, onClose, onSa
         fecha_subida: new Date(formData.fecha_subida).toISOString()
       };
 
-      await onSave(dataToSend);
+      await onSave(dataToSend, archivo);
 
       // Resetear formulario
       setFormData({
@@ -102,10 +133,11 @@ const CreateFotoModal: React.FC<CreateFotoModalProps> = ({ isOpen, onClose, onSa
         descripcion: '',
         orden: 1,
         es_portada: false,
-        fecha_subida: new Date().toISOString().slice(0, 16),
+        fecha_subida: aFechaLocalInput(),
         eliminado: false
       });
       setSelectedServicioName('');
+      setArchivo(null);
       setErrors({});
     } catch (error) {
       console.error('Error creating foto:', error);
@@ -124,10 +156,11 @@ const CreateFotoModal: React.FC<CreateFotoModalProps> = ({ isOpen, onClose, onSa
         descripcion: '',
         orden: 1,
         es_portada: false,
-        fecha_subida: new Date().toISOString().slice(0, 16),
+        fecha_subida: aFechaLocalInput(),
         eliminado: false
       });
       setSelectedServicioName('');
+      setArchivo(null);
       setErrors({});
     }
   };
@@ -172,20 +205,18 @@ const CreateFotoModal: React.FC<CreateFotoModalProps> = ({ isOpen, onClose, onSa
 
               <div>
                 <label className="flex items-center space-x-2 text-sm font-medium text-gray-700 mb-2">
-                  <Link className="h-4 w-4" />
-                  <span>URL de la Imagen *</span>
+                  <UploadCloud className="h-4 w-4" />
+                  <span>Archivo de imagen *</span>
                 </label>
                 <input
-                  type="url"
-                  name="url"
-                  value={formData.url}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent ${errors.url ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                  placeholder="https://ejemplo.com/imagen.jpg"
+                  type="file"
+                  accept={TIPOS_PERMITIDOS.join(',')}
+                  onChange={handleArchivoChange}
+                  className="block w-full text-sm text-gray-700 file:mr-3 file:rounded-md file:border-0 file:bg-purple-50 file:px-3 file:py-2 file:text-sm file:font-medium file:text-purple-700 hover:file:bg-purple-100"
                 />
-                {errors.url && (
-                  <p className="mt-1 text-sm text-red-600">{errors.url}</p>
+                <p className="mt-1 text-xs text-gray-500">JPG, PNG, WEBP o GIF, hasta {TAMANO_MAXIMO_MB} MB. Se guarda en S3.</p>
+                {errors.archivo && (
+                  <p className="mt-1 text-sm text-red-600">{errors.archivo}</p>
                 )}
               </div>
 
@@ -279,14 +310,14 @@ const CreateFotoModal: React.FC<CreateFotoModalProps> = ({ isOpen, onClose, onSa
               </div>
 
               {/* Vista previa de la imagen */}
-              {formData.url && validarURLImagen(formData.url) && (
+              {preview && (
                 <div>
                   <label className="text-sm font-medium text-gray-700 mb-2 block">
                     Vista Previa
                   </label>
                   <div className="border border-gray-200 rounded-lg p-2">
                     <img
-                      src={formData.url}
+                      src={preview}
                       alt="Vista previa"
                       className="w-full h-32 object-cover rounded"
                       onError={(e) => {

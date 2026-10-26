@@ -116,5 +116,5 @@ export interface EditFotoModalProps {
 export interface CreateFotoModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (data: DatosFoto) => Promise<void>;
+  onSave: (data: DatosFoto, archivo: File) => Promise<void>;
 }

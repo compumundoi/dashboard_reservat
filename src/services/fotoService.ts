@@ -8,6 +8,7 @@ import {
   FotoChartData,
 } from "../types/foto";
 import * as XLSX from "xlsx";
+import { getCookie } from "../utils/auth";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:8008/api/v1";
@@ -19,14 +20,9 @@ const paramBusqueda = (busqueda: string): string =>
   busqueda.trim() ? `&busqueda=${encodeURIComponent(busqueda.trim())}` : "";
 
 
-// Función para obtener el token de autenticación
-const getAuthToken = (): string => {
-  const cookies = document.cookie.split(";");
-  const tokenCookie = cookies.find((cookie) =>
-    cookie.trim().startsWith("auth_token="),
-  );
-  return tokenCookie ? tokenCookie.split("=")[1] : "";
-};
+// La cookie de sesión es httpOnly: el helper compartido cae a localStorage,
+// igual que el resto de servicios protegidos.
+const getAuthToken = (): string => getCookie("auth_token") || "";
 
 // Función para obtener headers con autenticación
 const getAuthHeaders = () => ({
@@ -65,16 +61,28 @@ const procesarFotoParaUI = (foto: RespuestaFoto): FotoData => ({
   fechaFormateada: formatearFecha(foto.fecha_subida),
 });
 
-// Crear nueva foto
-export const crearFoto = async (datosFoto: DatosFoto): Promise<void> => {
-  const response = await fetch(`${API_BASE_URL}/fotos/crear/`, {
+// Sube el archivo a S3 a través de ms_fotos y registra la foto en un paso.
+export const subirFoto = async (datosFoto: DatosFoto, archivo: File): Promise<void> => {
+  const formData = new FormData();
+  formData.append("archivo", archivo);
+  formData.append("servicio_id", datosFoto.servicio_id);
+  formData.append("descripcion", datosFoto.descripcion);
+  formData.append("orden", String(datosFoto.orden));
+  formData.append("es_portada", String(datosFoto.es_portada));
+  formData.append("eliminado", String(datosFoto.eliminado));
+  formData.append("fecha_subida", datosFoto.fecha_subida);
+
+  // Sin Content-Type: el navegador lo arma con el boundary del multipart.
+  const response = await fetch(`${API_BASE_URL}/fotos/subir/`, {
     method: "POST",
-    headers: getAuthHeaders(),
-    body: JSON.stringify(datosFoto),
+    headers: { Authorization: `Bearer ${getAuthToken()}` },
+    body: formData,
   });
 
   if (!response.ok) {
-    throw new Error("Error al crear la foto");
+    const error = await response.json().catch(() => null);
+    // Los 422 de FastAPI traen `detail` como lista; sólo se muestra si es texto.
+    throw new Error(typeof error?.detail === "string" ? error.detail : "Error al subir la foto");
   }
 };
 
@@ -306,12 +314,6 @@ export const exportarFotosExcel = async (): Promise<void> => {
   } catch {
     throw new Error("Error al exportar fotos a Excel");
   }
-};
-
-// Validar URL de imagen
-export const validarURLImagen = (url: string): boolean => {
-  const patronURL = /^https?:\/\/.+\.(jpg|jpeg|png|gif|bmp|webp)$/i;
-  return patronURL.test(url);
 };
 
 // Validar UUID

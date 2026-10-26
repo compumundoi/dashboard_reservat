@@ -9,7 +9,7 @@ import EditFotoModal from './EditFotoModal';
 import CreateFotoModal from './CreateFotoModal';
 import { 
   listarFotos, 
-  crearFoto, 
+  subirFoto,
   actualizarFoto, 
   eliminarFoto,
   procesarDatosFotos,
@@ -195,9 +195,9 @@ const FotosSection: React.FC = () => {
   };
 
   // Crear nueva foto
-  const handleCreateFoto = async (data: DatosFoto) => {
+  const handleCreateFoto = async (data: DatosFoto, archivo: File) => {
     try {
-      await crearFoto(data);
+      await subirFoto(data, archivo);
       
       await Swal.fire({
         title: '¡Creada!',
@@ -216,7 +216,8 @@ const FotosSection: React.FC = () => {
     } catch (error) {
       Swal.fire({
         title: 'Error',
-        text: 'No se pudo crear la foto',
+        // El backend explica el rechazo (formato, tamaño...).
+        text: error instanceof Error && error.message ? error.message : 'No se pudo crear la foto',
         icon: 'error'
       });
       throw error;
