@@ -210,10 +210,7 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({ userName, onNaviga
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <div className="flex items-center gap-2">
-            <h2 className="text-2xl font-display font-bold text-secondary-900">¡Hola, {userName || 'Administrador'}! 👋</h2>
-            <Badge variant="secondary">Datos de ejemplo</Badge>
-          </div>
+          <h2 className="text-2xl font-display font-bold text-secondary-900">¡Hola, {userName || 'Administrador'}! 👋</h2>
           <p className="mt-1 text-secondary-500">Así va tu negocio desde que arrancó la operación en julio.</p>
         </div>
         <div className="flex gap-3">
